@@ -1,0 +1,44 @@
+# Web框架
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# 数据库
+sqlalchemy==2.0.23
+alembic==1.12.1
+psycopg2-binary==2.9.9
+redis==5.0.1
+
+# 认证
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# 数据验证
+pydantic==2.5.0
+pydantic-settings==2.1.0
+email-validator==2.1.0
+
+# 科学计算
+numpy==1.26.2
+scipy==1.11.4
+pandas==2.1.3
+scikit-learn==1.3.2
+
+# 信号处理
+mne==1.5.1
+pylsl==1.16.2
+brainflow==5.10.1
+
+# 设备连接
+pyserial==3.5
+
+# 视觉刺激
+psychopy==2023.2.3
+
+# 本机键盘模拟（编辑器「启动系统选项」→ 刺激页快捷键动作）
+pynput==1.7.6
+
+# 工具
+python-dotenv==1.0.0
+aiofiles==23.2.1
+websockets==12.0

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSVEP Platform API 测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #121212 0%, #1E1E1E 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 2px solid #00D9FF;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            font-size: 48px;
+            color: #00D9FF;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            color: #aaa;
+        }
+        
+        .status-card {
+            background: #1E1E1E;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-online {
+            background: #4CAF50;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .info-item {
+            background: #2A2A2A;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #00D9FF;
+        }
+        
+        .info-label {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+        
+        .info-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #00D9FF;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #00D9FF;
+            color: #000;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn:hover {
+            background: #00B8D4;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 217, 255, 0.3);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .feature-card {
+            background: #1E1E1E;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            transition: all 0.3s;
+        }
+        
+        .feature-card:hover {
+            border-color: #00D9FF;
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        
+        .feature-title {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #00D9FF;
+        }
+        
+        .feature-desc {
+            color: #aaa;
+            line-height: 1.6;
+        }
+        
+        .actions {
+            text-align: center;
+            margin-top: 40px;
+        }
+        
+        .actions .btn {
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 SSVEP Platform</h1>
+            <p class="subtitle">跨平台稳态视觉诱发电位脑机接口开发平台</p>
+        </header>
+        
+        <div class="status-card">
+            <h2>
+                <span class="status-indicator status-online"></span>
+                服务器状态
+            </h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">服务状态</div>
+                    <div class="info-value" id="status">检查中...</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">版本</div>
+                    <div class="info-value" id="version">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">服务地址</div>
+                    <div class="info-value">localhost:8000</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">响应时间</div>
+                    <div class="info-value" id="response-time">-</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-card">
+            <h2>✨ 已完成功能</h2>
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">📦</div>
+                    <div class="feature-title">项目框架</div>
+                    <div class="feature-desc">完整的前后端项目结构，模块化设计</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <div class="feature-title">现代UI</div>
+                    <div class="feature-desc">黑灰色主题，Material Design 3</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <div class="feature-title">用户认证</div>
+                    <div class="feature-desc">JWT认证，密码加密，安全可靠</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💾</div>
+                    <div class="feature-title">数据库设计</div>
+                    <div class="feature-desc">8张表，完整的关系设计</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <div class="feature-title">高性能</div>
+                    <div class="feature-desc">FastAPI + Flutter，异步处理</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <div class="feature-title">跨平台</div>
+                    <div class="feature-desc">支持Windows/Mac/Linux/Android</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <a href="http://localhost:8000/docs" class="btn" target="_blank">📖 查看API文档</a>
+            <a href="http://localhost:8000/redoc" class="btn" target="_blank">📚 查看ReDoc</a>
+            <button class="btn" onclick="testAPI()">🧪 测试API</button>
+        </div>
+    </div>
+    
+    <script>
+        async function checkStatus() {
+            const startTime = Date.now();
+            try {
+                const response = await fetch('http://localhost:8000');
+                const data = await response.json();
+                const responseTime = Date.now() - startTime;
+                
+                document.getElementById('status').textContent = '✅ 在线';
+                document.getElementById('version').textContent = data.version;
+                document.getElementById('response-time').textContent = responseTime + ' ms';
+            } catch (error) {
+                document.getElementById('status').textContent = '❌ 离线';
+                document.getElementById('status').style.color = '#FF5252';
+            }
+        }
+        
+        async function testAPI() {
+            try {
+                const response = await fetch('http://localhost:8000/health');
+                const data = await response.json();
+                alert('✅ API测试成功！\n\n状态: ' + data.status);
+            } catch (error) {
+                alert('❌ API测试失败！\n\n错误: ' + error.message);
+            }
+        }
+        
+        // 页面加载时检查状态
+        checkStatus();
+        
+        // 每5秒更新一次状态
+        setInterval(checkStatus, 5000);
+    </script>
+</body>
+</html>

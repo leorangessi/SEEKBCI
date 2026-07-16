@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>刺激测试 - SSVEP Platform</title>
+    <link rel="stylesheet" href="css/experiment-test-nav.css?v=20260614">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .test-container {
+            display: flex;
+            height: 100vh;
+            min-height: 0;
+        }
+        
+        /* 左侧控制面板 */
+        .control-panel {
+            width: 350px;
+            background: #1E1E1E;
+            border-right: 1px solid #333;
+            padding: 20px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .control-panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00D9FF;
+            margin-bottom: 6px;
+        }
+
+        .control-panel-desc {
+            font-size: 12px;
+            color: #888;
+            line-height: 1.45;
+            margin-bottom: 4px;
+        }
+        
+        .panel-title {
+            font-size: 20px;
+            color: #00D9FF;
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+        }
+        
+        .control-label {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .control-input {
+            width: 100%;
+            padding: 12px;
+            background: #2A2A2A;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .control-input:focus {
+            outline: none;
+            border-color: #00D9FF;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .slider {
+            flex: 1;
+            height: 6px;
+            background: #2A2A2A;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #00D9FF;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .slider-value {
+            min-width: 60px;
+            text-align: right;
+            color: #00D9FF;
+            font-weight: bold;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #00D9FF;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #00B8D4;
+        }
+        
+        .btn-danger {
+            background: #FF5252;
+            color: #fff;
+        }
+        
+        .btn-danger:hover {
+            background: #FF1744;
+        }
+
+        .btn-secondary {
+            width: auto;
+            padding: 12px 24px;
+            margin-bottom: 0;
+            background: #2A2A2A;
+            color: #fff;
+            border: 2px solid #444;
+            border-radius: 25px;
+        }
+
+        .btn-secondary:hover {
+            background: #333;
+            border-color: #00D9FF;
+        }
+
+        .btn-block-row {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .info-box {
+            background: #2A2A2A;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #00D9FF;
+            margin-top: 20px;
+        }
+        
+        .info-title {
+            font-size: 14px;
+            color: #00D9FF;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .info-text {
+            font-size: 12px;
+            color: #aaa;
+            line-height: 1.6;
+        }
+        
+        /* 右侧刺激区域 */
+        .stimulus-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            position: relative;
+            min-width: 0;
+        }
+
+        /* 四圆球模式须占满横向宽度，否则置信度条 clientWidth≈0 无法绘制 */
+        .stimulus-area > #four-ball-stage {
+            flex: 1 1 auto;
+            align-self: stretch;
+            width: 100%;
+            min-width: 0;
+        }
+        
+        .stimulus-block {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #000;
+            user-select: none;
+            transition: none;
+        }
+        
+        /* FPS显示 */
+        .fps-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(30, 30, 30, 0.95);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            backdrop-filter: blur(10px);
+        }
+        
+        .fps-value {
+            font-size: 32px;
+            color: #00D9FF;
+            font-weight: bold;
+        }
+        
+        .fps-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        /* 波形图 */
+        .waveform-canvas {
+            width: 100%;
+            height: 150px;
+            background: #2A2A2A;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .four-ball-band-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 18px;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .four-ball-band-row label {
+            cursor: pointer;
+            font-size: 13px;
+            color: #ccc;
+        }
+
+        .four-ball-stage {
+            display: none;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+
+        .four-ball-canvas-wrap {
+            align-self: center;
+            flex-shrink: 0;
+            max-width: 100%;
+        }
+
+        #four-ball-canvas {
+            display: block;
+            border-radius: 8px;
+            background: #000;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .four-ball-decode-strip {
+            width: 100%;
+            max-width: 960px;
+            margin: 16px auto 0;
+            padding: 12px 14px;
+            background: #151515;
+            border-radius: 8px;
+            border: 1px solid #333;
+            box-sizing: border-box;
+            flex-shrink: 0;
+            min-width: 0;
+        }
+
+        .four-ball-decode-status {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+            min-height: 1.2em;
+        }
+
+        .four-ball-decode-strip .strip-title {
+            font-size: 13px;
+            color: #00D9FF;
+            margin-bottom: 8px;
+        }
+
+        #four-ball-prob-canvas {
+            width: 100%;
+            height: 310px;
+            display: block;
+            border-radius: 6px;
+            background: #1a1a1a;
+        }
+
+        .four-ball-rank {
+            font-size: 12px;
+            color: #bbb;
+            margin-top: 10px;
+            line-height: 1.65;
+            font-family: Consolas, 'Segoe UI', monospace;
+        }
+
+        .four-ball-rank .rank-line {
+            padding: 2px 0;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .single-stimulus-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .device-line {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 12px;
+            padding: 8px;
+            background: #252525;
+            border-radius: 6px;
+        }
+
+        .device-line.ok {
+            color: #8bc34a;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <!-- 左侧控制面板 -->
+        <div class="control-panel">
+            <div class="control-panel-title">🧪 刺激参数测试</div>
+            <p class="control-panel-desc">调节闪烁占空比与方块样式，可同步到项目运行配置。</p>
+            <div class="exp-test-nav" style="margin-bottom:16px;">
+                <a href="experiment.html">← 实验测试</a>
+                <a href="index.html" class="nav-home">← 返回主页</a>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">测试类型</label>
+                <select class="control-input" id="stimulus-mode" onchange="onStimulusModeChange()">
+                    <option value="single">单目标闪烁（参数调节）</option>
+                    <option value="four_ball">四圆球 + EEG 实时解码（FBCCA）</option>
+                </select>
+            </div>
+
+            <div id="single-target-controls">
+            <div class="control-group">
+                <label class="control-label">频率 (Hz)</label>
+                <div class="slider-container">
+                    <input type="range" class="slider" id="frequency-slider" 
+                           min="1" max="30" step="0.1" value="10"
+                           oninput="updateFrequency(this.value)">
+                    <span class="slider-value" id="frequency-value">10.0 Hz</span>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">相位 (0-2π)</label>
+                <div class="slider-container">
+                    <input type="range" class="slider" id="phase-slider" 
+                           min="0" max="6.28" step="0.01" value="0"
+                           oninput="updatePhase(this.value)">
+                    <span class="slider-value" id="phase-value">0.00</span>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">方块大小 (px)</label>
+                <div class="slider-container">
+                    <input type="range" class="slider" id="size-slider" 
+                           min="50" max="500" step="10" value="200"
+                           oninput="updateSize(this.value)">
+                    <span class="slider-value" id="size-value">200 px</span>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">形状</label>
+                <select class="control-input" id="shape-select" onchange="updateShape(this.value)">
+                    <option value="rectangle">矩形</option>
+                    <option value="circle">圆形</option>
+                    <option value="triangle">三角形</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">标签</label>
+                <input type="text" class="control-input" id="label-input" 
+                       value="测试方块" oninput="updateLabel(this.value)">
+            </div>
+            
+            <button class="btn" id="start-btn" onclick="startTest()">
+                ▶️ 开始测试
+            </button>
+            
+            <button class="btn btn-danger" id="stop-btn" onclick="stopTest()" style="display: none;">
+                ⏹️ 停止测试
+            </button>
+            
+            <div class="info-box">
+                <div class="info-title">📊 实时统计</div>
+                <div class="info-text">
+                    运行时间: <span id="runtime" style="color: #00D9FF;">00:00</span><br>
+                    帧数: <span id="framecount" style="color: #00D9FF;">0</span><br>
+                    平均FPS: <span id="avgfps" style="color: #00D9FF;">0</span>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <div class="info-title">💡 使用提示</div>
+                <div class="info-text">
+                    • 调整参数实时查看效果<br>
+                    • 建议频率: 8-15 Hz<br>
+                    • 观察FPS保持在60左右<br>
+                    • 按F键切换全屏
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">波形预览</label>
+                <canvas id="waveform" class="waveform-canvas"></canvas>
+            </div>
+
+            <div class="info-box" style="margin-top:8px;">
+                <div class="info-title">📤 同步到项目运行配置</div>
+                <p class="info-text" style="margin-bottom:10px;line-height:1.5;">
+                    下方闪烁占空比/透明度会写入项目的<strong>运行配置</strong>，正式刺激运行时生效。
+                </p>
+                <label class="control-label" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                    <input type="checkbox" id="exp-flicker-high-blank" style="width:auto;">
+                    高亮时方块透明（flickerHighBlank）
+                </label>
+                <div class="control-group">
+                    <label class="control-label">闪烁占空比 %（15–50）</label>
+                    <input type="number" class="control-input" id="exp-flicker-on-duty" min="15" max="50" value="32">
+                </div>
+                <div class="control-group">
+                    <label class="control-label">方块不透明度 %（20–100）</label>
+                    <input type="number" class="control-input" id="exp-flicker-block-opacity" min="20" max="100" value="58">
+                </div>
+                <div class="control-group">
+                    <label class="control-label">目标项目</label>
+                    <select class="control-input" id="exp-sync-project"></select>
+                </div>
+                <button type="button" class="btn btn-secondary btn-block-row" onclick="saveStimulusExperimentOnly()">💾 仅保存实验参数</button>
+                <button type="button" class="btn btn-block-row" style="margin-top:8px;" onclick="syncStimulusToProjectUi()">⬇ 同步到项目运行配置</button>
+                <p id="exp-sync-hint" class="info-text" style="margin-top:8px;color:#7ec8e3;"></p>
+            </div>
+            </div>
+
+            <div id="four-ball-controls" style="display: none;">
+                <div class="device-line" id="four-ball-device-line">
+                    EEG：<span id="four-ball-device-text">未连接</span>（需主页连接设备并开启 Python API）
+                </div>
+                <p class="info-text" style="margin-bottom:14px;line-height:1.5;">
+                    频段二选一；频率仅为预设方案。闪烁 4 圆球，后端 <strong>0.8 s</strong> 窗 FBCCA，界面每 <strong>0.3 s</strong> 刷新柱状图与排序。
+                </p>
+                <div class="control-group">
+                    <label class="control-label">频段</label>
+                    <div class="four-ball-band-row">
+                        <label><input type="radio" name="four-ball-band" value="low" checked> 低频 8–15 Hz</label>
+                        <label><input type="radio" name="four-ball-band" value="high"> 高频 16–30 Hz</label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">频率方案（预设）</label>
+                    <select class="control-input" id="four-ball-preset"></select>
+                </div>
+                <button type="button" class="btn" id="four-ball-start-btn" onclick="startFourBallRealtime()">▶ 开始实时解码</button>
+                <button type="button" class="btn btn-danger" id="four-ball-stop-btn" onclick="stopFourBallRealtime()" disabled>⏹ 停止</button>
+                <button type="button" class="btn btn-secondary btn-block-row" style="margin-top:16px;" onclick="window.location.href='ssvep-test.html'">SSVEP 准确度测试</button>
+            </div>
+        </div>
+        
+        <!-- 右侧刺激区域 -->
+        <div class="stimulus-area">
+            <div id="single-stimulus-wrap" class="single-stimulus-wrap">
+                <div id="stimulus-block" class="stimulus-block">
+                    测试方块
+                </div>
+            </div>
+
+            <div id="four-ball-stage" class="four-ball-stage">
+                <div class="four-ball-canvas-wrap">
+                    <canvas id="four-ball-canvas" width="880" height="520"></canvas>
+                </div>
+                <div id="four-ball-decode-strip" class="four-ball-decode-strip" style="display: none;">
+                    <div class="strip-title">柱高 = 得分相对强度（幂映射，易区分）；标注 p = softmax 概率</div>
+                    <div id="four-ball-decode-status" class="four-ball-decode-status"></div>
+                    <canvas id="four-ball-prob-canvas" width="640" height="310"></canvas>
+                    <div id="four-ball-rank-list" class="four-ball-rank"></div>
+                </div>
+            </div>
+            
+            <div class="fps-display">
+                <div class="fps-value" id="fps-value">60</div>
+                <div class="fps-label">FPS</div>
+                <div class="fps-label" id="refresh-hint" style="margin-top:6px;font-size:11px;color:#888;">屏幕刷新率检测中…</div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/display-refresh.js?v=20260613"></script>
+    <script src="js/stimulus-run-config.js?v=20260612"></script>
+    <script src="js/experiment-config.js?v=20260612"></script>
+    <script src="js/global-device-manager.js?v=20260524b"></script>
+    <script src="js/multimodal-channels.js?v=20260506a"></script>
+    <script src="js/device-channel-config.js?v=20260524m"></script>
+    <script src="js/connection-status-indicator.js?v=1.2"></script>
+    <script src="test-stimulus.js?v=20260612"></script>
+</body>
+</html>

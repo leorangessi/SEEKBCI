@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备管理 - SEEKBCI PLAT</title>
+    <link rel="stylesheet" href="css/app-shell.css?v=20260714g">
+    <link rel="stylesheet" href="css/plaza-shared.css?v=20260612">
+    <style>
+        .devices-hub { padding: 20px 0 40px; text-align: center; }
+        .devices-hub-icon { font-size: 80px; margin-bottom: 20px; }
+        .devices-hub-desc { color: #888; margin-bottom: 28px; }
+        .devices-hub-actions { display: flex; gap: 20px; justify-content: center; margin-bottom: 40px; flex-wrap: wrap; }
+        .devices-hub-actions .btn { padding: 15px 30px; font-size: 16px; width: auto; }
+        .devices-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; max-width:1000px; margin:0 auto 26px; }
+        .devices-card,.devices-hub-panel { background:#1E1E1E; padding:24px; border-radius:12px; border:1px solid #333; text-align:left; }
+        .devices-card h4,.devices-hub-panel h4 { color:#00D9FF; margin-bottom:15px; }
+        .devices-card p,.devices-card li,.devices-hub-panel li { color:#aaa; line-height:1.8; }
+        .devices-card ul,.devices-hub-panel ul { margin-left:18px; }
+        .devices-hub-panel { max-width:1000px; margin:0 auto; }
+        .tag { display:inline-block; padding:4px 10px; border-radius:999px; background:rgba(0,217,255,.10); border:1px solid rgba(0,217,255,.22); color:#9fefff; font-size:12px; margin:4px 6px 4px 0; }
+        .tag-act { background:rgba(255,179,0,.10); border-color:rgba(255,179,0,.28); color:#ffd58a; }
+        .devices-split { display:grid; grid-template-columns:1fr 1fr; gap:18px; max-width:1000px; margin:0 auto 26px; text-align:left; }
+        @media (max-width: 860px) { .devices-split { grid-template-columns:1fr; } }
+        .devices-list { margin:0; padding-left:18px; color:#aaa; line-height:1.9; }
+        .devices-list a { color:#00D9FF; text-decoration:none; }
+        .devices-list a:hover { text-decoration:underline; }
+    </style>
+</head>
+<body class="app-shell-page">
+    <div class="app-container">
+        <div id="app-sidebar-mount" data-active="devices"></div>
+        <div class="main-content">
+            <div class="page-header">
+                <h2>🔌 设备管理</h2>
+            </div>
+            <div class="page-scroll">
+                <div class="devices-hub">
+                    <div class="devices-hub-icon">🔌</div>
+                    <p class="devices-hub-desc">设备分为<strong style="color:#ccc;">控制设备</strong>（输入意图）与<strong style="color:#ccc;">被控设备</strong>（输出动作）两类。</p>
+
+                    <div class="devices-hub-actions">
+                        <button type="button" class="btn btn-primary" onclick="window.location.href='device-manager.html'">
+                            🔗 控制核心（脑电）
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="window.location.href='imu-test.html'">
+                            🧭 IMU / 光标测试
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="window.location.href='physical-world.html'">
+                            🌍 物理世界（被控）
+                        </button>
+                    </div>
+
+                    <div class="devices-split">
+                        <div class="devices-card">
+                            <h4>控制设备</h4>
+                            <span class="tag">输入</span>
+                            <ul class="devices-list" id="control-device-list"></ul>
+                        </div>
+                        <div class="devices-card">
+                            <h4>被控设备</h4>
+                            <span class="tag tag-act">输出</span>
+                            <ul class="devices-list" id="actuator-device-list"></ul>
+                        </div>
+                    </div>
+
+                    <div class="devices-grid">
+                        <div class="devices-card">
+                            <h4>SEEKPHY 设备</h4>
+                            <p>使用我们固件的 BLE 外设，统一称为 <strong>SEEKPHY</strong>。</p>
+                            <span class="tag">BLE 扫描注册</span><span class="tag">读取 Device Info</span><span class="tag">统一 Command/State</span>
+                            <ul>
+                                <li>灯、继电器、门禁、传感器</li>
+                                <li>低速小车、简单执行器</li>
+                                <li>平台生成 ULID 作为 deviceId</li>
+                            </ul>
+                        </div>
+                        <div class="devices-card">
+                            <h4>IMU 协议 seekbci_imu_v1</h4>
+                            <p>BMI270 @ ESP32：ASCII <code>ax,ay,az,gx,gy,gz</code>（m/s² + rad/s）。</p>
+                            <span class="tag">BLE Nordic UART</span><span class="tag">HEAD_MODE</span><span class="tag">光标 / 地球</span>
+                            <ul>
+                                <li>设备名 <code>ESP32_BMI270_MOUSE</code></li>
+                                <li>校准：静止估零偏 + 重力轴</li>
+                                <li>二维光标 · 三维地球测试页</li>
+                            </ul>
+                        </div>
+                        <div class="devices-card">
+                            <h4>项目编辑器绑定</h4>
+                            <p>SSVEP / EMG / EOG / IMU 可在项目里绑定到被控设备动作。</p>
+                            <span class="tag">设备动作</span><span class="tag">陀螺仪小车</span><span class="tag">高风险确认</span>
+                            <ul>
+                                <li>SSVEP 目标 → 开灯 / 关灯 / 场景</li>
+                                <li>IMU pitch/roll → 小车速度控制</li>
+                                <li>EMG 确认，EOG 急停 / 取消</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="devices-hub-panel">
+                        <h4>当前设备管理能力</h4>
+                        <ul>
+                            <li>控制核心：LSL、串口、WiFi 连接与实时波形显示</li>
+                            <li>IMU：BLE 订阅 + 光标 / 地球测试（<a href="imu-test.html" style="color:#00D9FF;">打开测试页</a>）</li>
+                            <li>物理世界：SEEKPHY BLE、物联网平台接入、统一设备模型</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/device-taxonomy.js?v=20260714"></script>
+    <script src="js/app-sidebar.js?v=20260714g"></script>
+    <script>
+        (function () {
+            const tax = window.SSVEP_DEVICE_TAXONOMY;
+            if (!tax) return;
+            const fill = (id, list) => {
+                const ul = document.getElementById(id);
+                if (!ul) return;
+                ul.innerHTML = list.map((d) => {
+                    const link = d.testPage
+                        ? ` — <a href="${d.testPage}">测试</a>`
+                        : '';
+                    return `<li>${d.label}${link}</li>`;
+                }).join('');
+            };
+            fill('control-device-list', tax.CONTROL_DEVICES);
+            fill('actuator-device-list', tax.ACTUATOR_DEVICES);
+        })();
+    </script>
+</body>
+</html>

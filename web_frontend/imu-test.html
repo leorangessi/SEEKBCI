@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMU / 光标测试 - SEEKBCI PLAT</title>
+    <link rel="stylesheet" href="css/experiment-test-nav.css?v=20260614">
+    <link rel="stylesheet" href="css/imu-test.css?v=20260714b">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>IMU · 光标</h1>
+                <p>控制设备 <strong>BMI270 IMU</strong> → 被控设备 <strong>光标</strong> / 三维地球预览。协议 <code>seekbci_imu_v1</code>。</p>
+                <div class="exp-test-nav">
+                    <a href="experiment.html">← 实验测试</a>
+                    <a href="devices.html">← 设备管理</a>
+                    <a href="index.html" class="nav-home">← 返回主页</a>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>连接</h2>
+                <div id="conn-status" class="status-pill status-bad">未连接</div>
+                <p class="form-hint" id="conn-detail" style="margin-top:8px;">扫描 BLE 名 ESP32_BMI270_MOUSE（与固件一致）</p>
+                <button type="button" class="btn btn-primary" id="btn-connect">连接 IMU（推荐）</button>
+                <button type="button" class="btn btn-secondary" id="btn-connect-web">Web Bluetooth 备用</button>
+                <button type="button" class="btn btn-secondary" id="btn-disconnect">断开</button>
+                <button type="button" class="btn btn-secondary" id="btn-calibrate">重新校准（静止）</button>
+                <p class="form-hint">默认走本机后端 Bleak（同参考 Python 客户端）。连不上时请确认：设备已上电、Windows 蓝牙开启、未占用串口/其它 Bleak 程序。</p>
+            </div>
+
+            <div class="section">
+                <h2>视图</h2>
+                <div class="mode-row">
+                    <button type="button" class="mode-btn" id="mode-2d">二维 · 光标</button>
+                    <button type="button" class="mode-btn active" id="mode-3d">三维 · 地球</button>
+                </div>
+                <p class="form-hint">二维：虚拟光标（可叠加系统鼠标）。三维：科幻地球随 IMU 转动。</p>
+            </div>
+
+            <div class="section">
+                <h2>映射参数</h2>
+                <div class="form-group">
+                    <label class="form-label">灵敏度</label>
+                    <input type="number" class="form-input" id="cfg-sensitivity" value="42" min="1" max="300" step="1">
+                </div>
+                <label class="check-row"><input type="checkbox" id="cfg-invert-x" checked> 翻转 X（yaw）</label>
+                <label class="check-row"><input type="checkbox" id="cfg-invert-y" checked> 翻转 Y（pitch）</label>
+                <label class="check-row"><input type="checkbox" id="cfg-system-mouse"> 驱动系统光标（相对移动）</label>
+                <p class="form-hint">系统光标经本机 <code>/api/system/mouse/move</code>，仅建议在设备测试时短暂开启。</p>
+            </div>
+
+            <div class="section">
+                <h2>报文</h2>
+                <pre id="payload-raw" class="payload">—</pre>
+                <pre id="stats-text" class="stats">—</pre>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="stage" id="panel-2d" hidden>
+                <canvas id="cursor-canvas"></canvas>
+            </div>
+            <div class="stage" id="panel-3d">
+                <canvas id="earth-canvas"></canvas>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/global-device-manager.js?v=20260714c"></script>
+    <script src="js/imu-protocol.js?v=20260714c"></script>
+    <script src="js/imu-cursor-mapper.js?v=20260714c"></script>
+    <script src="js/imu-ble-client.js?v=20260714c"></script>
+    <script src="js/imu-earth-renderer.js?v=20260715a"></script>
+    <script src="js/imu-test.js?v=20260715a"></script>
+</body>
+</html>

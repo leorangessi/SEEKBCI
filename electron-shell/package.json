@@ -1,0 +1,74 @@
+{
+  "name": "seekbci-plat",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SEEKBCI PLAT 桌面版：内嵌 API，用户无需安装 Python",
+  "main": "src/main.js",
+  "author": "SEEKBCI",
+  "scripts": {
+    "start": "electron .",
+    "start:stimulus": "electron . --stimulus",
+    "start:editor": "electron . --editor",
+    "start:home": "electron . --home",
+    "build:api": "powershell -NoProfile -ExecutionPolicy Bypass -File ../scripts/build-seekbci-api.ps1",
+    "predist": "npm run build:api",
+    "dist": "electron-builder --win --x64",
+    "dist:dir": "electron-builder --win --x64 --dir",
+    "pack": "npm run dist:dir"
+  },
+  "build": {
+    "appId": "com.seekbci.plat",
+    "productName": "SEEKBCI PLAT",
+    "copyright": "Copyright © SEEKBCI",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../python_backend/dist/seekbci-api",
+        "to": "seekbci-api",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "SEEKBCI PLAT"
+    },
+    "portable": {
+      "artifactName": "SEEKBCI-PLAT-${version}-portable.exe"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

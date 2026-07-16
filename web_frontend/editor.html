@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 直连 file:// 或旧缓存时避免误以为脚本未更新；配合 serve_frontend.py 的 Cache-Control 更佳 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <title>项目编辑器 - SSVEP Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        .editor-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* 左侧工具栏 */
+        .toolbar {
+            width: 250px;
+            background: #1E1E1E;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        
+        .toolbar-section {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .toolbar-title {
+            font-size: 14px;
+            color: #00D9FF;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .shape-button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #2A2A2A;
+            border: 2px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .shape-button:hover {
+            background: #333;
+            border-color: #00D9FF;
+        }
+        
+        .shape-button.active {
+            background: #00D9FF;
+            color: #000;
+            border-color: #00D9FF;
+        }
+        
+        .shape-icon {
+            font-size: 24px;
+        }
+        
+        /* 中间画布区域 */
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #1A1A1A;
+        }
+        
+        .canvas-header {
+            background: #1E1E1E;
+            padding: 15px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .canvas-title {
+            font-size: 18px;
+            color: #00D9FF;
+        }
+        
+        .canvas-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            background: #00D9FF;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #00B8D4;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #2A2A2A;
+            color: #fff;
+        }
+        
+        .btn-secondary:hover {
+            background: #333;
+        }
+        
+        .canvas-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            position: relative;
+        }
+        
+        /* 方块样式 */
+        .block {
+            position: absolute;
+            border: 2px solid #00D9FF;
+            cursor: move;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            user-select: none;
+            transition: box-shadow 0.3s;
+        }
+        
+        .block:hover {
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+        }
+
+        .block.block-ssvep-keyboard {
+            padding: 6px 8px 8px;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            border-style: dashed;
+            border-color: #7b61ff;
+            background: rgba(0, 0, 0, 0.55) !important;
+            box-sizing: border-box;
+        }
+
+        .block-ssvep-keyboard .ssvep-kb-row {
+            display: flex;
+            flex-direction: row;
+            gap: 22px;
+            margin-bottom: 22px;
+            flex: 1 1 0;
+            min-height: 0;
+        }
+
+        .block-ssvep-keyboard .ssvep-kb-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .block-ssvep-keyboard .ssvep-kb-key {
+            flex: 1 1 0;
+            min-width: 0;
+            min-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 217, 255, 0.45);
+            background: rgba(0, 217, 255, 0.12);
+            color: #e8f4ff;
+            font-size: 22px;
+            font-weight: 700;
+            pointer-events: none;
+            user-select: none;
+            padding: 2px 4px;
+            box-sizing: border-box;
+        }
+
+        .block-ssvep-keyboard .ssvep-kb-key.ssvep-kb-wide {
+            font-size: 18px;
+        }
+        
+        .block.selected {
+            border-color: #FFD700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+
+        .resize-handle {
+            position: absolute;
+            left: 75%;
+            top: 75%;
+            transform: translate(-50%, -50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #FFD700;
+            border: 2px solid #1a1a1a;
+            cursor: nwse-resize;
+            display: none;
+            z-index: 2;
+            clip-path: none;
+        }
+
+        .block.selected .resize-handle {
+            display: block;
+        }
+
+        .block-multimodal {
+            border-color: #C9A0FF;
+            background: rgba(92, 77, 125, 0.85) !important;
+            color: #f0e8ff;
+            font-size: 13px;
+            line-height: 1.25;
+            text-align: center;
+            padding: 6px;
+            border-radius: 8px;
+        }
+
+        .block-multimodal:hover {
+            box-shadow: 0 0 18px rgba(201, 160, 255, 0.45);
+        }
+
+        .block-multimodal.selected {
+            border-color: #FFB84D;
+            box-shadow: 0 0 24px rgba(255, 184, 77, 0.45);
+        }
+
+        .mm-picker-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .mm-picker-row select {
+            flex: 1;
+            padding: 10px;
+            background: #2A2A2A;
+            border: 2px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+        }
+        
+        .block.dragging {
+            opacity: 0.7;
+            cursor: grabbing;
+        }
+
+        .editor-action-slot-active {
+            border-color: #00D9FF !important;
+            box-shadow: 0 0 12px rgba(0, 217, 255, 0.25);
+        }
+
+        #python-global-editor {
+            width: 100%;
+            flex: 1;
+            min-height: 320px;
+            padding: 14px;
+            background: #141414;
+            border: 2px solid #444;
+            border-radius: 8px;
+            color: #e8e8e8;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.55;
+            resize: none;
+            box-sizing: border-box;
+        }
+
+        #python-global-editor:focus {
+            border-color: #00D9FF;
+            outline: none;
+        }
+
+        .advanced-features-panel .shape-button {
+            margin-bottom: 8px;
+        }
+
+        #python-global-modal .python-global-dialog {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 12px;
+            width: min(960px, 92vw);
+            height: min(720px, 88vh);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+            overflow: hidden;
+        }
+
+        #python-global-modal .python-global-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #python-global-modal .python-global-header h3 {
+            color: #00D9FF;
+            font-size: 17px;
+            margin: 0;
+        }
+
+        #python-global-modal .python-global-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px 20px;
+            min-height: 0;
+        }
+
+        #python-global-modal .python-global-hint {
+            font-size: 12px;
+            color: #888;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        #python-global-modal .python-global-footer {
+            padding: 14px 20px;
+            border-top: 1px solid #333;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        #python-compile-modal .python-compile-dialog {
+            background: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 12px;
+            width: min(520px, 92vw);
+            padding: 24px 28px;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+        }
+
+        #python-compile-modal h3 {
+            color: #00D9FF;
+            font-size: 17px;
+            margin: 0 0 8px;
+        }
+
+        #python-compile-status {
+            font-size: 13px;
+            color: #aaa;
+            margin: 12px 0 14px;
+            min-height: 1.4em;
+        }
+
+        .python-compile-progress-track {
+            height: 10px;
+            background: #2a2a2a;
+            border-radius: 999px;
+            overflow: hidden;
+            border: 1px solid #444;
+        }
+
+        .python-compile-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00D9FF, #7B61FF);
+            border-radius: 999px;
+            transition: width 0.25s ease;
+        }
+
+        #python-compile-percent {
+            font-size: 12px;
+            color: #666;
+            margin-top: 6px;
+            text-align: right;
+        }
+
+        #python-compile-result {
+            display: none;
+            margin-top: 16px;
+            max-height: 220px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.5;
+            padding: 12px;
+            border-radius: 8px;
+            background: #141414;
+            border: 1px solid #333;
+            color: #ccc;
+            white-space: pre-wrap;
+        }
+
+        #python-compile-result.success {
+            display: block;
+            border-color: #2e7d32;
+            color: #a5d6a7;
+        }
+
+        #python-compile-result.error {
+            display: block;
+            border-color: #c62828;
+            color: #ef9a9a;
+        }
+
+        #python-compile-modal .python-compile-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-disabled,
+        .btn:disabled,
+        .shape-button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed !important;
+            pointer-events: none;
+        }
+
+        .python-global-summary {
+            font-size: 11px;
+            color: #666;
+            margin-top: 8px;
+            line-height: 1.45;
+        }
+        
+        /* 右侧属性面板 */
+        .properties-panel {
+            width: 300px;
+            background: #1E1E1E;
+            border-left: 1px solid #333;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .property-group {
+            margin-bottom: 25px;
+        }
+        
+        .property-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .property-input {
+            width: 100%;
+            padding: 10px;
+            background: #2A2A2A;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .property-input:focus {
+            outline: none;
+            border-color: #00D9FF;
+        }
+        
+        select.property-input {
+            cursor: pointer;
+        }
+        
+        .color-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            border: 2px solid #444;
+            cursor: pointer;
+        }
+        
+        .property-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .property-row .property-input {
+            flex: 1;
+        }
+        
+        .delete-btn {
+            width: 100%;
+            padding: 12px;
+            background: #FF5252;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        
+        .delete-btn:hover {
+            background: #FF1744;
+        }
+        
+        .no-selection {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+        }
+        
+        /* 页面管理 */
+        .page-tabs {
+            display: flex;
+            gap: 5px;
+            padding: 10px 20px;
+            background: #1E1E1E;
+            border-bottom: 1px solid #333;
+            overflow-x: auto;
+        }
+        
+        .page-tab {
+            padding: 8px 16px;
+            background: #2A2A2A;
+            border: 1px solid #444;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .page-tab:hover {
+            background: #333;
+        }
+        
+        .page-tab.active {
+            background: #00D9FF;
+            color: #000;
+            border-color: #00D9FF;
+        }
+        
+        .delete-page-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            font-size: 16px;
+            line-height: 1;
+            transition: all 0.2s;
+        }
+        
+        .delete-page-btn:hover {
+            background: #FF5252;
+            color: #fff;
+        }
+        
+        .page-tab.active .delete-page-btn {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .page-tab.active .delete-page-btn:hover {
+            background: #FF5252;
+            color: #fff;
+        }
+        
+        .add-page-btn {
+            padding: 8px 16px;
+            background: #2A2A2A;
+            border: 1px dashed #666;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .add-page-btn:hover {
+            border-color: #00D9FF;
+            color: #00D9FF;
+        }
+
+        /* 快捷键录制（刻意不用 .property-input，避免看起来像可输入文本框） */
+        .kb-display {
+            width: 100%;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            background: #252525;
+            border: 2px dashed #555;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 15px;
+            user-select: none;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .kb-display:hover {
+            border-color: #666;
+            background: #2a2a2a;
+        }
+        .kb-display.kb-recording-active {
+            border-style: solid;
+            border-color: #00D9FF;
+            box-shadow: 0 0 0 1px rgba(0, 217, 255, 0.35);
+        }
+        .kb-hint {
+            font-size: 12px;
+            color: #888;
+            line-height: 1.4;
+            margin: 8px 0 0 0;
+        }
+        .kb-checkbox-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .kb-checkbox-row input {
+            margin-top: 2px;
+        }
+        .kb-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .kb-btn {
+            flex: 1;
+            padding: 10px 12px;
+            background: #00D9FF;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .kb-btn:hover {
+            filter: brightness(1.08);
+        }
+        .kb-btn-secondary {
+            flex: 0 0 auto;
+            background: #444;
+            color: #fff;
+        }
+        .kb-recording-active {
+            box-shadow: 0 0 0 2px #00D9FF;
+            animation: kb-pulse 1.2s ease-in-out infinite;
+        }
+        @keyframes kb-pulse {
+            50% { opacity: 0.85; }
+        }
+        body.key-recording {
+            cursor: crosshair;
+        }
+
+        /* 退出编辑器确认（保存 / 不保存 / 取消） */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(0, 0, 0, 0.65);
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-dialog {
+            background: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 24px 28px;
+            max-width: 440px;
+            width: 100%;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+        }
+
+        .modal-dialog h3 {
+            color: #00d9ff;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .modal-dialog p {
+            font-size: 14px;
+            color: #ccc;
+            line-height: 1.55;
+            margin-bottom: 22px;
+        }
+
+        .modal-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-actions button {
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+        }
+
+        .modal-btn-save {
+            background: #00d9ff;
+            color: #000;
+        }
+
+        .modal-btn-save:hover {
+            background: #00b8d4;
+        }
+
+        .modal-btn-discard {
+            background: #2a2a2a;
+            color: #fff;
+            border: 2px solid #555;
+        }
+
+        .modal-btn-discard:hover {
+            border-color: #ff5252;
+            color: #ff8a80;
+        }
+
+        .modal-btn-cancel {
+            background: #333;
+            color: #ddd;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #444;
+        }
+
+        /* 运行配置弹层（盖在编辑器 UI 之上） */
+        #run-config-modal,
+        #run-config-modal-threshold,
+        #run-config-modal-interval {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10160;
+            background: rgba(0, 0, 0, 0.82);
+            align-items: center;
+            justify-content: center;
+        }
+        #run-config-modal.active,
+        #run-config-modal-threshold.active,
+        #run-config-modal-interval.active {
+            display: flex;
+        }
+        #run-config-modal-threshold,
+        #run-config-modal-interval {
+            z-index: 10220;
+        }
+        #run-config-modal .modal-content,
+        #run-config-modal-threshold .modal-content,
+        #run-config-modal-interval .modal-content {
+            background: #1e1e1e;
+            padding: 28px;
+            border-radius: 14px;
+            border: 1px solid #444;
+            max-height: 86vh;
+            overflow-y: auto;
+        }
+        #run-config-modal .modal-header,
+        #run-config-modal-threshold .modal-header,
+        #run-config-modal-interval .modal-header {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 14px;
+            color: #00d9ff;
+        }
+        #run-config-modal .form-group,
+        #run-config-modal-threshold .form-group,
+        #run-config-modal-interval .form-group {
+            margin-bottom: 16px;
+        }
+        #run-config-modal .form-label,
+        #run-config-modal-threshold .form-label,
+        #run-config-modal-interval .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #aaa;
+        }
+        #run-config-modal .form-input,
+        #run-config-modal-threshold .form-input,
+        #run-config-modal-interval .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #2a2a2a;
+            color: #fff;
+        }
+        #run-config-modal .modal-actions,
+        #run-config-modal-threshold .modal-actions,
+        #run-config-modal-interval .modal-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 18px;
+        }
+
+        .rc-help {
+            font-size: 12px;
+            color: #9a9a9a;
+            line-height: 1.55;
+            margin-top: 8px;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.28);
+            border-radius: 8px;
+            border-left: 3px solid #00d9ff;
+        }
+        .rc-help strong {
+            color: #c8c8c8;
+            font-weight: 600;
+        }
+
+        .run-mode-btn.active {
+            background: #00D9FF !important;
+            color: #000 !important;
+            border-color: #00D9FF !important;
+            box-shadow: 0 0 0 2px rgba(0, 217, 255, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <div id="exit-confirm-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="exit-modal-title">
+        <div class="modal-dialog">
+            <h3 id="exit-modal-title">离开编辑器</h3>
+            <p id="exit-modal-text">是否保存当前项目后再离开？</p>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn-save" id="exit-modal-save">保存</button>
+                <button type="button" class="modal-btn-discard" id="exit-modal-discard">不保存</button>
+                <button type="button" class="modal-btn-cancel" id="exit-modal-cancel">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="save-project-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="save-project-modal-title">
+        <div class="modal-dialog">
+            <h3 id="save-project-modal-title">保存项目</h3>
+            <p style="font-size:13px;color:#aaa;margin-bottom:12px;">请输入项目名称</p>
+            <input type="text" id="save-project-name-input" class="property-input" maxlength="120"
+                   style="width:100%;padding:10px 12px;margin-bottom:4px;background:#1e1e26;border:1px solid #444;border-radius:6px;color:#fff;font-size:14px;">
+            <div class="modal-actions">
+                <button type="button" class="modal-btn-save" id="save-project-confirm">保存</button>
+                <button type="button" class="modal-btn-cancel" id="save-project-cancel">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Python 全局代码大窗口 -->
+    <div id="python-global-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="python-global-modal-title">
+        <div class="python-global-dialog">
+            <div class="python-global-header">
+                <h3 id="python-global-modal-title">🐍 Python 全局编辑器</h3>
+                <button type="button" class="btn btn-secondary" onclick="closePythonGlobalEditorModal()">关闭</button>
+            </div>
+            <div class="python-global-body">
+                <p class="python-global-hint">
+                    在此编写 <strong>import</strong> 与<strong>初始化</strong>（如 <code style="color:#aaa;">tello = Tello()</code>、<code style="color:#aaa;">tello.connect()</code>）。
+                    运行刺激时全局代码在会话内只执行一次，各动作片段共享变量。编译检查<strong>不会</strong>执行这些代码。
+                </p>
+                <p style="font-size:11px;color:#666;margin-bottom:8px;">快速插入验证示例（全局代码）：</p>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+                    <button type="button" class="btn btn-secondary" style="padding:4px 8px;font-size:11px;" onclick="insertPythonGlobalExample('hello')">print 测试</button>
+                    <button type="button" class="btn btn-secondary" style="padding:4px 8px;font-size:11px;" onclick="insertPythonGlobalExample('beep')">系统蜂鸣</button>
+                    <button type="button" class="btn btn-secondary" style="padding:4px 8px;font-size:11px;" onclick="insertPythonGlobalExample('tello')">Tello 连接</button>
+                </div>
+                <textarea id="python-global-editor" spellcheck="false"
+                          placeholder="from djitellopy import Tello&#10;tello = Tello()&#10;tello.connect()"
+                          onchange="onPythonGlobalChange()" oninput="onPythonGlobalInput()"></textarea>
+            </div>
+            <div class="python-global-footer">
+                <button type="button" class="btn btn-secondary" onclick="closePythonGlobalEditorModal()">取消</button>
+                <button type="button" class="btn" onclick="saveAndClosePythonGlobalEditorModal()">保存并关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Python 编译进度 -->
+    <div id="python-compile-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="python-compile-modal-title">
+        <div class="python-compile-dialog">
+            <h3 id="python-compile-modal-title">🧪 Python 编译检查</h3>
+            <p id="python-compile-status">准备中…</p>
+            <div class="python-compile-progress-track">
+                <div id="python-compile-progress-bar" class="python-compile-progress-bar"></div>
+            </div>
+            <div id="python-compile-percent">0%</div>
+            <div id="python-compile-result"></div>
+            <div class="python-compile-actions">
+                <button type="button" class="btn btn-secondary" id="python-compile-stop-btn" onclick="stopPythonCompile()">停止</button>
+                <button type="button" class="btn" id="python-compile-close-btn" style="display:none;" onclick="closePythonCompileModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="editor-container">
+        <!-- 左侧工具栏 -->
+        <div class="toolbar">
+            <div class="toolbar-section">
+                <div class="toolbar-title">📐 SSVEP 闪烁对象</div>
+                <button class="shape-button" onclick="addBlock('rectangle')">
+                    <span class="shape-icon">⬜</span>
+                    <span>矩形</span>
+                </button>
+                <button class="shape-button" onclick="addBlock('circle')">
+                    <span class="shape-icon">⭕</span>
+                    <span>圆形</span>
+                </button>
+                <button class="shape-button" onclick="addBlock('triangle')">
+                    <span class="shape-icon">🔺</span>
+                    <span>三角形</span>
+                </button>
+                <button class="shape-button" onclick="addBlock('hexagon')">
+                    <span class="shape-icon">⬡</span>
+                    <span>六边形</span>
+                </button>
+                <button class="shape-button" onclick="addBlock('diamond')">
+                    <span class="shape-icon">◇</span>
+                    <span>菱形</span>
+                </button>
+                <button class="shape-button" onclick="addBlock('pentagon')">
+                    <span class="shape-icon">⬟</span>
+                    <span>五边形</span>
+                </button>
+            </div>
+
+            <div class="toolbar-section">
+                <div class="toolbar-title">⌨️ 系统对象</div>
+                <p style="font-size: 11px; color: #888; line-height: 1.45; margin-bottom: 10px;">
+                    40 目标 QWERTY 键盘（8.0～15.8 Hz，步长 0.2 Hz）。<strong>每页仅可放置一个</strong>；建议本页不要再放其它闪烁方块，以免频率冲突与视觉干扰。
+                </p>
+                <button class="shape-button" onclick="addSsvepKeyboardBlock()">
+                    <span class="shape-icon">⌨️</span>
+                    <span>SSVEP 键盘 (40)</span>
+                </button>
+            </div>
+
+            <div class="toolbar-section">
+                <div class="toolbar-title">🖼 页面参考背景</div>
+                <p style="font-size: 11px; color: #888; line-height: 1.45; margin-bottom: 10px;">
+                    每页可单独上传一张截图作对齐参考（存在项目里）。参考图会铺满整块画布（与中间编辑区同大），便于对齐闪烁块；上传后可选择<strong>自适应、拉伸或平铺</strong>显示。<strong>运行刺激时不会显示</strong>。保存/导出/运行前会记录<strong>画布宽高</strong>，刺激页（含 Electron）按相同比例映射方块位置。过大的图会自动缩小为 JPEG 以减轻存储。
+                </p>
+                <button type="button" class="shape-button" onclick="document.getElementById('editor-ref-image-input').click()">
+                    <span class="shape-icon">📷</span>
+                    <span>上传本页参考图</span>
+                </button>
+                <button type="button" class="shape-button" onclick="clearEditorPageRefImage()">
+                    <span class="shape-icon">🗑️</span>
+                    <span>删除本页参考图</span>
+                </button>
+                <div id="editor-ref-image-mode-row" style="display:none; margin-top: 10px;">
+                    <label style="display:block; font-size: 12px; color: #aaa; margin-bottom: 6px;">显示方式</label>
+                    <select id="editor-ref-image-mode" class="form-input" style="width:100%; padding:8px 10px; font-size:13px;"
+                            onchange="onEditorRefImageModeChange()">
+                        <option value="fit">自适应（完整显示）</option>
+                        <option value="stretch">拉伸铺满</option>
+                        <option value="tile">平铺</option>
+                    </select>
+                </div>
+                <input type="file" id="editor-ref-image-input" accept="image/*" style="display: none"
+                       onchange="onEditorRefImageFileChange(event)">
+            </div>
+
+            <div class="toolbar-section">
+                <div class="toolbar-title">🧠 多模态设计</div>
+                <p style="font-size: 11px; color: #888; line-height: 1.45; margin-bottom: 10px;">
+                    四槽位：EOG-L / EOG-R / MOTION-L / MOTION-R。物理通道在属性里从<strong>设备管理</strong>已归类的眼电/运动中选取；运行时不显示在画面上。
+                </p>
+                <div class="mm-picker-row">
+                    <select id="mm-channel-picker" title="选择通道"></select>
+                    <button type="button" class="shape-button" style="margin:0; padding:10px 14px; flex-shrink:0;" onclick="addMultimodalBlockFromPicker()">添加</button>
+                </div>
+            </div>
+            
+            <div class="toolbar-section">
+                <div class="toolbar-title">⚡ 快捷操作</div>
+                <button class="shape-button" onclick="clearCanvas()">
+                    <span class="shape-icon">🗑️</span>
+                    <span>清空画布</span>
+                </button>
+                <button class="shape-button" onclick="exportProject()">
+                    <span class="shape-icon">💾</span>
+                    <span>导出项目</span>
+                </button>
+                <button class="shape-button" onclick="importProject()">
+                    <span class="shape-icon">📂</span>
+                    <span>导入项目</span>
+                </button>
+            </div>
+            
+            <div class="toolbar-section">
+                <div class="toolbar-title">📡 频率与相位</div>
+                <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#ccc;cursor:pointer;">
+                    <input type="checkbox" id="editor-auto-assign-freq-phase" checked
+                           onchange="onEditorAutoAssignSettingChange()" style="margin-top:2px;">
+                    <span>保存项目时自动分配各页频率与相位</span>
+                </label>
+                <p style="font-size:11px;color:#888;margin-top:8px;line-height:1.45;">
+                    普通对象在 9.0～15.8 Hz 内按页均匀分配频率（0.2 Hz 步长）与稳定相位；键盘保持 8.0～15.8 Hz 的 40 键编码并维护键相位。
+                </p>
+            </div>
+
+            <div class="toolbar-section">
+                <div class="toolbar-title">🛠 高级功能</div>
+                <button type="button" class="shape-button" id="advanced-features-toggle-btn" onclick="toggleAdvancedFeatures()">
+                    <span class="shape-icon">⚡</span>
+                    <span id="advanced-features-btn-label">高级功能</span>
+                </button>
+                <div id="advanced-features-section" class="advanced-features-panel" style="display:none;margin-top:12px;">
+                    <p style="font-size: 11px; color: #888; line-height: 1.45; margin-bottom: 10px;">
+                        Python 全局代码（import 与初始化）在独立大窗口编辑；编译为<strong>静态检查</strong>，不会连接无人机或执行 connect。
+                    </p>
+                    <button type="button" class="shape-button" onclick="openPythonGlobalEditorModal()">
+                        <span class="shape-icon">📝</span>
+                        <span>打开 Python 全局编辑器</span>
+                    </button>
+                    <button type="button" class="shape-button" id="btn-python-compile" onclick="compileProjectPythonCode()">
+                        <span class="shape-icon">🧪</span>
+                        <span>Python 编译检查</span>
+                    </button>
+                    <p id="python-global-summary" class="python-global-summary">尚未配置全局代码</p>
+                </div>
+            </div>
+
+            <div class="toolbar-section">
+                <div class="toolbar-title">⌨️ 系统选项（键鼠）</div>
+                <button type="button" class="shape-button" id="system-option-btn" onclick="toggleSystemKeyboardOption()">
+                    <span class="shape-icon">⚙️</span>
+                    <span id="system-option-btn-label">启动系统选项</span>
+                </button>
+                <p id="system-option-hint" style="font-size: 11px; color: #888; margin-top: 10px; line-height: 1.45;">
+                    开启后，运行刺激时「键盘快捷键」「鼠标双击（方块中心）」由本机 Python 后端模拟（需启动 API、<code style="color:#aaa;">pip install pynput</code>）。使用前请先聚焦要接收操作的目标窗口。
+                </p>
+            </div>
+            
+            <div class="toolbar-section">
+                <div class="toolbar-title">ℹ️ 使用说明</div>
+                <p style="font-size: 12px; color: #888; line-height: 1.6;">
+                    1. 点击左侧按钮添加对象<br>
+                    2. 拖拽对象调整位置<br>
+                    3. 点击对象查看属性<br>
+                    4. 选「键盘快捷键」后会自动监听按键，勿在框内打字<br>
+                    5. Python 动作：高级功能 → 打开全局编辑器写 import/初始化，动作里写逻辑<br>
+                    6. 「Python 编译检查」为静态分析，不会连机；运行时才执行 connect 等<br>
+                    7. 需要真实快捷键时点击「启动系统选项」并运行后端<br>
+                    8. 保存项目到本地；每个对象有唯一<strong>内部 ID</strong>，侧栏「标签」仅显示用，可随意改，不影响选中与拖拽<br>
+                    9. <kbd>Ctrl</kbd>+<kbd>Z</kbd> 撤销；<kbd>Ctrl</kbd>+<kbd>Y</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> 重做<br>
+                    10. 选中对象：<kbd>Ctrl</kbd>+<kbd>C</kbd> 复制，<kbd>Ctrl</kbd>+<kbd>V</kbd> 粘贴（新内部 ID，标签加「副本」），<kbd>Delete</kbd>/<kbd>Backspace</kbd> 删除（输入框内除外）<br>
+                    11. 选中对象后拖右下角黄色圆点缩放；按 <kbd>Space</kbd> 旋转 15°
+                </p>
+            </div>
+        </div>
+        
+        <!-- 中间画布区域 -->
+        <div class="canvas-area">
+            <div class="canvas-header">
+                <div class="canvas-title">📝 项目编辑器</div>
+                <div class="canvas-actions">
+                    <button class="btn btn-secondary" onclick="backToHome()">
+                        ← 返回主页
+                    </button>
+                    <button class="btn btn-secondary" onclick="backToProjectManager()">
+                        ← 返回
+                    </button>
+                    <button class="btn" id="btn-editor-run-stimulus" onclick="editorRunStimulus()" style="background: #7B61FF;">
+                        ▶️ 运行
+                    </button>
+                    <button class="btn" onclick="saveProject()">
+                        💾 保存项目
+                    </button>
+                    <button class="btn btn-secondary" onclick="saveProjectAs()">
+                        📄 另存为
+                    </button>
+                </div>
+            </div>
+            
+            <div class="page-tabs">
+                <div class="page-tab active" onclick="switchPage(0)">Page 1</div>
+                <div class="add-page-btn" onclick="addPage()">+ 添加页面</div>
+            </div>
+            
+            <div class="canvas-wrapper">
+                <div id="canvas"></div>
+            </div>
+        </div>
+        
+        <!-- 右侧属性面板 -->
+        <div class="properties-panel" id="properties-panel">
+            <div class="no-selection">
+                <div style="font-size: 48px; margin-bottom: 10px;">👆</div>
+                <p>点击画布中的对象<br>查看和编辑属性</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 运行刺激（与项目管理相同交互） -->
+    <div class="modal" id="run-config-modal">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">运行刺激</div>
+            <p style="color: #aaa; font-size: 13px; line-height: 1.5; margin-bottom: 16px;">
+                将跳转到刺激页。启用 EEG 时请先<strong>设备管理</strong>连接设备；同一画布内各对象闪烁频率须<strong>至少相差 0.2 Hz</strong>（支持小数，在编辑器中填写）。
+            </p>
+            <div class="rc-help" style="margin-bottom: 14px;">
+                <strong>Softmax 概率</strong>：把 FBCCA 对各闪烁频率的得分转成一组 0～1、总和为 1 的数，可理解为「当前脑电更像哪一个频率」的相对置信度。下面的阈值都是在调这个概率是否够高、是否明显领先第二名。
+            </div>
+            <div class="form-group">
+                <label class="form-label">
+                    <input type="checkbox" id="rc-eeg-enabled" checked onchange="syncRunConfigEegUi()">
+                    启用 EEG 在线识别并自动触发对象动作
+                </label>
+            </div>
+            <div class="form-group" id="rc-shared-params">
+                <label class="form-label">解码窗长（秒）</label>
+                <input type="number" class="form-input" id="rc-window" value="2.0" min="0.3" max="5" step="0.1">
+                <div class="rc-help">
+                    此项<strong>主要影响置信度模式</strong>：每次在线 FBCCA 分析使用的脑电窗长（默认 <strong>2 s</strong>，可在 0.3～5 s 调整；越短响应越快，但准确率往往下降）。<br>
+                    <strong>定时模式</strong>：仅当「识别间隔 − 0.5 s」≤ 4.5 s 时使用本值；间隔更长时程序会<strong>固定用 4 s</strong> 分析窗，此时修改此处无效。<br>
+                    置信度模式的实际触发速度还受「触发后冷却」、softmax 阈值、可选「连续两次同一频率」等影响，不只由窗长决定。
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">触发后冷却（秒，防抖）</label>
+                <input type="number" class="form-input" id="rc-cooldown" value="1.5" min="0.3" max="10" step="0.1">
+                <div class="rc-help">
+                    一次识别触发动作后，在此时间内不再触发，避免同一注视产生连续多次跳转或按键。
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">多模态确认/取消等待（秒）</label>
+                <input type="number" class="form-input" id="rc-ssvep-mm-wait" value="1.0" min="0.2" max="10" step="0.1">
+                <div class="rc-help">
+                    当本页有多模态通道勾选<strong>确认 SSVEP</strong>或<strong>取消 SSVEP</strong>时，SSVEP 识别到目标后进入该等待窗：确认模式须在此时间内触发确认；取消模式须在此时间内触发取消，否则自动执行 SSVEP 动作。
+                </div>
+            </div>
+            <div class="form-group" id="rc-speak-wrap">
+                <label style="display: block; color: #ccc;">
+                    <input type="checkbox" id="rc-speak-on-decode">
+                    识别触发后语音播报（SSVEP 目标 / 多模态确认·取消·触发）
+                </label>
+                <div class="rc-help" style="margin-top: 8px;">
+                    使用浏览器语音合成；字母单键用英文发音，中文标签用中文。含 SSVEP 待确认提示与多模态门控结果。需系统已安装 TTS 语音包。
+                </div>
+            </div>
+            <div class="rc-help" style="margin-bottom: 12px;">
+                FBCCA 参与通道请在 <a href="device-manager.html" style="color:#00D9FF;">设备管理</a> 页统一配置（测试刺激与运行项目共用）。
+            </div>
+            <div class="form-group">
+                <label class="form-label">运行呈现（与 EEG / 解码无关）</label>
+                <label style="display: block; margin: 8px 0; color: #ccc;">
+                    <input type="checkbox" id="rc-transparent-bg">
+                    透明背景（去掉页面黑底；浏览器内有效）
+                </label>
+                <label style="display: block; margin: 8px 0; color: #ccc;">
+                    <input type="checkbox" id="rc-start-fullscreen">
+                    进入刺激页后尝试全屏（若被拦截，刺激页按 F）
+                </label>
+                <label style="display: block; margin: 8px 0; color: #ccc;">
+                    <input type="checkbox" id="rc-flicker-high-blank"
+                           onchange="document.getElementById('rc-flicker-duty-wrap').style.display=this.checked?'block':'none'">
+                    高空白闪烁（方波）：拉长暗段、缩短亮段，便于看到方块后方内容（与透明背景叠加时更明显）
+                </label>
+                <div id="rc-flicker-duty-wrap" style="display: none; margin: 8px 0 0 0; padding-left: 4px;">
+                    <label class="form-label" style="margin-bottom: 6px;">亮段占每个闪烁周期的比例（%）</label>
+                    <input type="number" class="form-input" id="rc-flicker-on-duty" value="32" min="15" max="50" step="1"
+                           title="数值越小空白越多；过小可能影响 SSVEP 体感与解码，建议 28～40">
+                    <div class="rc-help" style="margin-top: 8px;">
+                        默认正弦闪烁约一半时间偏亮。方波模式下<strong>仅该比例时间为全白</strong>，其余时间为全黑；基频不变，但频谱含谐波，<strong>若开 EEG 在线识别请自行对比效果</strong>。
+                    </div>
+                </div>
+                <div style="margin-top: 12px;">
+                    <label class="form-label" style="margin-bottom: 6px;">闪烁对象不透明度（%）</label>
+                    <input type="number" class="form-input" id="rc-flicker-block-opacity" value="58" min="20" max="100" step="1"
+                           title="数值越低越能看到下层图像；建议 45～70">
+                    <div class="rc-help" style="margin-top: 8px;">
+                        降低后方块会半透明叠加到下方图像/窗口上，减少遮挡；如果识别变差，可适当调高。
+                    </div>
+                </div>
+                <div class="rc-help">
+                    <strong>系统级置顶、无边框</strong>需后续桌面壳；EEG 仍按文档约定连接 Python API。
+                </div>
+            </div>
+            <div id="rc-eeg-mode-actions" style="display: none;">
+                <p style="color: #888; font-size: 12px; margin-bottom: 10px;">请选择识别模式并配置对应参数：</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <button type="button" class="btn btn-secondary run-mode-btn" id="btn-rc-mode-threshold" onclick="openRunThresholdParamModal()">置信度模式</button>
+                    <button type="button" class="btn btn-secondary run-mode-btn" id="btn-rc-mode-interval" onclick="openRunIntervalParamModal()">定时模式</button>
+                </div>
+            </div>
+            <div id="rc-eeg-footer-hint" style="display: none; color: #666; font-size: 12px; margin-top: 12px;">
+                可先进入某个模式设置参数，点「返回」回到这里；点「打开刺激页面」会使用当前高亮模式。
+            </div>
+            <div class="modal-actions" style="margin-top: 16px;">
+                <button type="button" class="btn btn-secondary" onclick="closeRunConfigModal()">取消</button>
+                <button type="button" class="btn btn-primary" onclick="confirmRunStimulusSelectedMode()">打开刺激页面</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal modal-nested" id="run-config-modal-threshold">
+        <div class="modal-content" style="max-width: 440px;">
+            <div class="modal-header">置信度模式 — 参数</div>
+            <p style="color: #aaa; font-size: 13px; line-height: 1.5; margin-bottom: 14px;">
+                当某一频率的 softmax 概率足够高，且明显高于第二候选时触发（适合持续注视单目标）。
+            </p>
+            <div class="rc-help" style="margin-bottom: 14px;">
+                本模式使用主对话框中的「解码窗长」做 FBCCA（置信度模式默认 2 s，可改短以加快响应）。另受「触发后冷却」与可选「连续两次同一频率」影响实际触发速度。
+            </div>
+            <div class="form-group">
+                <label class="form-label">最低 softmax 概率（0～1）</label>
+                <input type="number" class="form-input" id="rc-th-minp" value="0.28" min="0.03" max="0.99" step="0.01">
+                <div class="rc-help">
+                    第一名概率必须达到该值才考虑触发。误触多 → 略调高；很难触发 → 略调低。默认偏宽松，便于先跑通流程。
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Top1 与 Top2 概率最小差值</label>
+                <input type="number" class="form-input" id="rc-th-minm" value="0.08" min="0.02" max="0.5" step="0.02">
+                <div class="rc-help">
+                    要求「最像的频率」比第二名高出至少这么多（概率相减）。两个候选差不多时不会触发。模糊、易误判 → 调大；总达不到 → 调小。
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">
+                    <input type="checkbox" id="rc-th-stable">
+                    连续两次解码均为同一频率后再触发（防抖动）
+                </label>
+                <div class="rc-help">
+                    开启后，相邻两次在线解码的 softmax <strong>第一名频率</strong>均须通过上方置信度条件，且两次频率在约 <strong>±0.12 Hz</strong> 内一致，才执行对象动作；第一次仅记录，第二次才触发。关闭则与原来一样，单次过阈值即触发。
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeRunThresholdParamModal()">返回</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal modal-nested" id="run-config-modal-interval">
+        <div class="modal-content" style="max-width: 440px;">
+            <div class="modal-header">定时模式 — 参数</div>
+            <p style="color: #aaa; font-size: 13px; line-height: 1.5; margin-bottom: 14px;">
+                每隔固定时间取当前窗内最高概率频率；可设最低概率门槛，低于则不触发。
+            </p>
+            <div class="rc-help" style="margin-bottom: 14px;">
+                程序用「<strong>识别间隔 − 0.5 s</strong>」与 <strong>4.5 s</strong> 比较：若<strong>大于</strong> 4.5 s，则每次解码<strong>固定取 4 s</strong> 脑电（对齐 <code style="color:#888;">9_cca_withoutvideo.py</code>）；否则使用主对话框中的<strong>解码窗长</strong>。
+            </div>
+            <div class="form-group">
+                <label class="form-label">识别间隔（秒）</label>
+                <input type="number" class="form-input" id="rc-iv-interval" value="3" min="0.5" max="60" step="0.5">
+                <div class="rc-help">
+                    两次自动解码之间的最短间隔；并参与解码窗判定。例如间隔 5 s → 5−0.5=4.5，用主界面窗长；间隔 6 s → 5.5>4.5，用固定 4 s 窗。
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">最低 softmax 概率（低于则不触发）</label>
+                <input type="number" class="form-input" id="rc-iv-minp" value="0.22" min="0.03" max="0.99" step="0.01">
+                <div class="rc-help">
+                    到点时若「第一名」概率仍低于该值，则本周期<strong>不触发任何对象</strong>，减少信噪差时的乱判。定时模式通常可比置信度模式略低一些。
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeRunIntervalParamModal()">返回</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/device-channel-config.js?v=20260524n"></script>
+    <script src="js/global-device-manager.js?v=20260503f"></script>
+    <script src="js/connection-status-indicator.js?v=20260521f"></script>
+    <script src="js/emg-processor.js?v=20260602a"></script>
+    <script src="js/emg-peak-trigger.js?v=20260601a"></script>
+    <script src="js/emg-drive.js?v=20260602a"></script>
+    <script src="js/emg-motion-runtime.js?v=20260531a"></script>
+    <script src="js/multimodal-detector.js?v=20260531i"></script>
+    <script src="js/multimodal-channels.js?v=20260522b"></script>
+    <script src="keyboard-binding.js?v=20260503f"></script>
+    <script src="js/ssvep-keyboard-40.js?v=20260522a"></script>
+    <script src="js/project-thumbnail.js?v=20260714f"></script>
+    <script src="js/stimulus-run-config.js?v=20260529d"></script>
+    <script src="js/project-contract.js?v=20260612"></script>
+    <script src="editor.js?v=20260529b"></script>
+</body>
+</html>

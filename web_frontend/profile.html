@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - SEEKBCI PLAT</title>
+    <link rel="stylesheet" href="css/app-shell.css?v=20260714g">
+    <link rel="stylesheet" href="css/plaza-shared.css?v=20260714e">
+    <style>
+        #profile-auth-card input,
+        #profile-auth-card textarea,
+        #profile-verify-card input {
+            pointer-events: auto;
+        }
+        #profile-auth-card.is-busy input,
+        #profile-auth-card.is-busy textarea {
+            pointer-events: auto;
+        }
+        .profile-confirm-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100000;
+            background: rgba(0, 0, 0, 0.72);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .profile-confirm-overlay.open {
+            display: flex;
+        }
+        .profile-confirm-card {
+            background: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 14px;
+            max-width: 440px;
+            width: 100%;
+            padding: 24px;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+        }
+        .profile-confirm-card h3 {
+            color: #00d9ff;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+        .profile-confirm-card p {
+            color: #bbb;
+            font-size: 14px;
+            line-height: 1.65;
+            white-space: pre-line;
+            margin-bottom: 20px;
+        }
+        .profile-confirm-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+        .profile-confirm-actions button {
+            padding: 9px 18px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .profile-confirm-cancel {
+            background: #2a2a2a;
+            color: #ddd;
+            border: 1px solid #555;
+        }
+        .profile-confirm-ok {
+            background: #00d9ff;
+            color: #111;
+        }
+        .profile-confirm-ok.danger {
+            background: #c62828;
+            color: #fff;
+        }
+        .profile-avatar-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        .profile-avatar-box {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: #1a1a1a;
+            border: 2px solid #444;
+            overflow: hidden;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .profile-avatar-box:hover {
+            border-color: #00d9ff;
+        }
+        .profile-avatar-box img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            pointer-events: none;
+        }
+        .profile-avatar-box .avatar-letter {
+            font-size: 36px;
+            color: #00d9ff;
+            font-weight: 700;
+            pointer-events: none;
+        }
+        .profile-avatar-meta {
+            color: #888;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+        .profile-avatar-meta strong {
+            color: #ccc;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body class="app-shell-page">
+    <div class="app-container">
+        <div id="app-sidebar-mount" data-active="profile"></div>
+        <div class="main-content">
+            <div class="page-header">
+                <h2>👤 个人中心</h2>
+            </div>
+            <div class="page-scroll">
+        <div id="profile-error" class="error-banner" style="display:none;"></div>
+        <div id="profile-status-hint" class="info-banner" style="display:none;"></div>
+        <div id="profile-loading-hint" class="info-banner" style="display:none;">正在同步账号信息…</div>
+
+        <!-- 未登录：登录 / 注册 -->
+        <div class="profile-card" id="profile-auth-card">
+            <div class="auth-tabs">
+                <button type="button" id="auth-tab-login" class="auth-tab active" onclick="switchAuthTab('login')">登录</button>
+                <button type="button" id="auth-tab-register" class="auth-tab" onclick="switchAuthTab('register')">注册</button>
+            </div>
+
+            <div id="auth-login-panel">
+                <p class="profile-hint">使用已注册邮箱登录，恢复广场账号与已发布项目。</p>
+                <div class="form-group">
+                    <label class="form-label">邮箱</label>
+                    <input type="email" class="form-input auth-input" id="login-email" maxlength="100"
+                           placeholder="name@example.com" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <input type="password" class="form-input auth-input" id="login-password" minlength="6" maxlength="128"
+                           autocomplete="current-password">
+                </div>
+                <div style="margin-top:18px;">
+                    <button type="button" class="btn btn-primary" onclick="loginProfile()">登录</button>
+                </div>
+            </div>
+
+            <div id="auth-register-panel" style="display:none;">
+                <p class="profile-hint">使用邮箱注册并验证后，即可在项目广场分享项目、点赞，并管理已发布内容。</p>
+                <div class="form-group">
+                    <label class="form-label">邮箱 *</label>
+                    <input type="email" class="form-input auth-input" id="register-email" maxlength="100"
+                           placeholder="name@example.com" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">显示名称 *</label>
+                    <input type="text" class="form-input auth-input" id="register-name" maxlength="50"
+                           placeholder="在广场上显示的作者名">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">密码 *（至少 6 位）</label>
+                    <input type="password" class="form-input auth-input" id="register-password" minlength="6" maxlength="128"
+                           autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">确认密码 *</label>
+                    <input type="password" class="form-input auth-input" id="register-password2" minlength="6" maxlength="128"
+                           autocomplete="new-password">
+                </div>
+                <div style="margin-top:18px;">
+                    <button type="button" class="btn btn-primary" onclick="registerProfile()">注册并发送验证码</button>
+                </div>
+            </div>
+
+            <p class="user-id-hint">本机 ID：<span id="profile-user-id-reg">—</span></p>
+        </div>
+
+        <!-- 待验证邮箱 -->
+        <div class="profile-card" id="profile-verify-card" style="display:none;">
+            <div class="section-title">验证邮箱</div>
+            <p style="color:#888;font-size:13px;line-height:1.55;margin-bottom:12px;">
+                我们已向 <strong id="verify-email-display">—</strong> 发送验证码（开发模式下注册接口会返回 dev_verify_code）。
+            </p>
+            <div class="form-group">
+                <label class="form-label">验证码</label>
+                <input type="text" class="form-input" id="verify-code" maxlength="8" placeholder="6 位数字" inputmode="numeric">
+            </div>
+            <p id="dev-verify-hint" class="user-id-hint" style="display:none;color:#ffc107;"></p>
+            <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                <button class="btn btn-primary" onclick="verifyProfileEmail()">验证邮箱</button>
+                <button class="btn btn-secondary btn-danger" onclick="logoutProfile()">退出账号</button>
+            </div>
+        </div>
+
+        <!-- 已注册：资料与统计 -->
+        <div class="profile-card" id="profile-main-card" style="display:none;">
+            <div class="section-title">我的资料</div>
+            <div class="profile-avatar-row">
+                <div class="profile-avatar-box" id="profile-avatar-box" title="点击编辑头像" onclick="openProfileAvatarEditor()">
+                    <img id="profile-avatar-img" alt="" style="display:none;">
+                    <span class="avatar-letter" id="profile-avatar-letter">?</span>
+                </div>
+                <div class="profile-avatar-meta">
+                    <strong>头像</strong><br>
+                    点击头像上传并编辑：完整显示、拉伸铺满、框选区域，或还原默认。
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">邮箱</label>
+                <input type="email" class="form-input" id="profile-email" readonly
+                       style="opacity:0.85;cursor:not-allowed;">
+            </div>
+            <div class="form-group">
+                <label class="form-label">显示名称</label>
+                <input type="text" class="form-input" id="profile-name" maxlength="50" placeholder="在广场上显示的作者名">
+            </div>
+            <div class="form-group">
+                <label class="form-label">个人简介</label>
+                <textarea class="form-textarea" id="profile-bio" maxlength="500" placeholder="介绍一下你自己或研究方向…"></textarea>
+            </div>
+            <div class="profile-grid" id="profile-stats">
+                <div class="stat-box"><div class="stat-num" id="stat-published">—</div><div class="stat-label">已发布项目</div></div>
+                <div class="stat-box"><div class="stat-num" id="stat-likes">—</div><div class="stat-label">收到点赞</div></div>
+                <div class="stat-box"><div class="stat-num" id="stat-points">—</div><div class="stat-label">积分</div></div>
+                <div class="stat-box"><div class="stat-num" id="stat-member">—</div><div class="stat-label">会员等级</div></div>
+            </div>
+            <p class="user-id-hint">本机 ID：<span id="profile-user-id">—</span></p>
+            <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="btn btn-primary" onclick="saveProfile()">保存资料</button>
+                <button class="btn btn-secondary" id="redeem-member-btn" onclick="redeemMember()" style="display:none;">积分兑换会员</button>
+                <button class="btn btn-secondary btn-danger" onclick="logoutProfile()">退出账号</button>
+            </div>
+            <p id="member-hint" class="user-id-hint" style="margin-top:10px;"></p>
+        </div>
+
+        <div id="profile-published-section" style="display:none;">
+            <div class="section-title">我发布到广场的项目</div>
+            <div class="projects-grid" id="my-plaza-grid"></div>
+            <div class="empty-state" id="my-plaza-empty" style="display:none;">
+                <div class="empty-icon">📤</div>
+                <div class="empty-title">还没有发布到广场</div>
+                <div class="empty-text">在项目管理器中打开项目，点击「分享到广场」即可公开。</div>
+                <button class="btn btn-primary" onclick="window.location.href='project-manager.html'">去项目管理</button>
+            </div>
+        </div>
+
+        <div class="privacy-footer">
+            您的偏好数据与账号绑定。
+            <strong>隐私说明：</strong>本机脑电信号默认仅在本地处理，不会上传至服务器。
+            您主动分享到广场的项目 JSON 会存储在服务端供他人浏览与导入。
+            邮箱仅用于账号验证与后续服务通知；我们不会出售您的个人信息。
+        </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile-confirm-overlay" class="profile-confirm-overlay" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="profile-confirm-card">
+            <h3 id="profile-confirm-title">确认</h3>
+            <p id="profile-confirm-message"></p>
+            <div class="profile-confirm-actions">
+                <button type="button" class="profile-confirm-cancel" id="profile-confirm-cancel">取消</button>
+                <button type="button" class="profile-confirm-ok" id="profile-confirm-ok">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        var KEY = 'seekbci_api_origin';
+        function def() { return 'http://127.0.0.1:28765'; }
+        window.ssvepResolveApiOrigin = function () {
+            try {
+                var o = localStorage.getItem(KEY);
+                if (o && o.trim()) return o.trim().replace(/\/$/, '');
+                var loc = window.location;
+                if (loc.protocol === 'http:' || loc.protocol === 'https:') {
+                    var h = loc.hostname || '127.0.0.1';
+                    if (h === 'localhost' || h === '[::1]' || h === '::1') h = '127.0.0.1';
+                    if (loc.port) return loc.protocol + '//' + h + ':' + loc.port;
+                }
+            } catch (_) { /* ignore */ }
+            return def();
+        };
+    })();
+    </script>
+    <script src="js/app-sidebar.js?v=20260714g"></script>
+    <script src="js/image-display-editor.js?v=20260714f"></script>
+    <script src="js/plaza-client.js?v=20260714e"></script>
+    <script src="profile.js?v=20260714f"></script>
+</body>
+</html>

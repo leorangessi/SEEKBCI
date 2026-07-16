@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目广场 - SEEKBCI PLAT</title>
+    <link rel="stylesheet" href="css/app-shell.css?v=20260714g">
+    <link rel="stylesheet" href="css/plaza-shared.css?v=20260714e">
+</head>
+<body class="app-shell-page">
+    <div class="app-container">
+        <div id="app-sidebar-mount" data-active="plaza"></div>
+        <div class="main-content">
+            <div class="page-header">
+                <div class="page-header-row">
+                    <div class="page-header-main">
+                        <h2>🏛️ 项目广场</h2>
+                        <div class="search-box">
+                            <input type="text" class="search-input" id="plaza-search" placeholder="搜索项目、作者…">
+                            <span class="search-icon">🔍</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-scroll">
+                <div class="info-banner">
+                    浏览社区分享的 SSVEP 项目，一键导入到本地编辑运行。每个账号对同一项目只能点赞一次。
+                    <strong>从广场导入的项目仅供本地使用，不可二次发布</strong>（知识产权保护）。
+                </div>
+
+                <div class="toolbar">
+                    <div class="view-toggle">
+                        <button class="view-btn active" data-sort="recent" onclick="plazaSetSort('recent', this)">🕐 最新发布</button>
+                        <button class="view-btn" data-sort="popular" onclick="plazaSetSort('popular', this)">🔥 最多点赞</button>
+                    </div>
+                    <div class="filter-group" id="plaza-tag-filters" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                        <button type="button" class="tag-filter-btn active" data-tag="" onclick="plazaSetTag('', this)">全部</button>
+                        <button type="button" class="tag-filter-btn" data-tag="keyboard" onclick="plazaSetTag('keyboard', this)">键盘</button>
+                        <button type="button" class="tag-filter-btn" data-tag="drone" onclick="plazaSetTag('drone', this)">无人机</button>
+                        <button type="button" class="tag-filter-btn" data-tag="multimodal" onclick="plazaSetTag('multimodal', this)">多模态</button>
+                        <button type="button" class="tag-filter-btn" data-tag="teaching" onclick="plazaSetTag('teaching', this)">教学</button>
+                    </div>
+                    <div class="filter-group">
+                        <span id="plaza-count">加载中…</span>
+                    </div>
+                </div>
+
+                <div class="projects-grid" id="plaza-grid"></div>
+
+                <div class="empty-state" id="plaza-empty" style="display:none;">
+                    <div class="empty-icon">🌌</div>
+                    <div class="empty-title">广场还没有项目</div>
+                    <div class="empty-text">在「项目管理」中点击「分享到广场」，成为第一个分享者。</div>
+                    <button class="btn btn-primary" onclick="window.location.href='project-manager.html'">去分享项目</button>
+                </div>
+
+                <div class="load-more-wrap" id="plaza-load-more-wrap" style="display:none;">
+                    <button class="btn btn-secondary" id="plaza-load-more" onclick="plazaLoadMore()">加载更多</button>
+                </div>
+
+                <div class="privacy-footer">
+                    <strong>隐私说明：</strong>脑电信号不会随广场浏览上传。您分享的项目 JSON 会存储在服务端。
+                    他人导入后仅可在本机运行，且标记为不可二次发布。举报功能用于社区治理。
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="plaza-detail-modal">
+        <div class="modal-content modal-wide">
+            <div class="modal-header" id="plaza-detail-title">项目详情</div>
+            <div id="plaza-detail-body"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closePlazaDetail()">关闭</button>
+                <button type="button" class="btn btn-secondary" id="plaza-detail-report-btn" onclick="plazaDetailReport()">🚩 举报</button>
+                <button type="button" class="btn btn-secondary" id="plaza-detail-like-btn" onclick="plazaDetailLike()">👍 点赞</button>
+                <button type="button" class="btn btn-primary" id="plaza-detail-import-btn" onclick="plazaDetailImport()">📥 导入到我的项目</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        var KEY = 'seekbci_api_origin';
+        function def() { return 'http://127.0.0.1:28765'; }
+        window.ssvepResolveApiOrigin = function () {
+            try {
+                var o = localStorage.getItem(KEY);
+                if (o && o.trim()) return o.trim().replace(/\/$/, '');
+                var loc = window.location;
+                if (loc.protocol === 'http:' || loc.protocol === 'https:') {
+                    var h = loc.hostname || '127.0.0.1';
+                    if (h === 'localhost' || h === '[::1]' || h === '::1') h = '127.0.0.1';
+                    if (loc.port) return loc.protocol + '//' + h + ':' + loc.port;
+                }
+            } catch (_) { /* ignore */ }
+            return def();
+        };
+    })();
+    </script>
+    <script src="js/app-sidebar.js?v=20260714g"></script>
+    <script src="js/plaza-client.js?v=20260609"></script>
+    <script src="plaza.js?v=20260609"></script>
+</body>
+</html>

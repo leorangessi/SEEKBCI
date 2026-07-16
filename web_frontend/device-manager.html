@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备管理 - SSVEP Platform</title>
+    <link rel="stylesheet" href="css/app-shell.css?v=20260714g">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: #fff;
+        }
+        
+        .device-container {
+            display: flex;
+            flex: 1;
+            height: 100%;
+            min-height: 0;
+        }
+        
+        /* 左侧设备列表 */
+        .device-sidebar {
+            width: 300px;
+            background: #1E1E1E;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .sidebar-title {
+            font-size: 18px;
+            color: #00D9FF;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .connection-tabs {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 8px;
+            background: #2A2A2A;
+            border: 1px solid #444;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            background: #333;
+        }
+        
+        .tab.active {
+            background: #00D9FF;
+            color: #000;
+            border-color: #00D9FF;
+        }
+        
+        .device-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .device-item {
+            background: #2A2A2A;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .device-item:hover {
+            border-color: #00D9FF;
+        }
+        
+        .device-item.connected {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+        
+        .device-name {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .device-info {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .device-status {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-online {
+            background: #4CAF50;
+        }
+        
+        .status-offline {
+            background: #666;
+        }
+        
+        /* 设备页主内容区 */
+        .device-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        
+        .content-header {
+            background: #1E1E1E;
+            padding: 20px 30px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 24px;
+            color: #00D9FF;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: #00D9FF;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #00B8D4;
+        }
+        
+        .btn-secondary {
+            background: #2A2A2A;
+            color: #fff;
+        }
+        
+        .btn-secondary:hover {
+            background: #333;
+        }
+        
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        
+        /* 连接表单 */
+        .connection-form {
+            max-width: 600px;
+            background: #1E1E1E;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            background: #2A2A2A;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #00D9FF;
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            background: #2A2A2A;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .info-box {
+            background: #2A2A2A;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #00D9FF;
+            margin-top: 20px;
+        }
+        
+        .info-title {
+            font-size: 14px;
+            color: #00D9FF;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .info-text {
+            font-size: 12px;
+            color: #aaa;
+            line-height: 1.6;
+        }
+        
+        /* 数据可视化 */
+        .data-visualization {
+            background: #1E1E1E;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            margin-top: 20px;
+        }
+        
+        .viz-title {
+            font-size: 16px;
+            color: #00D9FF;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .channel-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .channel-card {
+            background: #2A2A2A;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #444;
+        }
+        
+        .channel-card.active {
+            border-color: #4CAF50;
+        }
+        
+        .channel-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        
+        .channel-value {
+            font-size: 20px;
+            color: #00D9FF;
+            font-weight: bold;
+        }
+        
+        .signal-canvas {
+            width: 100%;
+            height: 320px;
+            background: #2A2A2A;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+        
+        /* 状态指示器 */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: #2A2A2A;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-connected {
+            background: #4CAF50;
+        }
+        
+        .status-disconnected {
+            background: #666;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .status-text {
+            flex: 1;
+        }
+        
+        .status-label {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .status-value {
+            font-size: 16px;
+            color: #00D9FF;
+            font-weight: bold;
+        }
+        
+        .backend-offline-banner {
+            margin: 0 24px 16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: rgba(244, 67, 54, 0.12);
+            border: 1px solid #f44336;
+            color: #ffcdd2;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .dm-modal-panel {
+            margin: 0 24px 20px;
+            padding: 20px 22px 18px;
+            border-radius: 14px;
+            border: 1px solid rgba(0, 217, 255, 0.22);
+            background: linear-gradient(145deg, rgba(18, 22, 38, 0.95) 0%, rgba(12, 14, 24, 0.98) 55%, rgba(20, 12, 32, 0.9) 100%);
+            box-shadow: 0 0 40px rgba(0, 217, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dm-modal-panel::before {
+            content: '';
+            position: absolute;
+            inset: -40% -20%;
+            background: conic-gradient(from 120deg, rgba(0, 217, 255, 0.12), rgba(201, 160, 255, 0.1), rgba(255, 179, 0, 0.08), transparent 55%);
+            animation: dm-aurora 14s linear infinite;
+            pointer-events: none;
+            opacity: 0.65;
+        }
+
+        @keyframes dm-aurora {
+            to { transform: rotate(360deg); }
+        }
+
+        .dm-modal-inner { position: relative; z-index: 1; }
+
+        .dm-modal-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .dm-modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #00d9ff, #c9a0ff 45%, #ffb300);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .dm-modal-sub {
+            font-size: 12px;
+            color: #8a8a9a;
+            line-height: 1.55;
+            max-width: 520px;
+        }
+
+        .dm-channel-matrix {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        @media (max-width: 1100px) {
+            .dm-channel-matrix { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .dm-ch-card {
+            --ch-accent: #00d9ff;
+            --ch-glow: rgba(0, 217, 255, 0.35);
+            position: relative;
+            padding: 12px 12px 10px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+
+        .dm-ch-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--ch-accent);
+            box-shadow: 0 0 22px var(--ch-glow);
+        }
+
+        .dm-ch-card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+
+        .dm-ch-num {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--ch-accent);
+            letter-spacing: 0.04em;
+        }
+
+        .dm-ch-live {
+            font-size: 11px;
+            color: #9aa0b0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .dm-ch-role-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--ch-accent);
+            margin-bottom: 8px;
+        }
+
+        .dm-ch-badge-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            color: var(--ch-accent);
+        }
+
+        .dm-ch-badge-icon .dm-role-svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .dm-ch-role-pills {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 6px;
+        }
+
+        .dm-role-svg {
+            width: 22px;
+            height: 22px;
+            display: block;
+            margin: 0 auto;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .dm-ch-pill {
+            min-width: 0;
+            padding: 7px 4px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #7a8494;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dm-ch-pill:hover {
+            border-color: var(--pill-color, #00d9ff);
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .dm-ch-pill.active {
+            border-color: var(--pill-color, #00d9ff);
+            background: color-mix(in srgb, var(--pill-color, #00d9ff) 28%, transparent);
+            color: #fff;
+            box-shadow: 0 0 14px color-mix(in srgb, var(--pill-color, #00d9ff) 45%, transparent);
+        }
+
+        .dm-ch-role-ssvep { --ch-accent: #00d9ff; }
+        .dm-ch-role-eog { --ch-accent: #c9a0ff; }
+        .dm-ch-role-motor_imagery { --ch-accent: #ffb300; }
+        .dm-ch-role-disabled { --ch-accent: #8a95a8; }
+
+        #dm-channel-matrix-summary {
+            margin-top: 14px;
+            font-size: 12px;
+            color: #7ec8e3;
+            line-height: 1.55;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: rgba(0, 217, 255, 0.06);
+            border: 1px solid rgba(0, 217, 255, 0.12);
+        }
+
+        .waveform-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 16px;
+            margin-bottom: 8px;
+        }
+
+        .waveform-auto-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 217, 255, 0.35);
+            background: rgba(0, 217, 255, 0.1);
+            color: #00d9ff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .waveform-auto-toggle input { accent-color: #00d9ff; }
+    </style>
+</head>
+<body class="app-shell-page">
+    <div class="app-container">
+        <div id="app-sidebar-mount" data-active="devices"></div>
+        <div class="main-content">
+    <div class="device-container">
+        <!-- 左侧设备列表 -->
+        <div class="device-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">🔌 设备连接</div>
+                <div class="connection-tabs">
+                    <div class="tab active" onclick="switchTab('lsl')">LSL</div>
+                    <div class="tab" onclick="switchTab('serial')">串口</div>
+                    <div class="tab" onclick="switchTab('brainflow')">BrainFlow</div>
+                    <div class="tab" onclick="switchTab('wifi')">WiFi</div>
+                </div>
+            </div>
+            
+            <div class="device-list" id="device-list">
+                <div class="info-text" style="text-align: center; padding: 20px; color: #666;">
+                    点击"扫描设备"查找可用设备
+                </div>
+            </div>
+        </div>
+        
+        <!-- 设备页主区域 -->
+        <div class="device-main">
+            <div class="content-header">
+                <div class="header-title">设备连接</div>
+            </div>
+            
+            <div id="backend-status-banner" class="backend-offline-banner" style="display: none;" role="status"></div>
+
+            <div class="dm-modal-panel">
+                <div class="dm-modal-inner">
+                    <div class="dm-modal-head">
+                        <div>
+                            <div class="dm-modal-title">多模态通道编排</div>
+                            <p class="dm-modal-sub">
+                                为每路指定模态（从左到右：双眼 SSVEP → 单眼 EOG → 拳头 MI → 取消）。
+                                仅 SSVEP 参与 FBCCA；1～7 路会块状复制为 8 路（2 路=各 4 份），并与真实 K 路融合解码。
+                            </p>
+                        </div>
+                    </div>
+                    <div id="dm-channel-matrix-root"></div>
+                    <div id="dm-channel-matrix-summary">加载中…</div>
+                </div>
+            </div>
+            
+            <div class="content-area">
+                <!-- LSL连接 -->
+                <div id="lsl-content" class="connection-content">
+                    <div class="connection-form">
+                        <h3 style="color: #00D9FF; margin-bottom: 20px;">📡 LSL (Lab Streaming Layer) 连接</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">流名称</label>
+                            <input type="text" class="form-input" id="lsl-stream-name" 
+                                   placeholder="请先扫描设备" value="">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">流类型</label>
+                            <select class="form-select" id="lsl-stream-type">
+                                <option value="EEG">EEG</option>
+                                <option value="EMG">EMG</option>
+                                <option value="ECG">ECG</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn" onclick="scanLSL()" style="width: 100%; margin-bottom: 10px;">
+                            🔍 扫描LSL设备
+                        </button>
+                        
+                        <button class="btn" onclick="connectLSL()" style="width: 100%;">
+                            🔗 连接设备
+                        </button>
+                        
+                        <div class="info-box">
+                            <div class="info-title">💡 LSL连接说明</div>
+                            <div class="info-text">
+                                • LSL是实验室数据流协议<br>
+                                • 支持网络自动发现<br>
+                                • 适合OpenBCI等设备<br>
+                                • 需要设备运行LSL服务
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 串口连接 -->
+                <div id="serial-content" class="connection-content" style="display: none;">
+                    <div class="connection-form">
+                        <h3 style="color: #00D9FF; margin-bottom: 20px;">🔌 串口连接 (推荐使用 BrainFlow)</h3>
+                        
+                        <div class="info-box" style="margin-bottom: 20px; border-left-color: #FF9800;">
+                            <div class="info-title" style="color: #FF9800;">⚠️ 重要提示</div>
+                            <div class="info-text">
+                                如果你使用 OpenBCI Cyton，建议使用 <strong>BrainFlow 标签</strong> 连接，<br>
+                                它会自动处理设备启动和数据流。
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">串口号</label>
+                            <select class="form-select" id="serial-port">
+                                <option value="">选择串口（需先扫描或见下方手动输入）</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">或手动输入端口</label>
+                            <input type="text" class="form-input" id="serial-port-manual"
+                                   placeholder="例如 Windows: COM3、COM10；Linux: /dev/ttyUSB0" value="">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">波特率</label>
+                            <select class="form-select" id="serial-baudrate">
+                                <option value="9600">9600</option>
+                                <option value="115200" selected>115200</option>
+                                <option value="230400">230400</option>
+                                <option value="460800">460800</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn" onclick="scanSerial()" style="width: 100%; margin-bottom: 10px;">
+                            🔍 扫描串口
+                        </button>
+                        
+                        <button class="btn" onclick="connectSerial()" style="width: 100%;">
+                            🔗 连接设备 (原始串口)
+                        </button>
+                        
+                        <div class="info-box">
+                            <div class="info-title">💡 串口连接说明</div>
+                            <div class="info-text">
+                                • 此方式为原始串口连接<br>
+                                • 需要手动处理设备协议<br>
+                                • <strong>推荐使用 BrainFlow 标签</strong><br>
+                                • BrainFlow 会自动启动设备
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- BrainFlow连接 -->
+                <div id="brainflow-content" class="connection-content" style="display: none;">
+                    <div class="connection-form">
+                        <h3 style="color: #00D9FF; margin-bottom: 20px;">🧠 BrainFlow连接 (推荐)</h3>
+                        
+                        <div class="info-box" style="margin-bottom: 20px; border-left-color: #4CAF50;">
+                            <div class="info-title" style="color: #4CAF50;">✅ 推荐使用</div>
+                            <div class="info-text">
+                                BrainFlow 会自动处理设备启动、数据流和协议，<br>
+                                无需手动发送命令，即插即用！
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">设备类型</label>
+                            <select class="form-select" id="brainflow-board">
+                                <option value="0">OpenBCI Cyton (8通道) - 推荐</option>
+                                <option value="2">OpenBCI Cyton+Daisy (16通道)</option>
+                                <option value="1">OpenBCI Ganglion (4通道)</option>
+                                <option value="-1">Synthetic Board (测试用)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">串口号</label>
+                            <select class="form-select" id="brainflow-port">
+                                <option value="">自动检测（需先扫描或见下方手动输入）</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">或手动输入端口</label>
+                            <input type="text" class="form-input" id="brainflow-port-manual"
+                                   placeholder="留空则自动检测；否则填 COM3 等" value="">
+                        </div>
+                        
+                        <button class="btn" onclick="scanSerial()" style="width: 100%; margin-bottom: 10px;">
+                            🔍 扫描串口
+                        </button>
+                        
+                        <button class="btn" onclick="connectBrainFlow()" style="width: 100%;">
+                            🔗 连接设备
+                        </button>
+                        
+                        <div class="info-box">
+                            <div class="info-title">💡 BrainFlow连接说明</div>
+                            <div class="info-text">
+                                • BrainFlow统一接口，支持多种设备<br>
+                                • <strong>自动发送启动命令</strong><br>
+                                • 自动配置采样率和通道数<br>
+                                • 自动启动数据流<br>
+                                • Synthetic Board可用于测试（无需硬件）
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- WiFi连接 -->
+                <div id="wifi-content" class="connection-content" style="display: none;">
+                    <div class="connection-form">
+                        <h3 style="color: #00D9FF; margin-bottom: 20px;">📶 WiFi连接</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">IP地址</label>
+                            <input type="text" class="form-input" id="wifi-ip" 
+                                   placeholder="例如: 192.168.4.1" value="192.168.4.1">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">端口</label>
+                            <input type="number" class="form-input" id="wifi-port" 
+                                   placeholder="例如: 12345" value="12345">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">协议</label>
+                            <select class="form-select" id="wifi-protocol">
+                                <option value="tcp">TCP</option>
+                                <option value="udp" selected>UDP</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn" onclick="testWiFi()" style="width: 100%; margin-bottom: 10px;">
+                            🧪 测试连接
+                        </button>
+                        
+                        <button class="btn" onclick="connectWiFi()" style="width: 100%;">
+                            🔗 连接设备
+                        </button>
+                        
+                        <div class="info-box">
+                            <div class="info-title">💡 WiFi连接说明</div>
+                            <div class="info-text">
+                                • 适用于WiFi Shield等设备<br>
+                                • 确保设备和电脑在同一网络<br>
+                                • 默认IP: 192.168.4.1<br>
+                                • 默认端口: 12345
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 数据可视化 -->
+                <div class="data-visualization" id="data-viz" style="display: none;">
+                    <div class="viz-title">📊 实时数据监控</div>
+                    
+                    <div class="status-indicator">
+                        <div class="status-dot status-connected" id="connection-dot"></div>
+                        <div class="status-text">
+                            <div class="status-label">连接状态</div>
+                            <div class="status-value" id="connection-status">已连接</div>
+                        </div>
+                        <div class="status-text">
+                            <div class="status-label">采样率</div>
+                            <div class="status-value" id="sampling-rate">250 Hz</div>
+                        </div>
+                        <div class="status-text">
+                            <div class="status-label">数据包</div>
+                            <div class="status-value" id="packet-count">0</div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="disconnectDevice()">
+                            断开连接
+                        </button>
+                    </div>
+                    
+                    <div class="viz-title" style="margin-top: 20px;">📡 通道状态</div>
+                    <div class="channel-grid" id="channel-grid">
+                        <!-- 动态生成通道卡片 -->
+                    </div>
+                    
+                    <div class="waveform-toolbar">
+                        <div class="viz-title" style="margin: 0;">📈 信号波形</div>
+                        <label class="waveform-auto-toggle" title="类似 OpenBCI GUI 时序控件 Auto：按当前窗自动缩放并居中">
+                            <input type="checkbox" id="waveform-auto-y" checked>
+                            Y 轴 Auto
+                        </label>
+                    </div>
+                    <canvas id="signal-canvas" class="signal-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+    
+    <script src="js/app-sidebar.js?v=20260714g"></script>
+    <script src="js/multimodal-channels.js?v=20260506a"></script>
+    <script src="js/global-device-manager.js?v=20260525c"></script>
+    <script src="js/device-channel-config.js?v=20260524n"></script>
+    <script src="js/connection-status-indicator.js?v=1.2"></script>
+    <script src="js/waveform-display.js?v=20260524b"></script>
+    <script src="device-manager.js?v=20260524b"></script>
+</body>
+</html>

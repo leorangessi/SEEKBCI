@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>运动通道 EMG 测试 - SSVEP Platform</title>
+    <link rel="stylesheet" href="css/experiment-test-nav.css?v=20260614">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0a0a0f; color: #e8e8e8; overflow: hidden; }
+        .layout { display: flex; height: 100vh; }
+        .sidebar { width: 300px; background: #141418; border-right: 1px solid #2a2a35; overflow-y: auto; flex-shrink: 0; }
+        .sidebar-header { padding: 16px 18px; border-bottom: 1px solid #2a2a35; }
+        .sidebar-header h1 { font-size: 17px; color: #ffb300; margin-bottom: 6px; }
+        .sidebar-header p { font-size: 11px; color: #888; line-height: 1.45; margin-bottom: 0; }
+        .section { padding: 14px 18px; border-bottom: 1px solid #2a2a35; }
+        .section h2 { font-size: 12px; color: #ffb300; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.04em; }
+        .form-group { margin-bottom: 10px; }
+        .form-label { display: block; font-size: 11px; color: #888; margin-bottom: 4px; }
+        .form-input, .form-select { width: 100%; padding: 7px 9px; background: #1e1e26; border: 1px solid #3a3a48; border-radius: 6px; color: #fff; font-size: 13px; }
+        .form-hint { font-size: 10px; color: #666; line-height: 1.45; margin-top: 4px; }
+        .form-hint strong { color: #999; font-weight: 600; }
+        .param-impact { font-size: 10px; color: #5a8ab8; line-height: 1.4; margin-top: 3px; }
+        .btn { width: 100%; padding: 9px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px; margin-bottom: 6px; }
+        .btn-secondary { background: #1e1e26; color: #ccc; border: 1px solid #3a3a48; }
+        .status-pill { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+        .status-ok { background: #1b3d2a; color: #4caf50; }
+        .status-bad { background: #3d1b1b; color: #ff5252; }
+        .status-wait { background: #3d351b; color: #ffc107; }
+        .map-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .toolbar { padding: 8px 14px; border-bottom: 1px solid #2a2a35; display: flex; align-items: center; gap: 14px; font-size: 12px; }
+        .toolbar a { color: #00d9ff; text-decoration: none; }
+        .toolbar a:hover { text-decoration: underline; }
+        .content { flex: 1; display: flex; min-height: 0; }
+        .plot-panel { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; min-width: 0; }
+        #motion-canvas { width: min(100%, 520px); height: min(calc(100vh - 120px), 520px); border-radius: 12px; background: #080810; border: 1px solid #2a2a40; }
+        .readout { margin-top: 10px; font-size: 12px; color: #888; text-align: center; line-height: 1.55; max-width: 520px; }
+        .readout strong { color: #ffb300; }
+        .channels-panel { width: 300px; flex-shrink: 0; border-left: 1px solid #2a2a35; overflow-y: auto; overflow-x: hidden; padding: 10px; background: #101014; display: flex; flex-direction: column; min-height: 0; }
+        .channels-panel h3 { font-size: 11px; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0; }
+        #emg-bars-canvas { display: block; width: 100%; height: auto; flex: none; border-radius: 8px; background: #0c0c12; border: 1px solid #2a2a35; image-rendering: pixelated; }
+        .bars-legend { font-size: 10px; color: #6a7280; line-height: 1.5; margin-top: 8px; flex-shrink: 0; }
+        .bars-legend h4 { font-size: 10px; color: #8a94a8; margin: 8px 0 4px; font-weight: 600; }
+        .bars-legend h4:first-child { margin-top: 0; }
+        .bars-legend ul { margin: 0 0 0 14px; padding: 0; }
+        .bars-legend li { margin-bottom: 3px; }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>运动通道测试</h1>
+                <p>输入经后端 OpenBCI 同款滤波（5–50 Hz + 50/60 Hz 陷波）。<strong>SSVEP 试次仍用原始 data，不受影响。</strong></p>
+                <div class="exp-test-nav">
+                    <a href="experiment.html">← 实验测试</a>
+                    <a href="index.html" class="nav-home">← 返回主页</a>
+                </div>
+            </div>
+            <div class="section">
+                <h2>连接</h2>
+                <div id="conn-status" class="status-pill status-bad">未连接</div>
+                <p class="form-hint" style="margin-top:8px;" id="conn-detail">请先在设备管理连接 EEG</p>
+            </div>
+            <div class="section">
+                <h2>左柱 · Norm（OpenBCI EmgSettings）</h2>
+                <p class="form-hint" style="margin-bottom:10px;">
+                    <strong>影响：</strong>左侧彩色柱高度、文本 <code>norm</code>、<code>avg|µV|</code>、综合「驱动」中的 norm 分量。<br>
+                    <strong>不影响：</strong>右侧橙柱、<code>峰/谷</code>、<code>bin</code> 达标段数。
+                </p>
+                <div class="form-group">
+                    <label class="form-label">滑动平均窗长（秒）</label>
+                    <input type="number" class="form-input" id="cfg-window" value="1.0" min="0.1" max="5" step="0.1">
+                    <p class="param-impact">→ 参与平均的 |µV| 样本时长；窗越长 norm 越平滑、反应越慢。</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">norm 驱动门限（0～1，柱内红虚线）</label>
+                    <input type="number" class="form-input" id="cfg-norm-gate" value="0.8" min="0" max="1" step="0.02">
+                    <p class="param-impact">→ norm 超过该值才计入「驱动」；与公式内上/下阈无关。</p>
+                </div>
+                <div class="form-group" style="margin-top:8px;">
+                    <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="checkbox" id="cfg-manual-thresholds" style="width:auto;">
+                        使用固定上/下阈（替代 OpenBCI 自适应）
+                    </label>
+                    <p class="form-hint">未勾选时行为与原先完全一致（自适应阈 + 可点下方重置）。勾选后 norm 按你填的 µV 上/下阈计算。</p>
+                </div>
+                <div id="manual-threshold-fields" style="display:none;">
+                    <div class="form-group">
+                        <label class="form-label">固定上阈（µV）</label>
+                        <input type="number" class="form-input" id="cfg-manual-upper" value="25" min="2" max="200" step="1">
+                        <p class="param-impact">→ 公式中的「上阈」；avg|µV| 接近该值时 norm→1。柱内上横线位置。</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">固定下阈（µV）</label>
+                        <input type="number" class="form-input" id="cfg-manual-lower" value="6" min="0" max="199" step="1">
+                        <p class="param-impact">→ 公式中的「下阈」；avg|µV| 接近该值时 norm→0。须小于上阈（至少相隔 10 µV）。</p>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary" id="btn-reset">重置 EMG 自适应上下阈</button>
+                <p class="form-hint">→ 仅<strong>未勾选固定阈</strong>时有效：恢复自适应初始值（上约 25 µV、下约 0 µV）。</p>
+            </div>
+            <div class="section">
+                <h2>右柱 · Bin 检测</h2>
+                <p class="form-hint" style="margin-bottom:10px;">
+                    <strong>影响：</strong>右侧橙柱高度、<code>峰/谷</code> 旁阈、<code>bin a/b需/c段</code>、是否显示「触发」、摇杆预览。<br>
+                    <strong>不影响：</strong>左侧 norm 柱高度与 <code>norm</code> 数值。
+                </p>
+                <div class="form-group">
+                    <label class="form-label">检测窗长（秒）</label>
+                    <input type="number" class="form-input" id="cfg-peak-window" value="0.6" min="0.2" max="5" step="0.1">
+                    <p class="param-impact">→ 统计最近多少秒内的 bin；越长可融合的段数越多（段数 = 窗长÷0.2）。</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">波峰/波谷阈（µV）</label>
+                    <input type="number" class="form-input" id="cfg-peak-threshold" value="50" min="10" max="500" step="5">
+                    <p class="param-impact">→ 每 0.2 s 段内 max/min 相对该阈判定是否「本段达标」；阈越高越难触发。</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">力度上限（µV）</label>
+                    <input type="number" class="form-input" id="cfg-peak-max" value="200" min="80" max="1000" step="10">
+                    <p class="param-impact">→ 单段幅值映射到橙柱 0～1 的上限；不改变达标段数，只改变柱高刻度。</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">达标 bin 比例（0.4 = 40%）</label>
+                    <input type="number" class="form-input" id="cfg-min-bins" value="0.4" min="0.2" max="1" step="0.1">
+                    <p class="param-impact">→ 检测窗内至少多少比例的 0.2 s 段达标才算「bin 触发」（见右侧 b「需」）。</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">持续时长（ms，预览）</label>
+                    <input type="number" class="form-input" id="cfg-hold-ms" value="600" min="50" max="3000" step="50">
+                    <p class="param-impact">→ 仅本页摇杆预览：驱动需维持多久；刺激运行另有「触发驱动门限」等配置。</p>
+                </div>
+                <div id="trigger-preview" class="status-pill status-wait">等待数据…</div>
+            </div>
+            <div class="section">
+                <h2>摇杆物理</h2>
+                <p class="form-hint" style="margin-bottom:8px;"><strong>影响：</strong>中间摇杆球的运动手感，不改变条形图读数。</p>
+                <div class="form-group"><label class="form-label">弹簧</label><input type="number" class="form-input" id="cfg-spring" value="10" min="1" max="50" step="1"></div>
+                <div class="form-group"><label class="form-label">阻尼</label><input type="number" class="form-input" id="cfg-damping" value="5" min="0.5" max="30" step="0.5"></div>
+                <div class="form-group"><label class="form-label">最大力</label><input type="number" class="form-input" id="cfg-max-force" value="1.2" min="0.2" max="3" step="0.1"></div>
+            </div>
+            <div class="section">
+                <h2>XY 映射</h2>
+                <p class="form-hint" style="margin-bottom:8px;"><strong>影响：</strong>哪路运动通道的「驱动」推摇杆 X+/X−/Y+/Y−。</p>
+                <div class="map-grid">
+                    <div class="form-group"><label class="form-label">X−</label><select class="form-select" id="map-x-neg"></select></div>
+                    <div class="form-group"><label class="form-label">X+</label><select class="form-select" id="map-x-pos"></select></div>
+                    <div class="form-group"><label class="form-label">Y+</label><select class="form-select" id="map-y-pos"></select></div>
+                    <div class="form-group"><label class="form-label">Y−</label><select class="form-select" id="map-y-neg"></select></div>
+                </div>
+            </div>
+            <div class="section">
+                <h2>📤 同步到项目</h2>
+                <p class="form-hint" style="margin-bottom:10px;">将当前 EMG/峰谷/摇杆参数保存到项目 <code>settings.experimentEmg</code>，供后续多模态编排参考。</p>
+                <div class="form-group">
+                    <label class="form-label">目标项目</label>
+                    <select class="form-select" id="exp-sync-project"></select>
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="saveEmgExperimentOnly()">💾 仅保存实验参数</button>
+                <button type="button" class="btn" onclick="syncEmgToProjectUi()" style="margin-top:6px;">⬇ 同步到项目</button>
+                <p id="exp-sync-hint" class="form-hint" style="margin-top:8px;color:#7ec8e3;"></p>
+            </div>
+        </aside>
+        <main class="main">
+            <div class="toolbar">
+                <a href="index.html" class="nav-home" style="color:#ffc107;font-weight:600;">← 返回主页</a>
+                <a href="experiment.html">← 实验测试</a>
+                <a href="device-manager.html">设备管理</a>
+                <a href="editor.html">编辑器</a>
+                <span id="sr-label">采样率 — Hz</span>
+            </div>
+            <div class="content">
+                <section class="plot-panel">
+                    <canvas id="motion-canvas" width="520" height="520"></canvas>
+                    <p class="readout">摇杆由映射通道的<strong>驱动</strong>推动；驱动 = max(norm 过门限后的值, bin 活动度)。</p>
+                </section>
+                <aside class="channels-panel">
+                    <h3>运动通道条形图</h3>
+                    <canvas id="emg-bars-canvas" width="280" height="120"></canvas>
+                    <div class="bars-legend">
+                        <h4>左柱（通道色，每路颜色不同）</h4>
+                        <ul>
+                            <li>柱高 = <strong>norm</strong>（0～1），OpenBCI EmgSettings 算法。</li>
+                            <li>计算：对滤波后 |µV| 做<strong>滑动平均</strong>得 avg|µV|，再映射<br>
+                                <code>norm = (avg|µV| − 下阈) / (上阈 − 下阈)</code>。</li>
+                            <li>默认<strong>上/下阈自适应</strong>（深色横线会动）；勾选「固定上/下阈」后改为手动 µV。</li>
+                            <li>深色横线 = 当前上/下阈；<strong>红虚线</strong> = norm 驱动门限。</li>
+                            <li>调 norm：滑动窗长、固定上/下阈（可选）、norm 驱动门限；自适应模式下可「重置」。</li>
+                        </ul>
+                        <h4>右柱（橙色）</h4>
+                        <ul>
+                            <li>柱高 = <strong>驱动</strong>（0～1），用于触发与摇杆；取 norm 分量与 bin 分量的较大值。</li>
+                            <li><strong>Bin 检测</strong>：检测窗按 0.2 s 切段；单段达标条件：<br>
+                                峰峰值 ≥ 2×阈，或（峰 &gt; 阈 且 谷 &lt; −阈）。</li>
+                            <li>文本 <code>峰/谷</code> = 最近 0.2 s 段的 max/min；<code>(±阈)</code> = 当前波峰/波谷阈。</li>
+                            <li><code>bin a/b需/c段</code>：a 段达标，b 段达标即触发，共 c 段（非必须 a=c）。</li>
+                            <li>调 bin：改<strong>检测窗长</strong>、<strong>波峰/波谷阈</strong>、<strong>达标比例</strong>、<strong>力度上限</strong>。</li>
+                        </ul>
+                    </div>
+                </aside>
+            </div>
+        </main>
+    </div>
+    <script src="js/experiment-config.js?v=20260612"></script>
+    <script src="js/device-channel-config.js?v=20260524n"></script>
+    <script src="js/global-device-manager.js?v=20260525d"></script>
+    <script src="js/connection-status-indicator.js?v=1.2"></script>
+    <script src="js/emg-processor.js?v=20260602a"></script>
+    <script src="js/emg-peak-trigger.js?v=20260601a"></script>
+    <script src="emg-test.js?v=20260612"></script>
+</body>
+</html>

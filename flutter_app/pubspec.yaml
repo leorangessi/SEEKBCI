@@ -1,0 +1,67 @@
+name: ssvep_platform
+description: SSVEP Platform - Cross-platform Brain-Computer Interface Development Tool
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # 状态管理
+  provider: ^6.1.0
+  
+  # 本地存储
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.0
+  
+  # 网络请求
+  dio: ^5.3.3
+  web_socket_channel: ^2.4.0
+  
+  # UI组件
+  fl_chart: ^0.64.0
+  flutter_colorpicker: ^1.0.3
+  file_picker: ^6.0.0
+  
+  # 工具
+  uuid: ^4.1.0
+  intl: ^0.18.1
+  logger: ^2.0.2
+  
+  # 分享
+  share_plus: ^7.2.0
+  
+  # 权限
+  permission_handler: ^11.0.1
+  
+  # JSON序列化
+  json_annotation: ^4.8.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  build_runner: ^2.4.6
+  hive_generator: ^2.0.1
+  json_serializable: ^6.7.1
+
+flutter:
+  uses-material-design: true
+  
+  # 资源文件
+  assets:
+    - assets/images/
+    - assets/fonts/
+    - assets/templates/
+  
+  # 字体
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+        - asset: assets/fonts/Roboto-Bold.ttf
+          weight: 700

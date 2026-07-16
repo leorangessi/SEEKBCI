@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>刺激预览 - SSVEP Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        /* 全屏刺激容器 */
+        #stimulus-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: #000;
+        }
+
+        /* 刺激方块 */
+        .stimulus-block {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+            user-select: none;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        
+        .stimulus-block:hover {
+            filter: brightness(1.2);
+        }
+        
+        .stimulus-block:active {
+            transform: scale(0.95);
+        }
+
+        .stimulus-block.stimulus-decode-top {
+            outline: 2px solid #ffb300;
+            outline-offset: 1px;
+            z-index: 2;
+            box-shadow: 0 0 10px rgba(255, 179, 0, 0.45);
+        }
+
+        .stimulus-block.stimulus-decode-triggered {
+            outline-color: #ffb300;
+            box-shadow: 0 0 14px rgba(255, 179, 0, 0.65);
+        }
+
+        .stimulus-block[data-decode-p]::after {
+            content: attr(data-decode-p);
+            position: absolute;
+            right: 4px;
+            bottom: 4px;
+            font-size: clamp(11px, 1.4vw, 16px);
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: 3px;
+            background: rgba(255, 179, 0, 0.92);
+            color: #1a1200;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .stimulus-keyboard-wrap {
+            padding: 6px 8px 8px;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            box-sizing: border-box;
+            background: transparent !important;
+        }
+
+        .stimulus-keyboard-wrap .ssvep-kb-row {
+            display: flex;
+            flex-direction: row;
+            gap: 22px;
+            margin-bottom: 22px;
+            flex: 1 1 0;
+            min-height: 0;
+        }
+
+        .stimulus-keyboard-wrap .ssvep-kb-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .stimulus-kb-key {
+            flex: 1 1 0;
+            min-width: 0;
+            min-height: 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            font-weight: bold;
+            color: #000;
+            cursor: pointer;
+            padding: 2px 4px;
+            box-sizing: border-box;
+        }
+
+        .stimulus-kb-key .stimulus-kb-label {
+            font-size: clamp(20px, 2.8vw, 36px);
+            line-height: 1.05;
+            pointer-events: none;
+        }
+
+        .stimulus-kb-key.ssvep-kb-wide .stimulus-kb-label {
+            font-size: clamp(16px, 2.2vw, 28px);
+        }
+
+        .stimulus-kb-key.stimulus-kb-key-top {
+            outline: 2px solid #ffb300;
+            outline-offset: 1px;
+            z-index: 2;
+            box-shadow: 0 0 10px rgba(255, 179, 0, 0.45);
+        }
+
+        .stimulus-kb-key.stimulus-kb-key-triggered {
+            outline-color: #ffb300;
+            box-shadow: 0 0 14px rgba(255, 179, 0, 0.65);
+        }
+
+        .stimulus-kb-key[data-decode-p]::after {
+            content: attr(data-decode-p);
+            position: absolute;
+            right: 3px;
+            bottom: 2px;
+            font-size: clamp(10px, 1.2vw, 14px);
+            font-weight: 700;
+            padding: 1px 4px;
+            border-radius: 3px;
+            background: rgba(255, 179, 0, 0.92);
+            color: #1a1200;
+            pointer-events: none;
+        }
+        
+        /* 控制面板 */
+        .control-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-x: hidden;
+            overflow-y: auto;
+            background: rgba(30, 30, 30, 0.95);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            min-width: 280px;
+            max-width: min(360px, calc(100vw - 40px));
+            z-index: 10000;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .panel-exit-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        .panel-exit-actions .btn-panel-exit {
+            flex: 1 1 auto;
+            min-width: 72px;
+            padding: 5px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 0;
+            border-radius: 5px;
+        }
+
+        .panel-exit-actions .btn-panel-exit.btn-danger-exit {
+            background: #c62828;
+            color: #fff;
+        }
+        
+        .control-panel.hidden {
+            display: none;
+        }
+        
+        .control-panel.minimized {
+            display: none;
+        }
+        
+        /* 浮动控制按钮 */
+        .floating-control-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 217, 255, 0.9);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: move;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0, 217, 255, 0.4);
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+            font-size: 24px;
+            user-select: none;
+        }
+        
+        .floating-control-btn:hover {
+            background: rgba(0, 217, 255, 1);
+            box-shadow: 0 6px 20px rgba(0, 217, 255, 0.6);
+        }
+        
+        .floating-control-btn:active {
+            cursor: grabbing;
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            color: #00D9FF;
+            margin-bottom: 15px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .minimize-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .minimize-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #00D9FF;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        .control-value {
+            font-size: 14px;
+            color: #00D9FF;
+            font-weight: bold;
+        }
+
+        .motion-bars-group {
+            flex-direction: column;
+            align-items: stretch;
+            margin-bottom: 12px;
+            padding: 8px 8px 6px;
+            border-radius: 10px;
+            background: linear-gradient(145deg, rgba(0, 217, 255, 0.06), rgba(20, 20, 28, 0.5));
+            border: 1px solid rgba(0, 217, 255, 0.18);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+
+        .motion-bars-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .motion-bars-header .control-label {
+            margin-bottom: 0;
+            color: #b8c0cc;
+            font-size: 11px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .motion-bars-header-pills {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            min-width: 0;
+        }
+
+        .motion-stream-pill {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #9aa3b2;
+            background: rgba(0, 0, 0, 0.25);
+            white-space: nowrap;
+        }
+
+        .motion-stream-pill--live {
+            color: #7ee8ff;
+            border-color: rgba(0, 217, 255, 0.35);
+            background: rgba(0, 217, 255, 0.1);
+        }
+
+        .motion-stream-pill--hit {
+            color: #ffe0a8;
+            border-color: rgba(255, 160, 60, 0.45);
+            background: rgba(255, 140, 0, 0.15);
+        }
+
+        .motion-stream-pill--wait {
+            color: #888;
+        }
+
+        .motion-bars-card {
+            margin-left: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(8, 10, 14, 0.65);
+        }
+
+        #motion-bars-canvas {
+            display: block;
+            width: 100%;
+            min-height: 56px;
+        }
+
+        .motion-bars-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
+            font-size: 10px;
+            color: #6d7685;
+        }
+
+        .motion-bars-legend .leg {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .motion-bars-legend .leg::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        .motion-bars-legend .leg-norm::before {
+            background: rgba(59, 130, 246, 0.85);
+        }
+
+        .motion-bars-legend .leg-drive::before {
+            background: rgba(255, 160, 60, 0.9);
+        }
+
+        .motion-bars-legend .leg-thr::before {
+            background: transparent;
+            border-bottom: 2px dashed rgba(255, 90, 90, 0.9);
+            height: 0;
+            width: 14px;
+        }
+
+        .motion-bars-foot {
+            font-size: 10px;
+            color: #8a939f;
+            line-height: 1.55;
+            margin-top: 6px;
+            font-family: Consolas, 'Segoe UI', monospace;
+            white-space: pre-line;
+        }
+
+        .eeg-decode-history {
+            margin-top: 8px;
+            max-height: 360px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #bbb;
+        }
+
+        .eeg-decode-history .eeg-history-empty {
+            color: #888;
+            font-size: 13px;
+            font-style: italic;
+        }
+
+        .eeg-history-item {
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 6px;
+            border-left: 3px solid #444;
+        }
+
+        .eeg-history-item.eeg-history-top {
+            border-left-color: #ffb300;
+        }
+
+        .eeg-history-item.eeg-history-triggered {
+            border-left-color: #4caf50;
+        }
+
+        .eeg-history-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .eeg-history-name {
+            color: #f0f0f0;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .eeg-history-row .eeg-history-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .eeg-history-tag {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #aaa;
+            white-space: nowrap;
+        }
+
+        .eeg-history-tag.triggered {
+            background: rgba(76, 175, 80, 0.25);
+            color: #81c784;
+        }
+
+        .python-history-item.ok {
+            border-left: 3px solid #4caf50;
+        }
+
+        .python-history-item.fail {
+            border-left: 3px solid #ef5350;
+        }
+
+        .python-history-code {
+            font-family: Consolas, monospace;
+            font-size: 10px;
+            color: #aaa;
+            margin-top: 4px;
+            word-break: break-all;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background: #00D9FF;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #00B8D4;
+        }
+        
+        .btn-danger {
+            background: #FF5252;
+            color: #fff;
+        }
+        
+        .btn-danger:hover {
+            background: #FF1744;
+        }
+        
+        .btn-secondary {
+            background: #2A2A2A;
+            color: #fff;
+        }
+        
+        .btn-secondary:hover {
+            background: #333;
+        }
+        
+        .btn-small {
+            padding: 8px;
+            font-size: 13px;
+        }
+        
+        /* 滑块样式 */
+        .slider-container {
+            margin-bottom: 15px;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #2A2A2A;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #00D9FF;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            background: #00B8D4;
+            transform: scale(1.2);
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #00D9FF;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .slider::-moz-range-thumb:hover {
+            background: #00B8D4;
+            transform: scale(1.2);
+        }
+        
+        .divider {
+            height: 1px;
+            background: #333;
+            margin: 15px 0;
+        }
+        
+        /* 帧率显示 */
+        .fps-display {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(30, 30, 30, 0.95);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .fps-display.hidden {
+            display: none;
+        }
+        
+        .fps-value {
+            font-size: 32px;
+            color: #00D9FF;
+            font-weight: bold;
+        }
+        
+        .fps-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        /* 提示信息 */
+        .hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 30, 30, 0.95);
+            padding: 15px 30px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+        
+        .hint.hidden {
+            display: none;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        #hint-shell-extra {
+            display: none;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 13px;
+            color: #aaa;
+            line-height: 1.55;
+            text-align: left;
+        }
+
+        #hint-dismiss {
+            display: none;
+            margin-top: 12px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #00D9FF;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        #hint-dismiss:hover {
+            background: #00B8D4;
+        }
+        
+        /* 加载动画 */
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 2000;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #333;
+            border-top-color: #00D9FF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 倒计时 */
+        .countdown {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 120px;
+            color: #00D9FF;
+            font-weight: bold;
+            z-index: 2000;
+            text-shadow: 0 0 30px rgba(0, 217, 255, 0.5);
+            animation: pulse 1s ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 加载提示 -->
+    <div id="loading" class="loading">
+        <div class="loading-spinner"></div>
+        <div style="color: #00D9FF;">正在加载项目...</div>
+    </div>
+    
+    <!-- 刺激容器 -->
+    <div id="stimulus-container"></div>
+    
+    <!-- 帧率显示 -->
+    <div id="fps-display" class="fps-display hidden">
+        <div class="fps-value" id="fps-value">60</div>
+        <div class="fps-label">FPS</div>
+    </div>
+    
+    <!-- 浮动控制按钮 -->
+    <div id="floating-control-btn" class="floating-control-btn">
+        🎮
+    </div>
+    
+    <!-- 控制面板 -->
+    <div id="control-panel" class="control-panel hidden">
+        <div class="panel-title">
+            <span>🎮 刺激控制</span>
+            <button class="minimize-btn" onclick="toggleControlPanel()" title="最小化">−</button>
+        </div>
+
+        <div class="panel-exit-actions">
+            <button type="button" class="btn btn-secondary btn-panel-exit" onclick="backToEditor()">← 编辑器</button>
+            <button type="button" class="btn btn-secondary btn-panel-exit" onclick="closeStimulus()">关闭</button>
+            <button type="button" class="btn btn-secondary btn-panel-exit" onclick="toggleFullscreen()">全屏</button>
+            <button type="button" class="btn btn-danger btn-panel-exit btn-danger-exit" id="panel-stop-btn" onclick="panelExitStopOrStart()">停止</button>
+        </div>
+        
+        <div class="control-group">
+            <span class="control-label">状态</span>
+            <span class="control-value" id="status-text">准备就绪</span>
+        </div>
+        
+        <div class="control-group">
+            <span class="control-label">运行时间</span>
+            <span class="control-value" id="time-text">00:00</span>
+        </div>
+        
+        <div class="control-group">
+            <span class="control-label">方块数量</span>
+            <span class="control-value" id="block-count">0</span>
+        </div>
+
+        <div class="control-group motion-bars-group" id="motion-bars-wrap" style="display: none;">
+            <div class="motion-bars-header">
+                <span class="control-label">运动通道</span>
+                <div class="motion-bars-header-pills">
+                    <span id="motion-trigger-pill" class="motion-stream-pill motion-stream-pill--wait">等待检测</span>
+                    <span id="motion-stream-pill" class="motion-stream-pill motion-stream-pill--wait">等待设备</span>
+                </div>
+            </div>
+            <div class="motion-bars-card">
+                <canvas id="motion-bars-canvas" width="300" height="80"></canvas>
+            </div>
+            <div class="motion-bars-legend" style="flex-direction:column;align-items:flex-start;gap:4px;line-height:1.45;">
+                <span><strong>左柱</strong>（通道色）= norm；<strong>右柱</strong>（橙）= 驱动/bin。norm 与 bin 参数在编辑器运动通道属性中分别配置。</span>
+            </div>
+            <div id="motion-drive-status" class="motion-bars-foot">等待滤波数据…</div>
+        </div>
+
+        <div class="control-group" id="eeg-status-wrap" style="display: none;">
+            <span class="control-label">EEG 在线识别</span>
+            <div id="eeg-decode-status" style="font-size: 11px; color: #888; line-height: 1.45; min-height: 2.8em;"></div>
+            <div class="control-group" id="stimulus-speak-wrap" style="margin-top: 8px; padding: 0;">
+                <label style="display: flex; align-items: flex-start; gap: 6px; font-size: 11px; color: #ccc; line-height: 1.4; cursor: pointer;">
+                    <input type="checkbox" id="stimulus-speak-on-decode" onchange="setStimulusSpeakOnDecode(this.checked)" style="margin-top: 2px;">
+                    <span>识别触发后语音播报（对象标签 / 键盘字符）</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="control-group" id="stimulus-debug-toggle-wrap">
+            <button type="button" class="btn btn-secondary btn-small" id="stimulus-debug-toggle-btn" onclick="toggleStimulusDebugPanel()">
+                🐛 Debug：关
+            </button>
+        </div>
+
+        <div class="control-group" id="stimulus-debug-panel" style="display: none;">
+            <span class="control-label">Debug · 识别历史</span>
+            <div id="eeg-decode-history" class="eeg-decode-history">
+                <div class="eeg-history-empty">暂无记录</div>
+            </div>
+            <span class="control-label" style="margin-top: 10px;">Debug · Python 调度（简版）</span>
+            <div id="python-action-history" class="eeg-decode-history">
+                <div class="eeg-history-empty">暂无记录</div>
+            </div>
+        </div>
+        
+        <div class="control-group" style="flex-direction: column; align-items: stretch;">
+            <button type="button" class="btn btn-secondary btn-small" id="stimulus-system-option-btn" onclick="toggleStimulusSystemOption()">
+                启用系统选项（键鼠）
+            </button>
+            <p id="stimulus-system-option-hint" style="font-size: 11px; color: #888; margin-top: 8px; line-height: 1.35;">
+                与编辑器「启动系统选项」相同：开启后「键盘快捷键」「鼠标双击」等动作才会由本机后端注入（pynput）。
+            </p>
+        </div>
+        
+        <button class="btn" id="start-btn" onclick="startStimulus()">
+            ▶️ 开始视觉刺激
+        </button>
+        
+        <button class="btn btn-danger hidden" id="stop-btn" onclick="stopStimulus()">
+            ⏹️ 停止视觉刺激
+        </button>
+        
+        <div class="divider"></div>
+        
+        <button class="btn btn-secondary btn-small" id="always-on-top-btn" onclick="toggleAlwaysOnTop()">
+            ✓ 置于顶层
+        </button>
+        
+        <div class="slider-container">
+            <div class="control-label">背景透明度</div>
+            <input type="range" min="0" max="100" value="100" class="slider" 
+                   id="opacity-slider" oninput="updateOpacity(this.value)">
+            <div style="text-align: center; margin-top: 5px;">
+                <span class="control-value" id="opacity-value">100%</span>
+            </div>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <button class="btn btn-secondary btn-small" onclick="toggleFPS()">
+            📊 显示/隐藏FPS
+        </button>
+        
+        <div class="divider"></div>
+
+        <div class="control-group" id="electron-window-actions" style="display: none;">
+            <span class="control-label">桌面窗口（无顶栏，避免挡下层点击）</span>
+            <button type="button" class="btn btn-secondary btn-small" onclick="window.ssvepElectron?.windowMinimize?.()">
+                最小化窗口
+            </button>
+            <button type="button" class="btn btn-secondary btn-small" onclick="window.ssvepElectron?.windowToggleMaximize?.()">
+                最大化 / 还原
+            </button>
+        </div>
+        
+    </div>
+    
+    <!-- 提示信息 -->
+    <div id="hint" class="hint">
+        <div style="font-size: 18px; margin-bottom: 5px;">按 <strong>H</strong> 键显示/隐藏控制面板</div>
+        <div style="font-size: 14px; color: #888;">按 <strong>F</strong> 键切换全屏（内容区全屏）</div>
+        <div id="hint-shell-extra">
+            <strong>桌面窗口：</strong>刺激页<strong>无顶栏</strong>，避免挡住下层；按 <strong>H</strong> 打开控制面板，内有「最小化 / 最大化 / 关闭窗口」。<br>
+            <strong>退出：</strong>控制面板「关闭运行」；刺激运行中可按 <strong>Esc</strong> 停止。<br>
+            <strong>置顶与鼠标：</strong>窗口置顶；透明区<strong>穿透</strong>到下层；<strong>本提示、🎮 与控制面板</strong>可点。「鼠标双击」动作点到下层对应位置。
+        </div>
+        <button type="button" id="hint-dismiss">知道了</button>
+    </div>
+    
+    <script src="js/device-channel-config.js?v=20260524n"></script>
+    <script src="js/global-device-manager.js?v=20260524c"></script>
+    <script src="js/connection-status-indicator.js?v=20260503f"></script>
+    <script src="js/emg-processor.js?v=20260602a"></script>
+    <script src="js/emg-peak-trigger.js?v=20260601a"></script>
+    <script src="js/emg-drive.js?v=20260602a"></script>
+    <script src="js/emg-motion-runtime.js?v=20260531i"></script>
+    <script src="js/emg-motion-bars.js?v=20260602a"></script>
+    <script src="js/multimodal-channels.js?v=20260522b"></script>
+    <script src="js/multimodal-detector.js?v=20260531i"></script>
+    <script src="keyboard-binding.js?v=20260503f"></script>
+    <script src="js/ssvep-keyboard-40.js?v=20260522a"></script>
+    <script src="js/stimulus-run-config.js?v=20260529d"></script>
+    <script src="stimulus.js?v=20260602b"></script>
+</body>
+</html>

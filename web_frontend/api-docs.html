@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 文档 - SEEKBCI PLAT</title>
+    <link rel="stylesheet" href="css/app-shell.css?v=20260714g">
+    <link rel="stylesheet" href="css/plaza-shared.css?v=20260612">
+    <style>
+        .doc { padding:20px 0 44px; }
+        .hero,.section { background:#1E1E1E; border:1px solid #333; border-radius:14px; padding:22px; margin-bottom:16px; }
+        .hero { background:linear-gradient(135deg,rgba(0,217,255,.14),rgba(124,77,255,.1)); border-color:rgba(0,217,255,.25); }
+        h3 { color:#00D9FF; margin-bottom:12px; } h4 { color:#e9f8ff; margin:14px 0 8px; }
+        p,li,td { color:#bdc7cf; line-height:1.75; } ul,ol { margin-left:20px; }
+        .tag { display:inline-block; padding:5px 10px; border-radius:999px; background:rgba(0,217,255,.1); border:1px solid rgba(0,217,255,.22); color:#a8efff; font-size:12px; margin:4px 6px 4px 0; }
+        .code { background:#101418; border:1px solid #2c3942; border-radius:10px; color:#d8edf7; padding:14px; overflow:auto; white-space:pre; font:13px/1.55 Consolas,Monaco,'Courier New',monospace; margin:10px 0; }
+        table { width:100%; border-collapse:collapse; margin:10px 0; } th,td { border:1px solid #303842; padding:10px 12px; text-align:left; vertical-align:top; } th { background:#202a32; color:#e3f8ff; } td { background:#151a1f; }
+    </style>
+</head>
+<body class="app-shell-page">
+    <div class="app-container">
+        <div id="app-sidebar-mount" data-active="home"></div>
+        <div class="main-content">
+            <div class="page-header"><h2>API 文档</h2></div>
+            <div class="page-scroll"><div class="doc">
+                <div class="hero">
+                    <h3>物理世界控制 API</h3>
+                    <p>SEEKBCI PLAT 通过统一 API 控制 SEEKPHY BLE 设备、物联网平台设备和运动设备。工程编辑器只绑定统一设备与动作，底层由 BLE / 物联网平台 / MQTT / WebSocket 等适配器执行。</p>
+                    <span class="tag">SEEKPHY BLE</span><span class="tag">ULID deviceId</span><span class="tag">陀螺仪小车</span><span class="tag">物联网平台接入</span>
+                </div>
+                <div class="section">
+                    <h3>1. SEEKPHY BLE 协议协商</h3>
+                    <ol><li>设备广播 SEEKPHY Control Service UUID，广播名建议 <code>SEEKPHY-xxxx</code>。</li><li>平台连接后读取 Device Info，获得 <code>apiVersion</code>、<code>deviceUid</code>、<code>deviceType</code>、<code>capabilities</code>、<code>safety</code>。</li><li>平台检查版本兼容，生成 <code>dev_ + ULID</code> 作为平台内 deviceId。</li><li>用户设置 name、alias、room、riskLevel 后注册。</li><li>平台写 Command，设备通过 State / Result Notify 回报。</li></ol>
+                    <div class="code">Service:   7f510001-1b15-4a0b-9f7f-8f54f8d7a001
+Info:      7f510002-1b15-4a0b-9f7f-8f54f8d7a001  Read
+State:     7f510003-1b15-4a0b-9f7f-8f54f8d7a001  Read / Notify
+Command:   7f510004-1b15-4a0b-9f7f-8f54f8d7a001  Write
+Result:    7f510005-1b15-4a0b-9f7f-8f54f8d7a001  Notify
+Heartbeat: 7f510006-1b15-4a0b-9f7f-8f54f8d7a001  Write / Notify
+Safety:    7f510007-1b15-4a0b-9f7f-8f54f8d7a001  Read / Write</div>
+                </div>
+                <div class="section">
+                    <h3>2. Device Info</h3>
+                    <div class="code">{
+  "apiVersion": "1.0",
+  "deviceUid": "seekphy_84F703123456",
+  "name": "SEEKPHY ESP32 Demo",
+  "manufacturer": "SEEKBCI",
+  "model": "esp32-wroom-ble-v1",
+  "firmwareVersion": "1.0.0",
+  "deviceType": "switch",
+  "category": "iot",
+  "capabilities": [
+    { "id": "power", "type": "switch", "actions": ["turn_on", "turn_off", "toggle"], "stateKey": "power" }
+  ],
+  "safety": { "riskLevel": "low", "emergencyStopSupported": false, "commandTimeoutMs": 3000 }
+}</div>
+                </div>
+                <div class="section">
+                    <h3>3. 用户可调用 API</h3>
+                    <table><tr><th>接口</th><th>用途</th></tr><tr><td>GET /api/physical-world/devices</td><td>获取已注册外部设备</td></tr><tr><td>POST /api/physical-world/discovery/ble/start</td><td>扫描 SEEKPHY BLE 设备</td></tr><tr><td>POST /api/physical-world/discovered-devices/{discoveryId}/register</td><td>注册扫描到的设备</td></tr><tr><td>POST /api/physical-world/iot-platforms</td><td>添加物联网平台接入</td></tr><tr><td>POST /api/physical-world/iot-platforms/{platformId}/scan</td><td>扫描平台实体/设备</td></tr><tr><td>POST /api/physical-world/control-bindings</td><td>创建控制绑定，如陀螺仪→小车</td></tr><tr><td>POST /api/physical-world/commands</td><td>发送统一控制命令</td></tr><tr><td>POST /api/physical-world/emergency-stop</td><td>急停</td></tr></table>
+                </div>
+                <div class="section">
+                    <h3>4. Command / State / Result</h3>
+                    <div class="code">Command:
+{ "commandId": "cmd_001", "action": "toggle", "capability": "power", "params": {}, "timeoutMs": 3000 }
+
+State:
+{ "online": true, "power": "on", "uptimeMs": 12345 }
+
+Result:
+{ "commandId": "cmd_001", "status": "success", "message": "power toggled", "state": { "power": "on" } }</div>
+                </div>
+                <div class="section">
+                    <h3>5. 陀螺仪小车控制</h3>
+                    <div class="code">POST /api/physical-world/control-bindings
+{
+  "name": "陀螺仪控制低速小车",
+  "input": { "modality": "imu", "axes": {
+    "pitch": { "mapsTo": "linearX", "deadzoneDeg": 5, "maxAngleDeg": 25, "outputMin": -0.25, "outputMax": 0.25 },
+    "roll":  { "mapsTo": "angularZ", "deadzoneDeg": 5, "maxAngleDeg": 25, "outputMin": -0.7, "outputMax": 0.7 }
+  }},
+  "target": { "deviceId": "dev_xxx", "capability": "cmd_vel" },
+  "gating": { "enableBy": { "modality": "emg", "gesture": "bite_toggle" }, "emergencyStopBy": { "modality": "eog", "gesture": "blink" } }
+}</div>
+                </div>
+                <div class="section">
+                    <h3>6. 物联网平台接入</h3>
+                    <p>Home Assistant、机智云、涂鸦、MQTT 网关等统一称为物联网平台接入。</p>
+                    <div class="code">POST /api/physical-world/iot-platforms
+{ "name": "家庭 Home Assistant", "platformType": "home_assistant", "connection": { "baseUrl": "http://homeassistant.local:8123", "token": "********" } }</div>
+                </div>
+            </div></div>
+        </div>
+    </div>
+    <script src="js/app-sidebar.js?v=20260714g"></script>
+</body>
+</html>

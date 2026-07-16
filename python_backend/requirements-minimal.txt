@@ -1,0 +1,24 @@
+# 最小依赖 - 用于快速启动
+# 适用于 Python 3.9+
+
+# Web框架（必需）
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# 数据验证（必需）
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# 科学计算（必需）
+numpy==1.26.2
+
+# 设备连接（必需）
+pylsl==1.16.2
+pyserial==3.5
+
+# WebSocket（必需）
+websockets==12.0
+
+# 工具（可选）
+python-dotenv==1.0.0

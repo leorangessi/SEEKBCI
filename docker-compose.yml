@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # PostgreSQL数据库
+  postgres:
+    image: postgres:14-alpine
+    container_name: ssvep_postgres
+    environment:
+      POSTGRES_DB: ssvep_platform
+      POSTGRES_USER: ssvep_user
+      POSTGRES_PASSWORD: ssvep_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ssvep_network
+    restart: unless-stopped
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: ssvep_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ssvep_network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # MinIO对象存储
+  minio:
+    image: minio/minio:latest
+    container_name: ssvep_minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - ssvep_network
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+
+  # Python后端
+  backend:
+    build:
+      context: ./python_backend
+      dockerfile: Dockerfile
+    container_name: ssvep_backend
+    environment:
+      DATABASE_URL: postgresql://ssvep_user:ssvep_password@postgres:5432/ssvep_platform
+      REDIS_URL: redis://redis:6379/0
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      SECRET_KEY: your-secret-key-change-in-production
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./python_backend:/app
+      - backend_logs:/app/logs
+    networks:
+      - ssvep_network
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Nginx反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: ssvep_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    networks:
+      - ssvep_network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  backend_logs:
+
+networks:
+  ssvep_network:
+    driver: bridge

@@ -1,0 +1,32 @@
+/* 实验测试子页：侧栏顶栏导航（与运动通道测试一致） */
+.exp-test-nav {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+.exp-test-nav a,
+.exp-test-nav button {
+    flex: 1;
+    min-width: 118px;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid #3a3a48;
+    background: #1e1e26;
+    color: #00d9ff;
+    text-decoration: none;
+    cursor: pointer;
+    text-align: center;
+    line-height: 1.3;
+}
+.exp-test-nav a:hover,
+.exp-test-nav button:hover {
+    border-color: #00d9ff;
+    background: rgba(0, 217, 255, 0.08);
+}
+.exp-test-nav .nav-home {
+    color: #ffc107;
+    border-color: #5a4a20;
+}

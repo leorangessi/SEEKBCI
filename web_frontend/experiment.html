@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实验测试 - SEEKBCI PLAT</title>
+    <link rel="stylesheet" href="css/app-shell.css?v=20260714g">
+    <link rel="stylesheet" href="css/plaza-shared.css?v=20260611">
+    <style>
+        .testing-hub {
+            padding: 20px 0 40px;
+            text-align: center;
+        }
+        .testing-hub-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        .testing-hub-desc {
+            color: #888;
+            margin-bottom: 28px;
+            max-width: 640px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.65;
+        }
+        .testing-hub-actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        .testing-hub-actions .btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            width: auto;
+        }
+        .testing-hub-panel {
+            background: #1E1E1E;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: left;
+            border: 1px solid #333;
+        }
+        .testing-hub-panel h4 {
+            color: #00D9FF;
+            margin-bottom: 15px;
+        }
+        .testing-hub-panel ul {
+            line-height: 2;
+        }
+        .testing-hub-panel .list-muted { color: #aaa; }
+        .testing-hub-panel .list-dim { color: #888; }
+        .testing-hub-panel h4.section-gap { margin: 20px 0 15px; }
+        .testing-hub-panel a { color: #00D9FF; }
+    </style>
+</head>
+<body class="app-shell-page">
+    <div class="app-container">
+        <div id="app-sidebar-mount" data-active="testing"></div>
+        <div class="main-content">
+            <div class="page-header">
+                <h2>🧪 实验测试</h2>
+            </div>
+            <div class="page-scroll">
+                <div class="testing-hub">
+                    <div class="testing-hub-icon">🧪</div>
+                    <p class="testing-hub-desc">
+                        在此尝试刺激参数、识别准确度、运动通道与 IMU / 光标设置。
+                        <strong style="color:#ccc;">找到较合适的参数后，请写入项目的运行配置</strong>，再在正式刺激中使用。
+                    </p>
+
+                    <div class="testing-hub-actions">
+                        <button type="button" class="btn btn-primary" onclick="window.location.href='test-stimulus.html'">
+                            🧪 刺激参数测试
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="window.location.href='ssvep-test.html'">
+                            📊 准确度测试
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="window.location.href='emg-test.html'">
+                            💪 运动通道测试
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="window.location.href='imu-test.html'">
+                            🧭 IMU / 光标测试
+                        </button>
+                    </div>
+
+                    <div class="testing-hub-panel">
+                        <h4>✅ 已实现功能</h4>
+                        <ul class="list-muted">
+                            <li>✅ 实时刺激渲染（60fps）</li>
+                            <li>✅ 精确频率控制（1-30 Hz）</li>
+                            <li>✅ 相位调整（0-2π）</li>
+                            <li>✅ 波形实时预览</li>
+                            <li>✅ FPS性能监控</li>
+                            <li>✅ 全屏模式</li>
+                            <li>✅ 三种形状支持</li>
+                            <li>✅ 参数实时调整</li>
+                            <li>✅ SSVEP准确度测试</li>
+                            <li>✅ 混淆矩阵分析</li>
+                            <li>✅ 频率识别率图表</li>
+                            <li>✅ 测试报告导出</li>
+                        </ul>
+
+                        <h4 class="section-gap">💡 与项目运行的关系</h4>
+                        <ul class="list-dim">
+                            <li><strong>识别速度测试</strong> → 同步到项目 <code>runConfig</code>（窗长、轮询、置信度阈值）</li>
+                            <li><strong>刺激参数测试</strong> → 同步闪烁占空比、透明度等到 <code>runConfig</code></li>
+                            <li><strong>运动通道测试</strong> → 同步 EMG/峰谷参数到 <code>settings.experimentEmg</code></li>
+                            <li><strong>IMU / 光标测试</strong> → 校验 seekbci_imu_v1 映射（二维光标 / 三维地球）</li>
+                            <li>实验页参数与编辑器「运行配置」应保持一致</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app-sidebar.js?v=20260714g"></script>
+</body>
+</html>

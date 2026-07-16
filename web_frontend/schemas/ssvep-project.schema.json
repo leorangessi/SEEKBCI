@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://seekbci.local/schemas/ssvep-project.schema.json",
+  "title": "SEEKBCI SSVEP Project",
+  "description": "SEEKBCI 平台项目 JSON 契约（contractVersion 1）",
+  "type": "object",
+  "required": ["contractVersion", "name", "pages"],
+  "additionalProperties": true,
+  "properties": {
+    "contractVersion": { "type": "integer", "const": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "description": { "type": "string", "maxLength": 2000 },
+    "author": { "type": "string", "maxLength": 50 },
+    "version": { "type": "string", "maxLength": 20 },
+    "thumbnail": { "type": "string" },
+    "thumbnailImage": { "type": "string" },
+    "thumbnailSource": { "type": "string", "enum": ["custom", "canvas"] },
+    "thumbnailOriginalImage": { "type": "string" },
+    "thumbnailDisplayMode": { "type": "string", "enum": ["fit", "stretch", "cover", "crop"] },
+    "thumbnailEditMode": { "type": "string", "enum": ["fit", "stretch", "crop"] },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" },
+    "importOnlyNoRepublish": { "type": "boolean" },
+    "importedFromPlaza": { "type": "boolean" },
+    "settings": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "pythonGlobalCode": { "type": "string" },
+        "pythonImports": { "type": "array", "items": { "type": "string" } },
+        "autoAssignFreqPhaseOnSave": { "type": "boolean" }
+      }
+    },
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["blocks"],
+        "additionalProperties": true,
+        "properties": {
+          "id": {},
+          "name": { "type": "string" },
+          "blocks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "id": {},
+                "label": { "type": "string" },
+                "frequency": { "type": "number", "minimum": 0.5, "maximum": 60 },
+                "phase": { "type": "number" },
+                "shape": { "type": "string" },
+                "actions": { "type": "array" }
+              }
+            }
+          },
+          "multimodalBlocks": { "type": "array" },
+          "editorRefImage": { "type": "string" },
+          "editorRefImageMode": { "type": "string", "enum": ["fit", "stretch", "tile"] }
+        }
+      }
+    }
+  }
+}

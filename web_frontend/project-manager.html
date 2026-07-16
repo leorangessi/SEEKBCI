@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目管理 - SSVEP Platform</title>
+    <link rel="stylesheet" href="css/app-shell.css?v=20260714g">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: #fff;
+        }
+        
+        .container {
+            max-width: none;
+            margin: 0;
+        }
+        
+        /* 页头操作区（侧栏负责全局导航） */
+        .search-box {
+            position: relative;
+        }
+        
+        .search-input {
+            padding: 10px 40px 10px 15px;
+            border: 2px solid #444;
+            border-radius: 25px;
+            width: 300px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: #2A2A2A;
+            color: #fff;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #00D9FF;
+            box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+        
+        .header-right {
+            display: flex;
+            gap: 15px;
+        }
+
+        .page-header-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: #00D9FF;
+            color: #000;
+        }
+        
+        .btn-primary:hover {
+            background: #00B8D4;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 217, 255, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #2A2A2A;
+            color: #fff;
+            border: 2px solid #444;
+        }
+        
+        .btn-secondary:hover {
+            background: #333;
+            border-color: #00D9FF;
+        }
+        
+        /* 工具栏 */
+        .toolbar {
+            background: #1E1E1E;
+            padding: 15px 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #333;
+        }
+        
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .view-btn {
+            padding: 8px 16px;
+            border: 2px solid #444;
+            background: #2A2A2A;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #fff;
+        }
+        
+        .view-btn.active {
+            background: #00D9FF;
+            color: #000;
+            border-color: #00D9FF;
+        }
+        
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            color: #aaa;
+        }
+        
+        .filter-select {
+            padding: 8px 15px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            background: #2A2A2A;
+            color: #fff;
+        }
+        
+        /* 项目网格 */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .project-card {
+            background: #1E1E1E;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 1px solid #333;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.2);
+            border-color: #00D9FF;
+        }
+        
+        .project-thumbnail {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            height: auto;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            overflow: hidden;
+        }
+
+        .project-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            display: block;
+            background: #1a1a1a;
+        }
+
+        .project-list-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .pm-thumbnail-preview-box {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            height: auto;
+            background: #1a1a1a;
+            border-radius: 8px;
+            border: 1px solid #444;
+            margin-bottom: 10px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .pm-thumbnail-preview-box:hover {
+            border-color: #00d9ff;
+        }
+
+        .pm-thumbnail-preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            display: block;
+            pointer-events: none;
+        }
+
+        .pm-thumbnail-preview-box .pm-thumb-hint {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 6px 8px;
+            background: rgba(0,0,0,.55);
+            color: #ccc;
+            font-size: 11px;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .pm-thumbnail-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .pm-thumbnail-actions .btn {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .project-info {
+            padding: 20px;
+        }
+        
+        .project-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+        
+        .project-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 15px;
+        }
+        
+        .project-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 15px;
+        }
+        
+        .project-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .action-btn-run {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .action-btn-run:hover {
+            background: #45a049;
+        }
+        
+        .action-btn-edit {
+            background: #00D9FF;
+            color: #000;
+        }
+        
+        .action-btn-edit:hover {
+            background: #00B8D4;
+        }
+        
+        .action-btn-delete {
+            background: #f44336;
+            color: white;
+        }
+        
+        .action-btn-delete:hover {
+            background: #d32f2f;
+        }
+        
+        .action-btn-export {
+            background: #FF9800;
+            color: white;
+        }
+        
+        .action-btn-export:hover {
+            background: #F57C00;
+        }
+        
+        /* 项目列表视图 */
+        .projects-list {
+            display: none;
+        }
+        
+        .projects-list.active {
+            display: block;
+        }
+        
+        .project-list-item {
+            background: #1E1E1E;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+            border: 1px solid #333;
+        }
+        
+        .project-list-item:hover {
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.2);
+            border-color: #00D9FF;
+        }
+        
+        .project-list-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+            cursor: pointer;
+        }
+        
+        .project-list-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00D9FF 0%, #0099CC 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+        
+        .project-list-details {
+            flex: 1;
+        }
+        
+        .project-list-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+        
+        .project-list-meta {
+            font-size: 13px;
+            color: #888;
+        }
+        
+        .project-list-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: #1E1E1E;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid #333;
+        }
+        
+        .empty-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        
+        .empty-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        
+        .empty-text {
+            font-size: 16px;
+            color: #888;
+            margin-bottom: 30px;
+        }
+        
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+
+        .modal.modal-nested {
+            z-index: 1100;
+        }
+
+        .rc-help {
+            font-size: 12px;
+            color: #9a9a9a;
+            line-height: 1.55;
+            margin-top: 8px;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.28);
+            border-radius: 8px;
+            border-left: 3px solid #00d9ff;
+        }
+        .rc-help strong {
+            color: #c8c8c8;
+            font-weight: 600;
+        }
+
+        .run-mode-btn.active {
+            background: #00D9FF !important;
+            color: #000 !important;
+            border-color: #00D9FF !important;
+            box-shadow: 0 0 0 2px rgba(0, 217, 255, 0.25);
+        }
+        
+        .modal-content {
+            background: #1E1E1E;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid #333;
+        }
+        
+        .modal-header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #00D9FF;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #aaa;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #2A2A2A;
+            color: #fff;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #00D9FF;
+        }
+        
+        .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 100px;
+            background: #2A2A2A;
+            color: #fff;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .version-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(0, 217, 255, 0.2);
+            color: #00D9FF;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="app-shell-page">
+    <div class="app-container">
+        <div id="app-sidebar-mount" data-active="projects"></div>
+        <div class="main-content">
+            <div class="page-header">
+                <div class="page-header-row">
+                    <div class="page-header-main">
+                        <h2>📁 项目管理</h2>
+                        <div class="search-box">
+                            <input type="text" class="search-input" id="search-input" placeholder="搜索项目...">
+                            <span class="search-icon">🔍</span>
+                        </div>
+                    </div>
+                    <div class="page-header-actions">
+                        <button class="btn btn-primary" onclick="window.location.href='editor.html?mode=new'">
+                            ➕ 创建新项目
+                        </button>
+                        <button class="btn btn-secondary" onclick="importSampleProjectsManually()">
+                            🐍 导入示例
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="page-scroll">
+        
+        <!-- 工具栏 -->
+        <div class="toolbar">
+            <div class="view-toggle">
+                <button class="view-btn active" onclick="switchView('grid')">
+                    🔲 网格视图
+                </button>
+                <button class="view-btn" onclick="switchView('list')">
+                    📋 列表视图
+                </button>
+            </div>
+            <div class="filter-group">
+                <span>排序：</span>
+                <select class="filter-select" id="sort-select" onchange="sortProjects()">
+                    <option value="updated">最近修改</option>
+                    <option value="created">创建时间</option>
+                    <option value="name">名称</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- 项目网格视图 -->
+        <div class="projects-grid" id="projects-grid">
+            <!-- 动态生成 -->
+        </div>
+        
+        <!-- 项目列表视图 -->
+        <div class="projects-list" id="projects-list">
+            <!-- 动态生成 -->
+        </div>
+        
+        <!-- 空状态 -->
+        <div class="empty-state" id="empty-state" style="display: none;">
+            <div class="empty-icon">📦</div>
+            <div class="empty-title">还没有项目</div>
+            <div class="empty-text">创建你的第一个 SSVEP 项目，或点击页头「🐍 导入示例」加载内置 Python 演示。</div>
+            <button class="btn btn-primary" onclick="window.location.href='editor.html?mode=new'">
+                ➕ 创建新项目
+            </button>
+        </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 创建/编辑项目模态框 -->
+    <div class="modal" id="project-modal">
+        <div class="modal-content">
+            <div class="modal-header" id="modal-title">创建新项目</div>
+            <form id="project-form">
+                <input type="hidden" id="project-id">
+                
+                <div class="form-group">
+                    <label class="form-label">项目名称 *</label>
+                    <input type="text" class="form-input" id="project-name" required placeholder="输入项目名称">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">项目描述</label>
+                    <textarea class="form-textarea" id="project-description" placeholder="描述你的项目..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">作者</label>
+                    <input type="text" class="form-input" id="project-author" placeholder="作者名称">
+                </div>
+
+                <div class="form-group" id="pm-thumbnail-section">
+                    <label class="form-label">项目图标</label>
+                    <div id="pm-thumbnail-preview-box" class="pm-thumbnail-preview-box" title="点击编辑图标">
+                        <img id="pm-thumbnail-preview-img" alt="" style="display:none;">
+                        <div id="pm-thumbnail-placeholder" style="color:#666;font-size:13px;padding:12px;text-align:center;line-height:1.5;">
+                            默认使用第 1 页画布预览<br><span style="color:#888;font-size:11px;">点击此处编辑 / 上传</span>
+                        </div>
+                        <div class="pm-thumb-hint">点击图片编辑显示方式</div>
+                    </div>
+                    <p style="font-size:11px;color:#888;line-height:1.45;margin:0;">
+                        预览尺寸与网格视图图标一致。点击图标可上传、完整显示、拉伸铺满、框选区域，或还原为第 1 页画布预览。
+                    </p>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 运行刺激：主对话框（公共项 + 分模式设置） -->
+    <div class="modal" id="run-config-modal">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">运行项目</div>
+            <p style="color: #aaa; font-size: 13px; line-height: 1.5; margin-bottom: 16px;">
+                将跳转到刺激页。启用 EEG 时请先<strong>设备管理</strong>连接设备；同一画布内各对象闪烁频率须<strong>至少相差 0.2 Hz</strong>（支持小数，在编辑器中填写）。
+            </p>
+            <div class="rc-help" style="margin-bottom: 14px;">
+                <strong>Softmax 概率</strong>：把 FBCCA 对各闪烁频率的得分转成一组 0～1、总和为 1 的数，可理解为「当前脑电更像哪一个频率」的相对置信度。下面的阈值都是在调这个概率是否够高、是否明显领先第二名。
+            </div>
+            <div class="form-group">
+                <label class="form-label">
+                    <input type="checkbox" id="rc-eeg-enabled" checked onchange="syncRunConfigEegUi()">
+                    启用 EEG 在线识别并自动触发对象动作
+                </label>
+            </div>
+            <div class="form-group" id="rc-shared-params">
+                <label class="form-label">解码窗长（秒）</label>
+                <input type="number" class="form-input" id="rc-window" value="2.0" min="0.3" max="5" step="0.1">
+                <div class="rc-help">
+                    此项<strong>主要影响置信度模式</strong>：每次在线 FBCCA 分析使用的脑电窗长（默认 <strong>2 s</strong>，可在 0.3～5 s 调整；越短响应越快，但准确率往往下降）。<br>
+                    <strong>定时模式</strong>：仅当「识别间隔 − 0.5 s」≤ 4.5 s 时使用本值；间隔更长时程序会<strong>固定用 4 s</strong> 分析窗（与准确度试次一致），此时修改此处无效。<br>
+                    置信度模式的实际触发速度还受「触发后冷却」、softmax 阈值、可选「连续两次同一频率」等影响，不只由窗长决定。
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">触发后冷却（秒，防抖）</label>
+                <input type="number" class="form-input" id="rc-cooldown" value="1.5" min="0.3" max="10" step="0.1">
+                <div class="rc-help">
+                    一次识别触发动作后，在此时间内不再触发，避免同一注视产生连续多次跳转或按键。
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">多模态确认/取消等待（秒）</label>
+                <input type="number" class="form-input" id="rc-ssvep-mm-wait" value="1.0" min="0.2" max="10" step="0.1">
+                <div class="rc-help">
+                    当本页有多模态通道勾选<strong>确认 SSVEP</strong>或<strong>取消 SSVEP</strong>时，SSVEP 识别到目标后进入该等待窗：确认模式须在此时间内触发确认；取消模式须在此时间内触发取消，否则自动执行 SSVEP 动作。
+                </div>
+            </div>
+            <div class="form-group" id="rc-speak-wrap">
+                <label style="display: block; color: #ccc;">
+                    <input type="checkbox" id="rc-speak-on-decode">
+                    识别触发后语音播报（SSVEP 目标 / 多模态确认·取消·触发）
+                </label>
+                <div class="rc-help" style="margin-top: 8px;">
+                    使用浏览器语音合成；字母单键用英文发音，中文标签用中文。含 SSVEP 待确认提示与多模态门控结果。需系统已安装 TTS 语音包。
+                </div>
+            </div>
+            <div class="rc-help" style="margin-bottom: 12px;">
+                FBCCA 参与通道请在 <a href="device-manager.html" style="color:#00D9FF;">设备管理</a> 页统一配置（测试刺激与运行项目共用）。
+            </div>
+            <div class="form-group">
+                <label class="form-label">运行呈现（与 EEG / 解码无关）</label>
+                <label style="display: block; margin: 8px 0; color: #ccc;">
+                    <input type="checkbox" id="rc-transparent-bg">
+                    透明背景（去掉页面黑底，便于与其他窗口叠加；浏览器内有效）
+                </label>
+                <label style="display: block; margin: 8px 0; color: #ccc;">
+                    <input type="checkbox" id="rc-start-fullscreen">
+                    进入刺激页后尝试全屏（若被浏览器拦截，可在刺激页按 F）
+                </label>
+                <label style="display: block; margin: 8px 0; color: #ccc;">
+                    <input type="checkbox" id="rc-flicker-high-blank"
+                           onchange="document.getElementById('rc-flicker-duty-wrap').style.display=this.checked?'block':'none'">
+                    高空白闪烁（方波）：拉长暗段、缩短亮段，便于看到方块后方内容（与透明背景叠加时更明显）
+                </label>
+                <div id="rc-flicker-duty-wrap" style="display: none; margin: 8px 0 0 0; padding-left: 4px;">
+                    <label class="form-label" style="margin-bottom: 6px;">亮段占每个闪烁周期的比例（%）</label>
+                    <input type="number" class="form-input" id="rc-flicker-on-duty" value="32" min="15" max="50" step="1"
+                           title="数值越小空白越多；过小可能影响 SSVEP 体感与解码，建议 28～40">
+                    <div class="rc-help" style="margin-top: 8px;">
+                        默认正弦闪烁约一半时间偏亮。方波模式下<strong>仅该比例时间为全白</strong>，其余时间为全黑；基频不变，但频谱含谐波，<strong>若开 EEG 在线识别请自行对比效果</strong>。
+                    </div>
+                </div>
+                <div style="margin-top: 12px;">
+                    <label class="form-label" style="margin-bottom: 6px;">闪烁对象不透明度（%）</label>
+                    <input type="number" class="form-input" id="rc-flicker-block-opacity" value="58" min="20" max="100" step="1"
+                           title="数值越低越能看到下层图像；建议 45～70">
+                    <div class="rc-help" style="margin-top: 8px;">
+                        降低后方块会半透明叠加到下方图像/窗口上，减少遮挡；如果识别变差，可适当调高。
+                    </div>
+                </div>
+                <div class="rc-help">
+                    <strong>系统级置顶、无边框窗口</strong>需后续 Electron/Tauri 桌面壳；EEG 仍按文档约定启动本机 Python API。
+                </div>
+            </div>
+            <div id="rc-eeg-mode-actions" style="display: none;">
+                <p style="color: #888; font-size: 12px; margin-bottom: 10px;">请选择识别模式并配置对应参数：</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <button type="button" class="btn btn-secondary run-mode-btn" id="btn-rc-mode-threshold" onclick="openRunThresholdParamModal()">置信度模式</button>
+                    <button type="button" class="btn btn-secondary run-mode-btn" id="btn-rc-mode-interval" onclick="openRunIntervalParamModal()">定时模式</button>
+                </div>
+            </div>
+            <div id="rc-eeg-footer-hint" style="display: none; color: #666; font-size: 12px; margin-top: 12px;">
+                可先进入某个模式设置参数，点「返回」回到这里；点「打开刺激页面」会使用当前高亮模式。
+            </div>
+            <div class="modal-actions" style="margin-top: 16px;">
+                <button type="button" class="btn btn-secondary" onclick="closeRunConfigModal()">取消</button>
+                <button type="button" class="btn btn-primary" onclick="confirmRunStimulusSelectedMode()">打开刺激页面</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 置信度模式专属参数 -->
+    <div class="modal modal-nested" id="run-config-modal-threshold">
+        <div class="modal-content" style="max-width: 440px;">
+            <div class="modal-header">置信度模式 — 参数</div>
+            <p style="color: #aaa; font-size: 13px; line-height: 1.5; margin-bottom: 14px;">
+                当某一频率的 softmax 概率足够高，且明显高于第二候选时触发（适合持续注视单目标）。
+            </p>
+            <div class="rc-help" style="margin-bottom: 14px;">
+                本模式使用主对话框中的「解码窗长」做 FBCCA（置信度模式默认 2 s，可改短以加快响应）。另受「触发后冷却」与可选「连续两次同一频率」影响实际触发速度。
+            </div>
+            <div class="form-group">
+                <label class="form-label">最低 softmax 概率（0～1）</label>
+                <input type="number" class="form-input" id="rc-th-minp" value="0.28" min="0.03" max="0.99" step="0.01">
+                <div class="rc-help">
+                    第一名概率必须达到该值才考虑触发。误触多 → 略调高；很难触发 → 略调低。默认偏宽松，便于先跑通流程。
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Top1 与 Top2 概率最小差值</label>
+                <input type="number" class="form-input" id="rc-th-minm" value="0.08" min="0.02" max="0.5" step="0.02">
+                <div class="rc-help">
+                    要求「最像的频率」比第二名高出至少这么多（概率相减）。两个候选差不多时不会触发。模糊、易误判 → 调大；总达不到 → 调小。
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">
+                    <input type="checkbox" id="rc-th-stable">
+                    连续两次解码均为同一频率后再触发（防抖动）
+                </label>
+                <div class="rc-help">
+                    开启后，相邻两次在线解码的 softmax <strong>第一名频率</strong>均须通过上方置信度条件，且两次频率在约 <strong>±0.12 Hz</strong> 内一致，才执行对象动作；第一次仅记录，第二次才触发。关闭则与原来一样，单次过阈值即触发。
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeRunThresholdParamModal()">返回</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 定时模式专属参数 -->
+    <div class="modal modal-nested" id="run-config-modal-interval">
+        <div class="modal-content" style="max-width: 440px;">
+            <div class="modal-header">定时模式 — 参数</div>
+            <p style="color: #aaa; font-size: 13px; line-height: 1.5; margin-bottom: 14px;">
+                每隔固定时间取当前窗内最高概率频率；可设最低概率门槛，低于则不触发。
+            </p>
+            <div class="rc-help" style="margin-bottom: 14px;">
+                程序用「<strong>识别间隔 − 0.5 s</strong>」与 <strong>4.5 s</strong> 比较：若<strong>大于</strong> 4.5 s，则每次解码<strong>固定取 4 s</strong> 脑电（对齐 <code style="color:#888;">9_cca_withoutvideo.py</code> 末 4 s）；否则使用主对话框中的<strong>解码窗长</strong>。本页的「识别间隔」即公式里的间隔。
+            </div>
+            <div class="form-group">
+                <label class="form-label">识别间隔（秒）</label>
+                <input type="number" class="form-input" id="rc-iv-interval" value="3" min="0.5" max="60" step="0.5">
+                <div class="rc-help">
+                    两次自动解码之间的最短间隔；并参与解码窗判定（见上方）。例如间隔 5 s → 5−0.5=4.5，不大于 4.5，则用主界面窗长；间隔 6 s → 5.5>4.5，则用固定 4 s 窗。
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">最低 softmax 概率（低于则不触发）</label>
+                <input type="number" class="form-input" id="rc-iv-minp" value="0.22" min="0.03" max="0.99" step="0.01">
+                <div class="rc-help">
+                    到点时若「第一名」概率仍低于该值，则本周期<strong>不触发任何对象</strong>，减少信噪差时的乱判。定时模式通常可比置信度模式略低一些。
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeRunIntervalParamModal()">返回</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/app-sidebar.js?v=20260714g"></script>
+    <script src="js/global-device-manager.js?v=20260503f"></script>
+    <script src="js/connection-status-indicator.js?v=20260503f"></script>
+    <script src="keyboard-binding.js?v=20260503f"></script>
+    <script src="js/ssvep-keyboard-40.js?v=20260521a"></script>
+    <script src="js/multimodal-channels.js?v=20260522b"></script>
+    <script src="js/project-thumbnail.js?v=20260714f"></script>
+    <script src="js/image-display-editor.js?v=20260714f"></script>
+    <script src="js/stimulus-run-config.js?v=20260529d"></script>
+    <script src="js/sample-projects.js?v=20260604a"></script>
+    <script src="js/plaza-client.js?v=20260714e"></script>
+    <script src="js/project-contract.js?v=20260605"></script>
+    <script src="project-manager.js?v=20260714f"></script>
+</body>
+</html>

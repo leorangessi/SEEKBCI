@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSVEP测试 - SSVEP Platform</title>
+    <link rel="stylesheet" href="css/experiment-test-nav.css?v=20260614">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        .test-container {
+            display: flex;
+            height: 100vh;
+            min-height: 0;
+        }
+        
+        /* 左侧控制面板 */
+        .control-panel {
+            width: 350px;
+            background: #1E1E1E;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+            background: #252525;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        
+        .panel-title {
+            font-size: 20px;
+            color: #00D9FF;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .panel-subtitle {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .panel-section {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            color: #00D9FF;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px;
+            background: #2A2A2A;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #00D9FF;
+        }
+
+        .form-hint {
+            font-size: 11px;
+            color: #888;
+            line-height: 1.45;
+            margin-top: 6px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #00D9FF;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            background: #00B8D4;
+        }
+        
+        .btn:disabled {
+            background: #444;
+            color: #666;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #2A2A2A;
+            color: #fff;
+            border: 2px solid #444;
+            border-radius: 25px;
+        }
+        
+        .btn-secondary:hover {
+            background: #333;
+            border-color: #00D9FF;
+        }
+        
+        .btn-danger {
+            background: #F44336;
+            color: #fff;
+        }
+        
+        .btn-danger:hover {
+            background: #D32F2F;
+        }
+        
+        .status-card {
+            background: #2A2A2A;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        
+        .status-label {
+            color: #888;
+        }
+        
+        .status-value {
+            color: #00D9FF;
+            font-weight: bold;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #2A2A2A;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00D9FF, #00B8D4);
+            transition: width 0.3s;
+        }
+        
+        /* 主测试区域 */
+        .test-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .test-header {
+            background: #1E1E1E;
+            padding: 20px 30px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .test-title {
+            font-size: 24px;
+            color: #00D9FF;
+        }
+        
+        .test-status {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #666;
+        }
+        
+        .status-dot.active {
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .test-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        /* 刺激显示区域 */
+        .stimulus-display {
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+        
+        .stimulus-display.active {
+            display: flex;
+        }
+        
+        #test-canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        /* 提示信息 */
+        .instruction-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 12px;
+            border: 2px solid #00D9FF;
+        }
+        
+        .instruction-title {
+            font-size: 32px;
+            color: #00D9FF;
+            margin-bottom: 20px;
+        }
+        
+        .instruction-text {
+            font-size: 18px;
+            color: #aaa;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+        
+        .countdown {
+            font-size: 64px;
+            color: #00D9FF;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        /* 倒计时条：不遮挡画布，提示阶段即可看到静态 8 方块布局 */
+        .countdown-overlay-bar {
+            position: absolute;
+            top: 64px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: auto;
+            max-width: min(560px, 92vw);
+            z-index: 15;
+            background: rgba(0, 0, 0, 0.82);
+            padding: 14px 28px;
+            border-radius: 12px;
+            border: 2px solid #00D9FF;
+            pointer-events: none;
+        }
+
+        .countdown-overlay-bar .instruction-title {
+            font-size: 17px;
+            margin-bottom: 6px;
+        }
+
+        .countdown-overlay-bar .countdown {
+            font-size: 44px;
+            margin: 6px 0;
+        }
+
+        .countdown-overlay-bar .instruction-text {
+            font-size: 15px;
+            margin-bottom: 0;
+        }
+        
+        .target-indicator {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 217, 255, 0.2);
+            padding: 15px 30px;
+            border-radius: 8px;
+            border: 2px solid #00D9FF;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 5;
+        }
+        
+        /* 结果显示 */
+        .results-view {
+            display: none;
+            padding: 40px;
+            overflow-y: auto;
+        }
+        
+        .results-view.active {
+            display: block;
+        }
+        
+        .result-card {
+            background: #1E1E1E;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            margin-bottom: 20px;
+        }
+        
+        .result-title {
+            font-size: 20px;
+            color: #00D9FF;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .accuracy-display {
+            text-align: center;
+            padding: 40px;
+            background: #2A2A2A;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .accuracy-value {
+            font-size: 72px;
+            color: #4CAF50;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .accuracy-label {
+            font-size: 18px;
+            color: #888;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #2A2A2A;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            color: #00D9FF;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .confusion-matrix {
+            background: #2A2A2A;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .matrix-table th,
+        .matrix-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #444;
+        }
+        
+        .matrix-table th {
+            background: #333;
+            color: #00D9FF;
+            font-weight: bold;
+        }
+        
+        .matrix-table td {
+            background: #2A2A2A;
+            color: #fff;
+        }
+        
+        .matrix-table td.correct {
+            background: rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        .matrix-table td.incorrect {
+            background: rgba(244, 67, 54, 0.3);
+            color: #F44336;
+        }
+        
+        .frequency-chart {
+            background: #2A2A2A;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .chart-canvas {
+            width: 100%;
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <!-- 左侧控制面板 -->
+        <div class="control-panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">📊 SSVEP 准确度 / 速度测试</div>
+                    <div class="panel-subtitle">实验测试 · 准确度与识别速度</div>
+                    <div class="exp-test-nav">
+                        <a href="experiment.html">← 实验测试</a>
+                        <a href="index.html" class="nav-home">← 返回主页</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <div class="section-title">📋 测试配置</div>
+                
+                <div class="form-group">
+                    <label class="form-label">测试模式</label>
+                    <select class="form-select" id="test-mode" onchange="onTestModeChange()">
+                        <option value="accuracy">准确度测试</option>
+                        <option value="speed">识别速度测试</option>
+                        <option value="quality">信号质量分析</option>
+                        <option value="full">完整测试</option>
+                    </select>
+                </div>
+
+                <div id="accuracy-config-panel">
+                <div class="form-group">
+                    <label class="form-label">每个目标时长（秒）</label>
+                    <input type="number" class="form-input" id="trial-duration" value="5" min="3" max="10">
+                    <p class="form-hint">
+                        后端对每段试次做 FBCCA：取整段中<strong>末尾至多 4 秒</strong>并重采样为 1000 点。试次
+                        不足 4 秒（如 3 秒）时，会按<strong>实际片段时长</strong>对齐正弦参考（等效
+                        <code style="color:#9ce;">analysis_fs</code>），与固定 4×250 Hz 混用不同，避免短试次上准确率异常。
+                    </p>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">提示时长（秒）</label>
+                    <input type="number" class="form-input" id="cue-duration" value="1" min="1" max="8">
+                </div>
+                </div>
+
+                <div id="speed-config-panel" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">触发规则</label>
+                        <select class="form-select" id="speed-trigger-rule" onchange="onSpeedTriggerRuleChange()">
+                            <option value="prob_margin">Top1 概率 + Top1−Top2 差值</option>
+                            <option value="prob_only">仅 Top1 Softmax 概率</option>
+                        </select>
+                        <p class="form-hint">与刺激项目「置信度模式」相同：在线滑动窗 decode_window + Softmax 阈值。</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Top1 最低概率</label>
+                        <input type="number" class="form-input" id="speed-min-prob" value="0.28" min="0.05" max="0.99" step="0.01">
+                    </div>
+                    <div class="form-group" id="speed-margin-group">
+                        <label class="form-label">Top1 − Top2 最小差值</label>
+                        <input type="number" class="form-input" id="speed-min-margin" value="0.08" min="0.02" max="0.5" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#ccc;">
+                            <input type="checkbox" id="speed-require-stable" style="width:auto;">
+                            连续两次识别同一频率后触发
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">解码窗长（秒）</label>
+                        <input type="number" class="form-input" id="speed-window-sec" value="0.8" min="0.3" max="5" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">轮询间隔（毫秒）</label>
+                        <input type="number" class="form-input" id="speed-poll-ms" value="280" min="100" max="2000" step="20">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">单目标最长等待（秒）</label>
+                        <input type="number" class="form-input" id="speed-max-trial-sec" value="30" min="5" max="120" step="1">
+                        <p class="form-hint">速度测试提示固定 1 秒（注视青色蓝框），随后开始闪烁并计时。</p>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">重复次数</label>
+                    <input type="number" class="form-input" id="repeat-count" value="1" min="1" max="5">
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <div class="section-title">📡 FBCCA 通道</div>
+                <p id="fbcca-channel-hint" class="form-hint" style="margin:0;line-height:1.5;color:#7ec8e3;">
+                    加载通道配置…
+                </p>
+                <p class="form-hint" style="margin:8px 0 0;">
+                    与设备管理一致；2 路=各复制 4 份成 8 路，并与真实 2 路 FBCCA 融合（CAR 去共模噪声）。
+                    <a href="device-manager.html" style="color:#00d9ff;">去设备管理修改</a>
+                </p>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">🎯 测试状态</div>
+                
+                <div class="status-card">
+                    <div class="status-row">
+                        <span class="status-label">当前目标</span>
+                        <span class="status-value" id="current-target">-</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">识别结果</span>
+                        <span class="status-value" id="recognition-result">-</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">进度</span>
+                        <span class="status-value" id="test-progress">0/0</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <div class="section-title">⚡ 实时统计</div>
+                
+                <div class="status-card">
+                    <div class="status-row">
+                        <span class="status-label">正确数</span>
+                        <span class="status-value" id="correct-count">0</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">错误数</span>
+                        <span class="status-value" id="incorrect-count">0</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">当前准确率</span>
+                        <span class="status-value" id="current-accuracy">0%</span>
+                    </div>
+                    <div class="status-row speed-only-stat" style="display: none;">
+                        <span class="status-label">误触发次数</span>
+                        <span class="status-value" id="speed-false-triggers">0</span>
+                    </div>
+                    <div class="status-row speed-only-stat" style="display: none;">
+                        <span class="status-label">平均识别耗时</span>
+                        <span class="status-value" id="speed-avg-rt">-</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <div class="section-title">📤 同步到项目</div>
+                <p class="form-hint" style="margin-bottom:12px;">
+                    在「识别速度测试」下调好的参数（窗长、轮询、Top1 阈值等）可写入项目的<strong>运行配置</strong>，之后在项目管理/编辑器中「运行刺激」时生效。
+                </p>
+                <div class="form-group">
+                    <label class="form-label">目标项目</label>
+                    <select class="form-select" id="exp-sync-project"></select>
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="saveExperimentParamsOnly()">
+                    💾 仅保存实验参数
+                </button>
+                <button type="button" class="btn" onclick="syncExperimentParamsToProject()" style="margin-top:8px;">
+                    ⬇ 同步到项目运行配置
+                </button>
+                <p id="exp-sync-hint" class="form-hint" style="margin-top:10px;color:#7ec8e3;"></p>
+            </div>
+
+            <div class="panel-section">
+                <button type="button" class="btn" id="start-btn" onclick="startTest()">
+                    🚀 开始测试
+                </button>
+                <button class="btn btn-danger" id="stop-btn" onclick="stopTest()" disabled>
+                    ⏹ 停止测试
+                </button>
+            </div>
+        </div>
+        
+        <!-- 主测试区域 -->
+        <div class="test-area">
+            <div class="test-header">
+                <div class="test-title" id="test-page-title">SSVEP准确度测试</div>
+                <div class="test-status">
+                    <div class="status-indicator">
+                        <div class="status-dot" id="device-status"></div>
+                        <span id="device-text">设备未连接</span>
+                    </div>
+                    <div class="status-indicator">
+                        <div class="status-dot" id="test-status"></div>
+                        <span id="test-text">就绪</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-content">
+                <!-- 刺激显示 -->
+                <div class="stimulus-display" id="stimulus-display">
+                    <canvas id="test-canvas"></canvas>
+                    <div class="target-indicator" id="target-indicator" style="display: none;">
+                        目标: <span id="target-freq">-</span> Hz
+                    </div>
+                </div>
+                
+                <!-- 指导说明 -->
+                <div class="instruction-overlay" id="instruction-overlay">
+                    <div class="instruction-title">📖 测试说明</div>
+                    <div class="instruction-text" id="instruction-text-body">
+                        1. 测试将依次显示8个闪烁方块（8～15 Hz）<br>
+                        2. 与 Psychopy 脚本一致：目标顺序为 8→15 Hz 循环（非随机）；提示阶段即可看到<strong>静态</strong>八个方块与青色注视框，倒计时结束后开始闪烁<br>
+                        3. 请注视指定的目标方块；真实识别由本机后端 FBCCA 完成：整段试次中<strong>最后至多 4 秒</strong>参与分类；短于 4 秒的试次会按实际时长建参考。数据边界与 Psychopy 一致：刺激开始时 API 标记试次起点、结束时用服务端整段原始采样（需设备 WebSocket 与 Python API 同时运行）<br>
+                        4. 若需与 ssevp/Psychopy 相当的刷新节拍，可另开终端运行：<code style="color:#00D9FF;">python scripts/ssvep_psychopy_stimulus.py</code>（全屏闪烁），浏览器仅保留 LSL 连接与结果页<br>
+                        5. 保持头部稳定，减少眨眼<br>
+                        6. 测试完成后查看结果报告
+                    </div>
+                    <button class="btn" onclick="hideInstruction()">
+                        ✅ 我已了解，开始测试
+                    </button>
+                </div>
+                
+                <!-- 倒计时 -->
+                <div class="instruction-overlay countdown-overlay-bar" id="countdown-overlay" style="display: none;">
+                    <div class="instruction-title">准备注视目标</div>
+                    <div class="countdown" id="countdown-number">3</div>
+                    <div class="instruction-text" id="countdown-target">
+                        目标: 8.0 Hz (左上)
+                    </div>
+                </div>
+                
+                <!-- 结果显示 -->
+                <div class="results-view" id="results-view">
+                    <div class="result-card">
+                        <div class="result-title">📊 测试结果</div>
+                        
+                        <div class="accuracy-display">
+                            <div class="accuracy-value" id="final-accuracy">0%</div>
+                            <div class="accuracy-label">总体准确率</div>
+                        </div>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="total-trials">0</div>
+                                <div class="stat-label">总测试数</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="correct-trials">0</div>
+                                <div class="stat-label">正确识别</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="incorrect-trials">0</div>
+                                <div class="stat-label">错误识别</div>
+                            </div>
+                            <div class="stat-card speed-only-result" style="display: none;">
+                                <div class="stat-value" id="median-response-time">0</div>
+                                <div class="stat-label">中位识别耗时(ms)</div>
+                            </div>
+                            <div class="stat-card speed-only-result" style="display: none;">
+                                <div class="stat-value" id="false-trigger-total">0</div>
+                                <div class="stat-label">误触发总次数</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="avg-response-time">0</div>
+                                <div class="stat-label" id="avg-response-time-label">平均响应时间(ms)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-title">🎯 混淆矩阵</div>
+                        <div class="confusion-matrix">
+                            <table class="matrix-table" id="confusion-matrix-table">
+                                <!-- 动态生成 -->
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-title">📈 频率识别率</div>
+                        <div class="frequency-chart">
+                            <canvas id="frequency-chart" class="chart-canvas"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px;">
+                        <button class="btn" onclick="resetTest()" style="flex: 1;">
+                            🔄 重新测试
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportResults()" style="flex: 1;">
+                            💾 导出报告
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/stimulus-run-config.js?v=20260606"></script>
+    <script src="js/experiment-config.js?v=20260612"></script>
+    <script src="js/device-channel-config.js?v=20260524n"></script>
+    <script src="js/global-device-manager.js?v=20260606"></script>
+    <script src="js/connection-status-indicator.js?v=1.2"></script>
+    <script src="ssvep-test.js?v=20260606"></script>
+</body>
+</html>

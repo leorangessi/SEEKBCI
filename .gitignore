@@ -1,0 +1,228 @@
+# Flutter
+flutter_app/.dart_tool/
+flutter_app/.flutter-plugins
+flutter_app/.flutter-plugins-dependencies
+flutter_app/.packages
+flutter_app/.pub-cache/
+flutter_app/.pub/
+flutter_app/build/
+flutter_app/.flutter-plugins-dependencies
+flutter_app/.metadata
+
+# Flutter/Dart/Pub related
+flutter_app/**/doc/api/
+flutter_app/.dart_tool/
+flutter_app/.packages
+flutter_app/pubspec.lock
+
+# Android related
+flutter_app/**/android/**/gradle-wrapper.jar
+flutter_app/**/android/.gradle
+flutter_app/**/android/captures/
+flutter_app/**/android/gradlew
+flutter_app/**/android/gradlew.bat
+flutter_app/**/android/local.properties
+flutter_app/**/android/**/GeneratedPluginRegistrant.java
+flutter_app/**/android/key.properties
+flutter_app/*.jks
+
+# iOS/XCode related
+flutter_app/**/ios/**/*.mode1v3
+flutter_app/**/ios/**/*.mode2v3
+flutter_app/**/ios/**/*.moved-aside
+flutter_app/**/ios/**/*.pbxuser
+flutter_app/**/ios/**/*.perspectivev3
+flutter_app/**/ios/**/*sync/
+flutter_app/**/ios/**/.sconsign.dblite
+flutter_app/**/ios/**/.tags*
+flutter_app/**/ios/**/.vagrant/
+flutter_app/**/ios/**/DerivedData/
+flutter_app/**/ios/**/Icon?
+flutter_app/**/ios/**/Pods/
+flutter_app/**/ios/**/.symlinks/
+flutter_app/**/ios/**/profile
+flutter_app/**/ios/**/xcuserdata
+flutter_app/**/ios/.generated/
+flutter_app/**/ios/Flutter/App.framework
+flutter_app/**/ios/Flutter/Flutter.framework
+flutter_app/**/ios/Flutter/Flutter.podspec
+flutter_app/**/ios/Flutter/Generated.xcconfig
+flutter_app/**/ios/Flutter/app.flx
+flutter_app/**/ios/Flutter/app.zip
+flutter_app/**/ios/Flutter/flutter_assets/
+flutter_app/**/ios/Flutter/flutter_export_environment.sh
+flutter_app/**/ios/ServiceDefinitions.json
+flutter_app/**/ios/Runner/GeneratedPluginRegistrant.*
+
+# macOS
+flutter_app/**/macos/Flutter/GeneratedPluginRegistrant.swift
+flutter_app/**/macos/Flutter/Flutter-Debug.xcconfig
+flutter_app/**/macos/Flutter/Flutter-Release.xcconfig
+flutter_app/**/macos/Flutter/Flutter-Profile.xcconfig
+
+# Windows
+flutter_app/**/windows/flutter/generated_plugin_registrant.cc
+flutter_app/**/windows/flutter/generated_plugin_registrant.h
+flutter_app/**/windows/flutter/generated_plugins.cmake
+
+# Linux
+flutter_app/**/linux/flutter/generated_plugin_registrant.cc
+flutter_app/**/linux/flutter/generated_plugin_registrant.h
+flutter_app/**/linux/flutter/generated_plugins.cmake
+
+# Coverage
+flutter_app/coverage/
+
+# Symbols
+flutter_app/app.*.symbols
+
+# Exceptions to above rules.
+!flutter_app/**/ios/**/default.mode1v3
+!flutter_app/**/ios/**/default.mode2v3
+!flutter_app/**/ios/**/default.pbxuser
+!flutter_app/**/ios/**/default.perspectivev3
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+python_backend/.Python
+python_backend/build/
+python_backend/develop-eggs/
+python_backend/dist/
+python_backend/downloads/
+python_backend/eggs/
+python_backend/.eggs/
+python_backend/lib/
+python_backend/lib64/
+python_backend/parts/
+python_backend/sdist/
+python_backend/var/
+python_backend/wheels/
+python_backend/pip-wheel-metadata/
+python_backend/share/python-wheels/
+python_backend/*.egg-info/
+python_backend/.installed.cfg
+python_backend/*.egg
+python_backend/MANIFEST
+
+# PyInstaller（保留仓库内 spec）
+python_backend/*.manifest
+!python_backend/seekbci_api.spec
+
+# Electron 桌面打包产物
+electron-shell/dist/
+
+# Unit test / coverage reports
+python_backend/htmlcov/
+python_backend/.tox/
+python_backend/.nox/
+python_backend/.coverage
+python_backend/.coverage.*
+python_backend/.cache
+python_backend/nosetests.xml
+python_backend/coverage.xml
+python_backend/*.cover
+python_backend/*.py,cover
+python_backend/.hypothesis/
+python_backend/.pytest_cache/
+
+# Virtual environments
+python_backend/venv/
+python_backend/env/
+python_backend/ENV/
+python_backend/env.bak/
+python_backend/venv.bak/
+
+# Jupyter Notebook
+python_backend/.ipynb_checkpoints
+
+# pyenv
+python_backend/.python-version
+
+# Celery
+python_backend/celerybeat-schedule
+python_backend/celerybeat.pid
+
+# SageMath parsed files
+python_backend/*.sage.py
+
+# Environments
+python_backend/.env
+python_backend/.venv
+python_backend/env/
+python_backend/venv/
+python_backend/ENV/
+python_backend/env.bak/
+python_backend/venv.bak/
+
+# mypy
+python_backend/.mypy_cache/
+python_backend/.dmypy.json
+python_backend/dmypy.json
+
+# Pyre type checker
+python_backend/.pyre/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# User data
+user_data/
+uploads/
+downloads/
+python_backend/data/plaza.json
+
+# Docker
+.dockerignore
+
+# Node modules (if any)
+node_modules/
+
+# Build outputs
+*.exe
+*.apk
+*.ipa
+*.dmg
+*.deb
+*.rpm
+*.tar.gz
+*.zip
+
+# EEG data
+eeg_data/
+*.csv
+*.edf
+*.bdf
+
+# Project files (user generated)
+projects/
+*.ssvep
