@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSVEP 键盘测试 - SEEKBCI PLAT</title>
+    <link rel="stylesheet" href="css/experiment-test-nav.css?v=20260614">
+    <link rel="stylesheet" href="css/ssvep-keyboard-test.css?v=20260721a">
+</head>
+<body>
+    <div class="kb-test-layout">
+        <aside class="kb-side">
+            <div class="kb-side-header">
+                <h1>⌨️ SSVEP 键盘测试</h1>
+                <p>中间为 QWERTY 或九宫格键盘；下方文本框显示输出；左侧为可调试的 SSVEP 运行参数。</p>
+                <div class="exp-test-nav">
+                    <a href="experiment.html">← 实验测试</a>
+                    <a href="ssvep-test.html">准确度</a>
+                    <a href="index.html" class="nav-home">← 主页</a>
+                </div>
+            </div>
+            <div class="kb-side-scroll">
+                <div class="kb-section">
+                    <h2>运行</h2>
+                    <div id="conn-status" class="status-pill status-bad">设备未连接</div>
+                    <pre id="decode-live" class="kb-live">等待开始…</pre>
+                    <p class="form-hint" id="buf-hint">EEG缓冲 —</p>
+                    <div class="form-group">
+                        <label class="form-label">键盘布局</label>
+                        <select class="form-select" id="cfg-layout">
+                            <option value="qwerty" selected>QWERTY（40 键，与项目设计一致）</option>
+                            <option value="t9">九宫格（搜狗式：先选键位组再选字母）</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">闪烁频段</label>
+                        <select class="form-select" id="cfg-freq-band">
+                            <option value="low" selected>7.0–15.8 Hz（标准，略刺眼）</option>
+                            <option value="high">16.0–31.8 Hz（高频，更省眼；建议 120Hz 屏）</option>
+                        </select>
+                        <p class="form-hint">高频闪烁肉眼更淡；60Hz 屏对 30Hz 以上支持有限。</p>
+                    </div>
+                    <button type="button" class="btn" id="btn-start">▶ 开始闪烁 + 解码</button>
+                    <button type="button" class="btn btn-danger" id="btn-stop" disabled>⏹ 停止</button>
+                    <button type="button" class="btn btn-secondary" id="btn-clear-out">清空文本框</button>
+                    <p class="form-hint">识别需先连接 SEEKBCI。开始后请保持闪烁满「分析窗长」再注视。也可点击按键模拟输入。</p>
+                </div>
+
+                <div class="kb-section">
+                    <h2>识别模式</h2>
+                    <div class="form-group">
+                        <label class="form-label">模式</label>
+                        <select class="form-select" id="cfg-mode">
+                            <option value="threshold" selected>置信度阈值</option>
+                            <option value="interval">定时触发</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">分析窗长 (s)</label>
+                        <input type="number" class="form-input" id="cfg-window" value="3.0" min="0.3" max="5" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">冷却时间 (s)</label>
+                        <input type="number" class="form-input" id="cfg-cooldown" value="2.0" min="0.3" max="10" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">轮询间隔 (ms)</label>
+                        <input type="number" class="form-input" id="cfg-poll" value="400" min="120" max="2000" step="20">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">定时模式间隔 (s)</label>
+                        <input type="number" class="form-input" id="cfg-interval" value="3" min="0.5" max="15" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Top1 最低概率</label>
+                        <input type="number" class="form-input" id="cfg-min-prob" value="0.20" min="0.03" max="0.99" step="0.01">
+                        <p class="form-hint">可调至 0.2 或更低；40 键时建议从 0.2 起试。</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Top1−Top2 最小差值</label>
+                        <input type="number" class="form-input" id="cfg-min-margin" value="0.06" min="0" max="0.5" step="0.01">
+                    </div>
+                    <label class="check-row">
+                        <input type="checkbox" id="cfg-require-stable">
+                        <span>要求连续两次同一目标（更稳，更慢）</span>
+                    </label>
+                </div>
+
+                <div class="kb-section">
+                    <h2>闪烁呈现</h2>
+                    <label class="check-row">
+                        <input type="checkbox" id="cfg-flicker-high-blank">
+                        <span>高空白方波（透明叠窗用）</span>
+                    </label>
+                    <div class="form-group kb-duty-wrap" id="cfg-duty-wrap" hidden>
+                        <label class="form-label">亮段占空比 (%)</label>
+                        <input type="number" class="form-input" id="cfg-duty" value="32" min="15" max="50" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">方块不透明度 (%)</label>
+                        <input type="number" class="form-input" id="cfg-opacity" value="100" min="20" max="100" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">闪烁双色（亮相 / 暗相）</label>
+                        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#aaa;">
+                                亮相 <input type="color" id="cfg-flicker-on" value="#ffffff">
+                            </label>
+                            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#aaa;">
+                                暗相 <input type="color" id="cfg-flicker-off" value="#000000">
+                            </label>
+                            <button type="button" class="btn btn-secondary" id="btn-flicker-bw" style="padding:4px 8px;font-size:11px;">黑白</button>
+                        </div>
+                    </div>
+                    <label class="check-row">
+                        <input type="checkbox" id="cfg-opaque-kb" checked>
+                        <span>键盘区域实心黑底（提高对比）</span>
+                    </label>
+                </div>
+
+                <div class="kb-section">
+                    <h2>输出与反馈</h2>
+                    <label class="check-row">
+                        <input type="checkbox" id="cfg-speak">
+                        <span>识别成功时语音播报键名</span>
+                    </label>
+                    <label class="check-row">
+                        <input type="checkbox" id="cfg-system-keys">
+                        <span>同时注入系统按键（需系统选项 / pynput）</span>
+                    </label>
+                    <p class="form-hint" id="fbcca-hint">FBCCA 通道：—</p>
+                </div>
+
+                <div class="kb-section">
+                    <h2>同步到项目</h2>
+                    <div class="form-group">
+                        <label class="form-label">目标项目</label>
+                        <select class="form-select" id="cfg-project"></select>
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="btn-sync-project">写入所选项目 runConfig</button>
+                    <p class="form-hint">会同步窗长、冷却、轮询、阈值与闪烁参数，便于正式「运行项目」沿用。</p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="kb-main">
+            <div class="kb-stage">
+                <div class="kb-stage-meta">
+                    <span>FPS <strong id="fps-value">—</strong></span>
+                    <span>触发 <strong id="hit-count">0</strong></span>
+                    <span id="caps-badge">Caps Off</span>
+                </div>
+                <div id="kb-wrap" class="stimulus-keyboard-wrap" aria-label="SSVEP 40 键键盘"></div>
+            </div>
+            <div class="kb-output-panel">
+                <div id="kb-candidates" class="kb-candidates" hidden></div>
+                <div class="kb-output-toolbar">
+                    <h3>输出文本</h3>
+                    <span class="form-hint" id="last-key-hint">最近：—</span>
+                </div>
+                <textarea id="kb-output" placeholder="识别或点击按键后的文字会出现在这里…" spellcheck="false"></textarea>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/device-channel-config.js?v=20260524n"></script>
+    <script src="js/global-device-manager.js?v=20260714c"></script>
+    <script src="js/connection-status-indicator.js?v=1.2"></script>
+    <script src="keyboard-binding.js?v=20260503f"></script>
+    <script src="js/ssvep-keyboard-40.js?v=20260721a"></script>
+    <script src="js/stimulus-run-config.js?v=20260719d"></script>
+    <script src="js/experiment-config.js?v=20260614"></script>
+    <script src="js/ssvep-keyboard-test.js?v=20260721a"></script>
+</body>
+</html>

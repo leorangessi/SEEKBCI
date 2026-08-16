@@ -474,9 +474,9 @@ class GlobalDeviceManager {
                 body: JSON.stringify(params)
             });
             
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
             
-            if (data.success) {
+            if (response.ok && data.success) {
                 this.isConnected = true;
                 this.deviceInfo = data.device_info;
                 this.saveState();
@@ -484,7 +484,8 @@ class GlobalDeviceManager {
                 this.notifyListeners('connected', data);
                 return true;
             } else {
-                throw new Error(data.message || 'Connection failed');
+                const detail = data.detail || data.message || `HTTP ${response.status}`;
+                throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
             }
         } catch (e) {
             console.error('Connect device failed:', e);

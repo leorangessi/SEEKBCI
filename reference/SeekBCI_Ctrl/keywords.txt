@@ -1,0 +1,125 @@
+#######################################
+# Syntax Coloring Map for SeekBCI_Ctrl
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+SeekBCI_Ctrl	KEYWORD1
+SeekBCI_OTA	KEYWORD1
+ctrl_command_t	KEYWORD1
+ctrl_status_t	KEYWORD1
+ctrl_rule_t	KEYWORD1
+ctrl_algo_params_t	KEYWORD1
+ctrl_meta_t	KEYWORD1
+ctrl_digital_input_t	KEYWORD1
+ctrl_analog_input_t	KEYWORD1
+ctrl_output_t	KEYWORD1
+eog_detector_t	KEYWORD1
+emg_detector_t	KEYWORD1
+focus_detector_t	KEYWORD1
+seekbci_role_t	KEYWORD1
+seekbci_edge_t	KEYWORD1
+seekbci_signal_type_t	KEYWORD1
+seekbci_action_type_t	KEYWORD1
+seekbci_trigger_mode_t	KEYWORD1
+seekbci_led_state_t	KEYWORD1
+seekbci_mode_t	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+setRole	KEYWORD2
+addDigitalInput	KEYWORD2
+addAnalogInput	KEYWORD2
+addDigitalOutput	KEYWORD2
+addDacOutput	KEYWORD2
+addPwmOutput	KEYWORD2
+addServoOutput	KEYWORD2
+executeGpioSet	KEYWORD2
+executeGpioToggle	KEYWORD2
+executeDac	KEYWORD2
+executePwm	KEYWORD2
+executePwmTimed	KEYWORD2
+executeServo	KEYWORD2
+addRule	KEYWORD2
+clearRules	KEYWORD2
+saveRulesToNvs	KEYWORD2
+loadRulesFromNvs	KEYWORD2
+getRuleCount	KEYWORD2
+setAlgoParams	KEYWORD2
+getAlgoParams	KEYWORD2
+saveAlgoParamsToNvs	KEYWORD2
+loadAlgoParamsFromNvs	KEYWORD2
+onConnect	KEYWORD2
+onDisconnect	KEYWORD2
+onCommand	KEYWORD2
+onInputTrigger	KEYWORD2
+isPaired	KEYWORD2
+isConnectedToPlatform	KEYWORD2
+isStandaloneMode	KEYWORD2
+getMode	KEYWORD2
+getLedState	KEYWORD2
+getRole	KEYWORD2
+readInput	KEYWORD2
+writeOutput	KEYWORD2
+update	KEYWORD2
+enterStandaloneMode	KEYWORD2
+exitStandaloneMode	KEYWORD2
+setPairTargetMac	KEYWORD2
+handleWrite	KEYWORD2
+processLoop	KEYWORD2
+isInProgress	KEYWORD2
+setStatusCallback	KEYWORD2
+eog_init	KEYWORD2
+eog_init_default	KEYWORD2
+eog_process	KEYWORD2
+emg_init	KEYWORD2
+emg_init_default	KEYWORD2
+emg_process	KEYWORD2
+focus_init	KEYWORD2
+focus_init_default	KEYWORD2
+focus_feed	KEYWORD2
+seekbci_default_algo_params	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+SEEKBCI_ROLE_INPUT	LITERAL1
+SEEKBCI_ROLE_OUTPUT	LITERAL1
+EDGE_RISING	LITERAL1
+EDGE_FALLING	LITERAL1
+EDGE_BOTH	LITERAL1
+SIGNAL_GPIO	LITERAL1
+SIGNAL_ADC	LITERAL1
+SIGNAL_EOG	LITERAL1
+SIGNAL_EMG	LITERAL1
+SIGNAL_FOCUS	LITERAL1
+ACTION_GPIO_SET	LITERAL1
+ACTION_GPIO_TOGGLE	LITERAL1
+ACTION_DAC	LITERAL1
+ACTION_PWM	LITERAL1
+ACTION_PWM_TIMED	LITERAL1
+ACTION_SERVO	LITERAL1
+TRIGGER_EDGE	LITERAL1
+TRIGGER_THRESH	LITERAL1
+TRIGGER_LINEAR	LITERAL1
+LED_PAIRING_SLOW_BLINK	LITERAL1
+LED_CONNECTED_SOLID	LITERAL1
+LED_STANDALONE_SCANNING	LITERAL1
+LED_STANDALONE_PAIRED	LITERAL1
+LED_STANDALONE_LOST	LITERAL1
+LED_OTA_BREATHING	LITERAL1
+MODE_PAIRING	LITERAL1
+MODE_CONNECTED	LITERAL1
+MODE_STANDALONE_SCAN	LITERAL1
+MODE_STANDALONE_RUN	LITERAL1
+FOCUS_METRIC_TBR	LITERAL1
+FOCUS_METRIC_ENGAGEMENT	LITERAL1
+SEEKBCI_CTRL_MAX_INPUTS	LITERAL1
+SEEKBCI_CTRL_MAX_OUTPUTS	LITERAL1
+SEEKBCI_CTRL_MAX_RULES	LITERAL1

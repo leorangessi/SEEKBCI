@@ -4,9 +4,12 @@
 """
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 import asyncio
+import base64
 import json
+import time
+import uuid
 
 import numpy as np
 
@@ -14,6 +17,19 @@ from app.services.device_manager import device_manager, SERIAL_AVAILABLE
 from app.services.signal_processor import signal_processor
 
 router = APIRouter()
+
+OTA_TASKS: Dict[str, Dict[str, Any]] = {}
+OTA_TASK_TTL_SECONDS = 1800
+
+
+def _cleanup_ota_tasks() -> None:
+    now = time.time()
+    expired = [
+        task_id for task_id, task in OTA_TASKS.items()
+        if now - float(task.get("updated_at", task.get("created_at", now))) > OTA_TASK_TTL_SECONDS
+    ]
+    for task_id in expired:
+        OTA_TASKS.pop(task_id, None)
 
 
 # ==================== 请求模型 ====================
@@ -37,6 +53,20 @@ class WiFiConnectRequest(BaseModel):
 class BrainFlowConnectRequest(BaseModel):
     board_id: int
     serial_port: Optional[str] = None
+
+
+class BleConnectRequest(BaseModel):
+    device_name: Optional[str] = "SEEKBCI"
+    address: Optional[str] = None
+    timeout: float = 15.0
+
+
+class BleOtaRequest(BaseModel):
+    filename: str = "SEEKBCI.bin"
+    firmware_b64: str
+    device_name: Optional[str] = "SEEKBCI"
+    address: Optional[str] = None
+    timeout: float = 20.0
 
 
 # ==================== 设备扫描 ====================
@@ -82,6 +112,25 @@ async def list_brainflow_boards():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取BrainFlow设备列表失败: {str(e)}")
+
+
+@router.get("/scan/ble")
+async def scan_ble_devices(timeout: float = 6.0):
+    """扫描 SEEKBCI BLE 设备"""
+    try:
+        devices = await asyncio.to_thread(device_manager.scan_ble_devices, timeout)
+        from app.services.eeg_ble_bridge import availability as eeg_ble_availability
+
+        ok, detail = eeg_ble_availability()
+        return {
+            "success": True,
+            "devices": devices,
+            "count": len(devices),
+            "ble_available": ok,
+            "availability_detail": detail,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"扫描 BLE 失败: {str(e)}")
 
 
 # ==================== 设备连接 ====================
@@ -173,6 +222,122 @@ async def connect_brainflow(request: BrainFlowConnectRequest):
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"连接BrainFlow设备失败: {str(e)}")
+
+
+@router.post("/connect/ble")
+async def connect_ble(request: BleConnectRequest):
+    """连接 SEEKBCI BLE 设备（烧录 SEEKBCI.ino）"""
+    try:
+        success = await asyncio.to_thread(
+            device_manager.connect_ble,
+            request.device_name,
+            request.address,
+            request.timeout,
+        )
+        if success:
+            return {
+                "success": True,
+                "message": "SEEKBCI BLE 连接成功",
+                "device_info": device_manager.device_info,
+            }
+        detail = device_manager.last_error or "SEEKBCI BLE 连接失败"
+        raise HTTPException(status_code=400, detail=detail)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"连接 SEEKBCI BLE 失败: {str(e)}")
+
+
+@router.post("/ota/ble")
+async def ota_ble(request: BleOtaRequest):
+    """启动后端 Bleak BLE OTA 任务，前端通过 task_id 轮询进度。"""
+    try:
+        _cleanup_ota_tasks()
+        filename = request.filename or "SEEKBCI.bin"
+        if not filename.lower().endswith(".bin"):
+            raise HTTPException(status_code=400, detail="请上传 ESP32 .bin 固件")
+        try:
+            blob = base64.b64decode(request.firmware_b64, validate=True)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"固件 base64 解码失败: {e}") from e
+        if not blob:
+            raise HTTPException(status_code=400, detail="固件为空")
+
+        task_id = uuid.uuid4().hex
+        OTA_TASKS[task_id] = {
+            "task_id": task_id,
+            "success": True,
+            "state": "running",
+            "percent": 0,
+            "message": "准备 OTA",
+            "filename": filename,
+            "bytes": len(blob),
+            "created_at": time.time(),
+            "updated_at": time.time(),
+            "error": None,
+            "result": None,
+        }
+
+        async def run_ota_task() -> None:
+            task = OTA_TASKS[task_id]
+            try:
+                if device_manager.is_connected:
+                    task.update({"percent": 0, "message": "断开当前采集连接", "updated_at": time.time()})
+                    device_manager.disconnect()
+                    await asyncio.sleep(1.0)
+
+                from app.services.eeg_ble_bridge import eeg_ble_bridge
+
+                def on_progress(percent: int, message: str) -> None:
+                    task.update({
+                        "percent": max(0, min(100, int(percent))),
+                        "message": message,
+                        "updated_at": time.time(),
+                    })
+                    print(f"[SEEKBCI OTA] {task['percent']}% {message}")
+
+                result = await asyncio.to_thread(
+                    eeg_ble_bridge.ota_update,
+                    blob,
+                    request.device_name or "SEEKBCI",
+                    request.address or None,
+                    request.timeout,
+                    on_progress,
+                )
+                device_manager.is_connected = False
+                device_manager.device_type = None
+                device_manager.device_info = {}
+                task.update({
+                    "state": "done",
+                    "percent": 100,
+                    "message": result.get("message") or "OTA 完成，设备正在重启",
+                    "result": result,
+                    "updated_at": time.time(),
+                })
+            except Exception as e:
+                task.update({
+                    "state": "error",
+                    "error": str(e),
+                    "message": f"OTA 失败: {e}",
+                    "updated_at": time.time(),
+                })
+
+        asyncio.create_task(run_ota_task())
+        return {"success": True, "task_id": task_id, "state": "running", "percent": 0, "message": "OTA 已启动"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"SEEKBCI BLE OTA 启动失败: {str(e)}")
+
+
+@router.get("/ota/ble/{task_id}")
+async def ota_ble_status(task_id: str):
+    """查询 BLE OTA 任务进度。"""
+    _cleanup_ota_tasks()
+    task = OTA_TASKS.get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="OTA 任务不存在或已过期")
+    return task
 
 
 # ==================== 设备断开 ====================
@@ -304,6 +469,13 @@ def _build_stream_payload(data: np.ndarray) -> dict:
         "sampling_rate": device_manager.sampling_rate,
         "channel_count": device_manager.channel_count,
     }
+    pkt = device_manager.get_packet_stats()
+    if pkt is not None:
+        payload["packet_stats"] = pkt
+    if device_manager.device_type == "ble":
+        bat = device_manager.get_battery()
+        if bat is not None:
+            payload["battery"] = bat
     if device_manager.enable_signal_processing:
         try:
             disp = signal_processor.append_and_process_display(np.array(data, copy=True))

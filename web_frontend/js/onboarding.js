@@ -11,12 +11,12 @@
         },
         {
             title: '① 从示例项目开始',
-            body: '打开「项目管理」，内置脑控音乐盒、骰子运势站等示例。导入后可直接运行（无设备时也可体验界面与 Python 反馈）。',
+            body: '打开「项目管理」，内置脑控音乐盒、骰子运势站、SSVEP 键盘测试等示例。导入后可直接运行（无设备时也可体验界面与 Python 反馈）。',
             action: { label: '打开项目管理', href: 'project-manager.html' }
         },
         {
             title: '② 连接设备',
-            body: '在「设备管理」中连接 LSL、串口或 WiFi EEG 设备。刺激运行时会使用全局设备条中的连接状态。',
+            body: '在「设备管理」中通过 SEEKBCI BLE 连接脑电/IMU。刺激运行时会使用全局设备条中的连接状态。',
             action: { label: '设备管理', href: 'devices.html' }
         },
         {

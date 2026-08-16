@@ -3,44 +3,204 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>物理世界 - SEEKBCI PLAT</title>
-<link rel="stylesheet" href="css/app-shell.css?v=20260714g"><link rel="stylesheet" href="css/plaza-shared.css?v=20260612">
+<link rel="stylesheet" href="css/app-shell.css?v=20260714g">
 <style>
-.pw-page{padding:20px 0 44px}.pw-hero,.pw-panel,.device-row{background:#1E1E1E;border:1px solid #333;border-radius:14px}.pw-hero{padding:24px;background:linear-gradient(135deg,rgba(0,217,255,.14),rgba(124,77,255,.1));border-color:rgba(0,217,255,.25)}.pw-hero h3,.pw-panel h3{color:#00D9FF;margin-bottom:10px}.pw-hero p,.pw-panel p,.device-row p,.hint{color:#aeb9c2;line-height:1.65}.pw-layout{display:grid;grid-template-columns:minmax(320px,1fr) minmax(320px,1fr);gap:16px;margin-top:16px}.pw-panel{padding:20px;min-width:0}.btn-row{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}.pw-btn{padding:10px 16px;border-radius:8px;border:1px solid #00D9FF;background:#00D9FF;color:#000;font-weight:700;cursor:pointer}.pw-btn.secondary{background:#2A2A2A;color:#fff;border-color:#555}.pw-btn.small{padding:6px 10px;font-size:12px}.tag{display:inline-block;padding:4px 10px;border-radius:999px;background:rgba(0,217,255,.1);border:1px solid rgba(0,217,255,.22);color:#a8efff;font-size:12px;margin:3px 5px 3px 0}.tag.ok{background:rgba(76,175,80,.12);border-color:rgba(76,175,80,.28);color:#a5e8a8}.tag.off{background:rgba(244,67,54,.1);border-color:rgba(244,67,54,.28);color:#ffb4ad}.device-list{display:flex;flex-direction:column;gap:10px;margin-top:12px}.device-row{padding:14px}.device-row h4{color:#eaf8ff;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:8px}.meta{color:#82909a;font-size:12px;word-break:break-all}.form-grid{display:grid;gap:12px;margin-top:12px}.field label{display:block;font-size:12px;color:#888;margin-bottom:6px}.field input,.field select,.field textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #444;background:#2A2A2A;color:#fff;box-sizing:border-box}.field textarea{min-height:76px;resize:vertical}.empty{border:1px dashed #444;border-radius:12px;padding:22px;color:#888;text-align:center;line-height:1.7;margin-top:12px}.status{background:#151a1f;border:1px solid #303842;border-radius:10px;padding:12px;color:#b9c7d0;font-size:13px;line-height:1.6;margin-top:12px;white-space:pre-wrap}@media(max-width:900px){.pw-layout{grid-template-columns:1fr}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#121212;color:#fff}
+.pw-page{padding:20px 0 44px}
+.btn{padding:8px 14px;border-radius:8px;border:none;font-weight:600;cursor:pointer;font-size:13px;transition:all .2s}
+.btn-primary{background:#00D9FF;color:#000}.btn-primary:hover{background:#33e2ff}
+.btn-secondary{background:#2A2A2A;color:#ccc;border:1px solid #555}.btn-secondary:hover{background:#333}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-danger{background:#f44336;color:#fff}.btn-danger:hover{background:#e53935}
+.btn-green{background:#4CAF50;color:#fff}.btn-green:hover{background:#66bb6a}
+.btn-orange{background:#FF9800;color:#000}.btn-orange:hover{background:#ffad33}
+.tag{display:inline-block;padding:3px 8px;border-radius:99px;font-size:11px;margin:2px 4px 2px 0}
+.tag-ok{background:rgba(76,175,80,.12);border:1px solid rgba(76,175,80,.28);color:#a5e8a8}
+.tag-off{background:rgba(244,67,54,.1);border:1px solid rgba(244,67,54,.28);color:#ffb4ad}
+.tag-blue{background:rgba(0,217,255,.1);border:1px solid rgba(0,217,255,.22);color:#a8efff}
+.empty-hint{border:1px dashed #444;border-radius:10px;padding:16px;color:#666;text-align:center;font-size:13px;line-height:1.6}
+.panel{background:#1E1E1E;border:1px solid #333;border-radius:14px;padding:16px}
+.panel h4{color:#00D9FF;font-size:14px;margin-bottom:8px}
+
+/* === Layout: 2-column, left tall + right stacked === */
+.pw-layout{display:grid;grid-template-columns:280px 1fr;grid-template-rows:auto 1fr;gap:14px;min-height:700px}
+.pw-layout .pw-discovery{grid-row:1/3}
+.pw-layout .pw-top-right{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pw-layout .pw-bottom-right{display:grid;grid-template-columns:1fr 120px;gap:14px}
+@media(max-width:960px){.pw-layout{grid-template-columns:1fr;grid-template-rows:auto}}
+
+/* Target five-zone layout */
+.pw-layout{grid-template-columns:minmax(300px,36%) minmax(0,1fr);grid-template-rows:minmax(300px,2fr) minmax(390px,3fr);min-height:740px;height:calc(100vh - 150px)}
+.pw-layout .pw-discovery{grid-column:1;grid-row:1/3;min-height:0;height:100%;overflow:hidden}
+.pw-layout .pw-top-right{grid-column:2;grid-row:1;grid-template-columns:minmax(230px,.94fr) minmax(260px,1.06fr);gap:40px;min-width:0;min-height:0}
+.pw-layout .pw-top-right>.panel{min-width:0;min-height:0;height:100%;overflow:auto}
+.pw-layout .pw-bottom-right{grid-column:2;grid-row:2;grid-template-columns:minmax(0,1fr) 88px;gap:16px;min-width:0;min-height:0}
+.pw-layout .pw-bottom-right>.rule-canvas{height:100%;min-height:390px}
+.pw-layout .rl-panel{min-width:0;align-self:start}
+@media(max-width:1080px){
+  .pw-layout{grid-template-columns:280px minmax(0,1fr)}
+  .pw-layout .pw-top-right{grid-template-columns:1fr 1fr;gap:14px}
+  .pw-layout .pw-bottom-right{grid-template-columns:minmax(0,1fr) 92px}
+}
+@media(max-width:820px){
+  .pw-layout{display:flex;flex-direction:column;height:auto;min-height:0}
+  .pw-layout .pw-discovery{min-height:420px;height:auto;overflow:visible}
+  .pw-layout .pw-top-right{grid-template-columns:1fr}
+  .pw-layout .pw-bottom-right{grid-template-columns:1fr}
+  .pw-layout .rl-panel{display:grid;grid-template-columns:repeat(4,minmax(76px,1fr));align-items:start}
+  .pw-layout .rl-panel h4,.pw-layout .rl-panel #rl-tabs{grid-column:1/-1}
+}
+
+/* Device discovery */
+.scan-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.device-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.dev-card{background:#252525;border:2px solid #333;border-radius:10px;padding:9px 11px;cursor:grab;transition:all .2s;user-select:none}
+.dev-card:hover{border-color:#00D9FF}
+.dev-card.selected{border-color:#00D9FF;background:rgba(0,217,255,.06)}
+.dev-card.active-sel{border-color:#7c4dff;box-shadow:0 0 0 2px rgba(124,77,255,.3)}
+.dev-card.offline{opacity:.45}
+.dev-card .dev-name{font-weight:600;font-size:12px;color:#eaf8ff}
+.dev-card .dev-meta{font-size:10px;color:#82909a;margin-top:2px}
+.dev-card .dev-actions{display:flex;gap:5px;margin-top:5px}
+.dev-card.dragging{opacity:.5;border-color:#7c4dff}
+.status-bar{background:#151a1f;border:1px solid #303842;border-radius:8px;padding:6px 10px;color:#b9c7d0;font-size:11px;margin-top:8px;max-height:40px;overflow-y:auto}
+
+/* Config */
+.config-body{display:none}
+.config-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.config-row label{font-size:12px;color:#999;min-width:55px}
+.config-row select{padding:5px 8px;border-radius:6px;border:1px solid #444;background:#2A2A2A;color:#fff;font-size:12px}
+.pin-grid{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
+.pin-chip{padding:4px 8px;border-radius:6px;background:#2A2A2A;border:1px solid #444;font-size:11px;cursor:pointer;transition:all .15s}
+.pin-chip:hover{border-color:#00D9FF}
+.pin-chip.sel-in{background:rgba(255,152,0,.15);border-color:#FF9800;color:#FFB74D}
+.pin-chip.sel-out{background:rgba(76,175,80,.15);border-color:#4CAF50;color:#81C784}
+
+/* Pinout */
+.pinout-box{display:flex;align-items:center;justify-content:center;min-height:200px}
+.esp32-pinout-svg{width:100%;max-width:240px;height:auto}
+
+/* Rule canvas */
+.rule-canvas{position:relative;min-height:340px;background:#181c20;border:1px solid #2a2e34;border-radius:14px;overflow:hidden}
+.rule-canvas.drag-over{border-color:#00D9FF;box-shadow:inset 0 0 20px rgba(0,217,255,.08)}
+.canvas-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#555;font-size:13px;pointer-events:none;text-align:center}
+.canvas-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.canvas-line{stroke:#00D9FF;stroke-width:2;fill:none;opacity:.7;pointer-events:stroke;cursor:pointer}
+.canvas-line:hover{opacity:1;stroke-width:3}
+.canvas-device{position:absolute;width:170px;background:#252525;border:2px solid #444;border-radius:12px;padding:8px;cursor:move;user-select:none;z-index:2}
+.canvas-device.offline{opacity:.5;border-color:#666}
+.canvas-device.type-headband{border-color:#7c4dff}
+.canvas-device .cd-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.canvas-device .cd-name{font-size:11px;font-weight:600;color:#eaf8ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px}
+.canvas-device .cd-status{font-size:9px;color:#888}
+.canvas-device .cd-remove{cursor:pointer;color:#f44;font-size:14px}
+.canvas-device .cd-pins{display:flex;flex-direction:column;gap:2px}
+.canvas-device .cd-pin{display:flex;align-items:center;gap:5px;font-size:10px;padding:3px 5px;border-radius:4px;cursor:crosshair;transition:background .15s}
+.canvas-device .cd-pin:hover{background:rgba(0,217,255,.12)}
+.canvas-device .cd-pin .pin-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.canvas-device .cd-pin.input .pin-dot{background:#FF9800}
+.canvas-device .cd-pin.output .pin-dot{background:#4CAF50}
+.canvas-device .cd-pin.signal .pin-dot{background:#7c4dff}
+
+/* Logic blocks palette + nodes */
+.logic-palette{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;max-height:72px;overflow-y:auto}
+.logic-palette-btn{padding:4px 8px;border-radius:6px;border:1px solid #444;background:#252525;color:#ccc;font-size:10px;cursor:pointer;white-space:nowrap}
+.logic-palette-btn:hover{border-color:#7c4dff;color:#fff}
+.canvas-logic{position:absolute;min-width:120px;background:#2a2438;border:2px solid #7c4dff;border-radius:10px;padding:6px 8px;cursor:grab;z-index:2;user-select:none}
+.canvas-logic .lg-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.canvas-logic .lg-name{font-size:11px;font-weight:700;color:#ce93d8}
+.canvas-logic .lg-remove{cursor:pointer;color:#f44;font-size:14px;line-height:1}
+.canvas-logic .lg-pins{display:flex;flex-direction:column;gap:3px}
+.canvas-logic .lg-pin{font-size:10px;padding:2px 6px;border-radius:4px;display:flex;align-items:center;gap:4px;cursor:crosshair}
+.canvas-logic .lg-pin.sink{background:rgba(255,152,0,.12);color:#ffb74d}
+.canvas-logic .lg-pin.source{background:rgba(76,175,80,.12);color:#81c784;justify-content:flex-end}
+.canvas-logic .lg-pin .pin-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.canvas-logic .lg-params{margin-top:4px;border-top:1px solid #444;padding-top:4px}
+.canvas-logic .lg-params input,.canvas-logic .lg-params select{width:100%;font-size:9px;padding:2px 4px;margin-top:2px;background:#1a1a1a;border:1px solid #555;color:#eee;border-radius:3px}
+.canvas-logic .lg-params textarea{width:100%;min-height:36px;font-size:9px;font-family:monospace;background:#1a1a1a;border:1px solid #555;color:#eee;border-radius:3px;resize:vertical}
+.canvas-line.logic{stroke:#7c4dff}
+
+/* Rule set sidebar */
+.rl-panel{display:flex;flex-direction:column;gap:6px}
+.rl-panel h4{color:#00D9FF;font-size:13px;margin-bottom:4px}
+.rl-tab{padding:8px 10px;background:#252525;border:1px solid #333;border-radius:8px;font-size:11px;cursor:pointer;transition:all .15s;color:#aaa}
+.rl-tab:hover{border-color:#00D9FF;color:#fff}
+.rl-tab.active{border-color:#00D9FF;background:rgba(0,217,255,.08);color:#00D9FF}
+.rl-tab .rl-del{margin-left:4px;color:#f44;font-size:10px;cursor:pointer}
+
+/* Radar */
+#scan-radar{display:flex;flex-direction:column;align-items:center;justify-content:center;height:120px;position:relative}
+.radar-circle{width:70px;height:70px;border-radius:50%;border:2px solid rgba(0,217,255,.3);position:relative;overflow:hidden}
+.radar-circle::before,.radar-circle::after{content:'';position:absolute;border-radius:50%;border:1px solid rgba(0,217,255,.15);top:50%;left:50%;transform:translate(-50%,-50%)}
+.radar-circle::before{width:70%;height:70%}.radar-circle::after{width:40%;height:40%}
+.radar-sweep{position:absolute;width:35px;height:35px;top:calc(50% - 17px - 12px);left:calc(50% - 17px);border-radius:50%;background:conic-gradient(from 0deg,transparent 0deg,rgba(0,217,255,.4) 60deg,transparent 60deg);animation:radar-spin 2s linear infinite}
+@keyframes radar-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.radar-label{margin-top:5px;color:#00D9FF;font-size:11px;animation:radar-pulse 1.5s ease-in-out infinite}
+@keyframes radar-pulse{0%,100%{opacity:1}50%{opacity:.4}}
 </style>
 </head>
-<body class="app-shell-page"><div class="app-container"><div id="app-sidebar-mount" data-active="devices"></div><div class="main-content"><div class="page-header"><h2>物理世界</h2></div><div class="page-scroll"><div class="pw-page">
-<div class="pw-hero"><h3>设备发现与设备绑定</h3><p><strong>绑定</strong>是保存设备关系，断电后仍保留；<strong>在线</strong>代表当前 BLE 已连接，断电后会显示离线。点击“连接/重连”后才能真实调用 ESP32 动作。</p><span class="tag">SEEKPHY：扫描绑定</span><span class="tag">在线状态独立</span><span class="tag">Web Bluetooth 调用</span></div>
+<body class="app-shell-page"><div class="app-container"><div id="app-sidebar-mount" data-active="devices"></div><div class="main-content"><div class="page-header"><h2>SEEKBCI 控制板管理</h2></div><div class="page-scroll"><div class="pw-page">
+
 <div class="pw-layout">
-<section class="pw-panel"><h3>1. SEEKPHY 设备发现 / 绑定 / 调用</h3><p>使用 Web Bluetooth 连接 ESP32 示例固件，并写入 Command Characteristic。请使用 Chrome / Edge，并通过 HTTPS 或 localhost 打开页面。</p><div class="btn-row"><button class="pw-btn" id="scan-btn" type="button">扫描并连接 SEEKPHY</button><button class="pw-btn secondary" id="clear-btn" type="button">清空发现列表</button></div><div class="status" id="scan-status">状态：等待连接。已绑定设备会自动显示，但断电后应为离线。</div><div class="device-list" id="seekphy-list"><div class="empty">暂无发现设备。</div></div><div class="status" id="bind-status">绑定状态：读取中...</div></section>
-<section class="pw-panel"><h3>2. 非 SEEKPHY 设备注册</h3><p>用于第三方物联网平台、网关、自定义协议设备。核心是唯一 ID、协议类型和触发动作。</p><div class="form-grid"><div class="field"><label>唯一 ID / 外部 ID</label><input id="m-id" placeholder="ha:light.living_room / custom:relay01"></div><div class="field"><label>设备名称</label><input id="m-name" placeholder="客厅灯 / 门禁继电器"></div><div class="field"><label>工程别名</label><input id="m-alias" placeholder="living_room_light / door_relay"><div class="hint">建议使用英文、数字、下划线。</div></div><div class="field"><label>设备类别</label><select id="m-type"><option value="light">light</option><option value="switch">switch</option><option value="lock">lock</option><option value="cover">cover</option><option value="vehicle">vehicle</option><option value="custom">custom</option></select></div><div class="field"><label>协议 / 平台</label><select id="m-protocol"><option value="iot_platform">物联网平台接入</option><option value="mqtt">MQTT 网关</option><option value="websocket">WebSocket 网关</option><option value="udp">UDP 车辆控制</option><option value="custom">自定义协议</option></select></div><div class="field"><label>触发动作 / 调用属性</label><textarea id="m-actions" placeholder="开灯：action=turn_on; entity=light.living_room"></textarea></div><div class="field"><label>风险等级</label><select id="m-risk"><option value="low">low</option><option value="medium">medium</option><option value="high">high</option></select></div></div><div class="btn-row"><button class="pw-btn" id="manual-register" type="button">注册非 SEEKPHY 设备</button><button class="pw-btn secondary" id="manual-reset" type="button">重置</button></div><div class="status" id="manual-status">状态：等待填写非 SEEKPHY 设备信息。</div></section>
-</div></div></div></div></div></div>
+
+  <!-- LEFT: Device Discovery (spans full height) -->
+  <div class="panel pw-discovery" style="display:flex;flex-direction:column">
+    <h4>设备发现</h4>
+    <div class="scan-row"><button class="btn btn-primary" id="btn-scan">扫描控制板</button></div>
+    <div class="device-list" id="device-list"><div class="empty-hint">点击扫描发现设备<br>已连接设备可拖入画布</div></div>
+    <div class="status-bar" id="status-bar">就绪</div>
+  </div>
+
+  <!-- TOP-RIGHT: Config + Pinout side by side -->
+  <div class="pw-top-right">
+    <div class="panel">
+      <h4>设备配置 <span id="config-device-name" style="color:#aaa;font-size:12px;font-weight:normal"></span></h4>
+      <div id="config-empty" class="empty-hint" style="padding:12px">选中已连接设备</div>
+      <div id="config-body" class="config-body">
+        <div class="config-row"><label>角色</label><select id="cfg-role"><option value="input">控制端 (INPUT)</option><option value="output">被控端 (OUTPUT)</option></select></div>
+        <div id="cfg-input" style="display:none">
+          <div class="config-row"><label>数字输入</label></div><div class="pin-grid" id="pins-din"></div>
+          <div class="config-row"><label>ADC</label></div><div class="pin-grid" id="pins-adc"></div>
+        </div>
+        <div id="cfg-output" style="display:none">
+          <div class="config-row"><label>GPIO</label></div><div class="pin-grid" id="pins-dout"></div>
+          <div class="config-row"><label>PWM</label></div><div class="pin-grid" id="pins-pwm"></div>
+          <div class="config-row"><label>DAC</label></div><div class="pin-grid" id="pins-dac"></div>
+          <div class="config-row"><label>舵机</label></div><div class="pin-grid" id="pins-servo"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="btn-save-config" style="margin-top:10px">保存配置</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h4>引脚排布</h4>
+      <div class="pinout-box" id="pinout-container"><div class="empty-hint" style="font-size:12px">选中设备后显示</div></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM-RIGHT: Rule Canvas + Rule Set list -->
+  <div class="pw-bottom-right">
+    <div class="rule-canvas" id="rule-canvas">
+      <div class="logic-palette" id="logic-palette"></div>
+      <svg class="canvas-svg" id="canvas-svg"></svg>
+      <div class="canvas-hint" id="canvas-hint">将已连接设备拖入此区域<br>插入逻辑块：源→逻辑→汇，建立规则</div>
+    </div>
+    <div class="rl-panel">
+      <h4>规则集</h4>
+      <button class="btn btn-green btn-sm" id="btn-rule-new" style="width:100%">+ 新建</button>
+      <button class="btn btn-danger btn-sm" id="btn-rule-apply" style="width:100%">应用规则</button>
+      <button class="btn btn-orange btn-sm" id="btn-rule-stop" style="width:100%">停止</button>
+      <button class="btn btn-danger btn-sm" id="btn-rule-clear" style="width:100%">清空</button>
+      <div id="rl-tabs" style="display:flex;flex-direction:column;gap:4px;margin-top:6px"></div>
+    </div>
+  </div>
+
+</div><!-- pw-layout -->
+
+</div></div></div></div>
 <script src="js/app-sidebar.js?v=20260714g"></script>
-<script>
-const STORE_KEY='seekbci_physical_devices';
-const SERVICE='7f510001-1b15-4a0b-9f7f-8f54f8d7a001';
-const INFO_CHAR='7f510002-1b15-4a0b-9f7f-8f54f8d7a001';
-const COMMAND_CHAR='7f510004-1b15-4a0b-9f7f-8f54f8d7a001';
-const STATE_CHAR='7f510003-1b15-4a0b-9f7f-8f54f8d7a001';
-const ACTIONS=[{id:'turn_on',label:'打开'},{id:'turn_off',label:'关闭'},{id:'toggle',label:'切换'}];
-const bleRuntime=new Map();
-let healthTimer=null;
-function loadDevices(){try{return JSON.parse(localStorage.getItem(STORE_KEY)||'[]')}catch{return[]}}
-function saveDevices(list){localStorage.setItem(STORE_KEY,JSON.stringify(list));window.dispatchEvent(new CustomEvent('seekbciPhysicalDevicesChanged',{detail:list}))}
-function deviceIdOf(d){return d.deviceId||('dev_'+String(d.physicalId||d.deviceUid||'').replace(/[^a-zA-Z0-9_]/g,'_'))}
-function upsertDevice(d){const list=loadDevices();const id=deviceIdOf(d);const next={...d,deviceId:id,bound:true,boundAt:d.boundAt||new Date().toISOString(),lastSeenAt:new Date().toISOString()};const idx=list.findIndex(x=>x.deviceId===id||x.physicalId===next.physicalId);if(idx>=0)list[idx]={...list[idx],...next};else list.push(next);saveDevices(list);return next}
-function updateDeviceOnline(physicalId,online){const list=loadDevices();const idx=list.findIndex(d=>d.physicalId===physicalId);if(idx>=0){list[idx].online=online;list[idx].lastSeenAt=new Date().toISOString();saveDevices(list)}}
-function markRuntimeOffline(physicalId,msg){const r=bleRuntime.get(physicalId);if(r&&r.healthTimer)clearInterval(r.healthTimer);bleRuntime.delete(physicalId);try{if(r&&r.device&&r.device.gatt&&r.device.gatt.connected)r.device.gatt.disconnect()}catch(_){}updateDeviceOnline(physicalId,false);renderList();if(msg)document.getElementById('bind-status').textContent=msg+'\n该设备已从当前在线列表隐藏；重新上电后请点击“扫描并连接 SEEKPHY”。'}
-function startHealthCheck(physicalId){const r=bleRuntime.get(physicalId);if(!r)return;if(r.healthTimer)clearInterval(r.healthTimer);r.healthTimer=setInterval(async()=>{try{if(!r.device.gatt||!r.device.gatt.connected)throw new Error('GATT disconnected');if(r.stateChar){await r.stateChar.readValue()}updateDeviceOnline(physicalId,true)}catch(err){markRuntimeOffline(physicalId,'连接状态：设备无响应或已断电，已自动标记离线。绑定关系仍保留。')}} ,2000)}
-function decodeTextValue(value){return new TextDecoder('utf-8').decode(value)}
-function renderList(){const devices=loadDevices().filter(d=>d.protocol==='ble_seekphy'&&d.online===true);const list=document.getElementById('seekphy-list');if(!devices.length){list.innerHTML='<div class="empty">暂无在线 SEEKPHY 设备。已绑定但离线的设备不显示；请上电后点击“扫描并连接 SEEKPHY”。</div>';return;}list.innerHTML=devices.map((d,i)=>`<div class="device-row"><h4>${d.name||d.alias||d.deviceId}<button class="pw-btn secondary small" data-connect="${i}" type="button">${d.online?'重连':'连接/重连'}</button></h4><p>类型：${d.deviceType||'switch'} · ${d.online?'<span class="tag ok">在线</span>':'<span class="tag off">离线 / 未连接</span>'} <span class="tag ok">已绑定</span></p><div class="meta">physicalId：${d.physicalId}<br>deviceId：${d.deviceId}</div><div>${(d.actions||ACTIONS).map(a=>`<button class="pw-btn secondary small" data-action="${i}|${a.id}" type="button">${a.label||a.id}</button>`).join('')}</div></div>`).join('');list.querySelectorAll('[data-connect]').forEach(btn=>btn.addEventListener('click',()=>connectExisting(devices[Number(btn.dataset.connect)])));list.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('click',()=>callAction(devices,btn.dataset.action)))}
-async function scanAndConnect(){if(!navigator.bluetooth){document.getElementById('scan-status').textContent='状态：当前浏览器不支持 Web Bluetooth。请使用 Chrome / Edge。';return;}try{for(const r of bleRuntime.values()){try{if(r.healthTimer)clearInterval(r.healthTimer);if(r.device&&r.device.gatt&&r.device.gatt.connected)r.device.gatt.disconnect()}catch(_){}}bleRuntime.clear();document.getElementById('scan-status').textContent='状态：正在请求蓝牙设备...';const device=await navigator.bluetooth.requestDevice({filters:[{services:[SERVICE]}],optionalServices:[SERVICE]});await connectBleDevice(device,true)}catch(err){const msg=err&&err.name==='NotFoundError'?'用户取消了蓝牙选择器；请确认设备已上电、正在广播 SEEKPHY，再重新点击连接。':(err.message||String(err));document.getElementById('scan-status').textContent='状态：连接取消或失败：'+msg}}
-async function connectExisting(saved){try{document.getElementById('scan-status').textContent='状态：正在尝试重连已授权 BLE 设备...';const runtime=bleRuntime.get(saved.physicalId);if(runtime&&runtime.device){await connectBleDevice(runtime.device,true);return;}if(navigator.bluetooth&&navigator.bluetooth.getDevices){const devices=await navigator.bluetooth.getDevices();const found=devices.find(d=>(d.name||'').startsWith('SEEKPHY'));if(found){await connectBleDevice(found,true);return;}}document.getElementById('scan-status').textContent='状态：未找到可复用授权，需要在弹窗中重新选择 SEEKPHY。';await scanAndConnect()}catch(err){const msg=err&&err.name==='NotFoundError'?'用户取消了蓝牙选择器；绑定关系仍保留，但当前离线。请确认设备已上电并重新点击连接/重连。':(err.message||String(err));document.getElementById('scan-status').textContent='状态：重连失败：'+msg}}
-async function connectBleDevice(device,saveBinding){device.addEventListener('gattserverdisconnected',()=>{const runtime=[...bleRuntime.values()].find(r=>r.device===device);if(runtime){markRuntimeOffline(runtime.physicalId,'连接状态：设备已断开或断电，绑定关系仍保留。')}});const server=await device.gatt.connect();const service=await server.getPrimaryService(SERVICE);const commandChar=await service.getCharacteristic(COMMAND_CHAR);let stateChar=null;try{stateChar=await service.getCharacteristic(STATE_CHAR)}catch(_){}let info={};try{const infoChar=await service.getCharacteristic(INFO_CHAR);info=JSON.parse(decodeTextValue(await infoChar.readValue()))}catch(_){info={deviceUid:device.id,name:device.name||'SEEKPHY Device',deviceType:'switch'}}const physicalId='ble:'+(info.deviceUid||device.id);bleRuntime.set(physicalId,{device,commandChar,stateChar,physicalId});const saved=upsertDevice({mode:'seekphy_bind',physicalId,name:info.name||device.name||'SEEKPHY Device',alias:'seekphy_switch_01',protocol:'ble_seekphy',deviceType:info.deviceType||'switch',online:true,actions:ACTIONS});startHealthCheck(physicalId);document.getElementById('scan-status').textContent='状态：已连接 '+saved.name+'。现在点击“打开/关闭/切换”会写入 ESP32 BLE Command，并会每 2 秒检测在线状态。';document.getElementById('bind-status').textContent='绑定状态：在线并已绑定。\n'+JSON.stringify(saved,null,2);renderList()}
-async function callAction(devices,raw){const [idx,action]=raw.split('|');const d=devices[Number(idx)];if(!d)return;const runtime=bleRuntime.get(d.physicalId);if(!runtime||!runtime.commandChar){document.getElementById('bind-status').textContent='动作调用失败：设备当前离线或没有 BLE 会话。请先点击“连接/重连”。';updateDeviceOnline(d.physicalId,false);renderList();return;}const command={commandId:'cmd_'+Date.now(),capability:'power',action,params:{},timeoutMs:3000};try{await runtime.commandChar.writeValue(new TextEncoder().encode(JSON.stringify(command)));document.getElementById('bind-status').textContent='动作已发送：'+(ACTIONS.find(a=>a.id===action)?.label||action)+'\n'+JSON.stringify(command,null,2)}catch(err){updateDeviceOnline(d.physicalId,false);renderList();document.getElementById('bind-status').textContent='动作调用失败：'+(err.message||String(err))+'\n绑定关系仍保留，但设备已标记离线。'}}
-function clearScan(){document.getElementById('scan-status').textContent='状态：已清空页面发现显示；已绑定设备仍会保留。';renderList()}
-function registerManual(){const physicalId=document.getElementById('m-id').value.trim(),name=document.getElementById('m-name').value.trim(),alias=document.getElementById('m-alias').value.trim(),actionsText=document.getElementById('m-actions').value.trim(),status=document.getElementById('manual-status');if(!physicalId||!name||!alias||!actionsText){status.textContent='状态：唯一 ID、名称、别名、触发动作不能为空。';return;}const actionId=(actionsText.match(/action=([^;\n]+)/)||[])[1]||'custom_action';const saved=upsertDevice({mode:'manual_register_non_seekphy',physicalId,name,alias,deviceType:document.getElementById('m-type').value,protocol:document.getElementById('m-protocol').value,online:true,actions:[{id:actionId,label:'自定义动作',raw:actionsText}],riskLevel:document.getElementById('m-risk').value});status.textContent='状态：非 SEEKPHY 设备已保存。\n'+JSON.stringify(saved,null,2)}
-function resetManual(){['m-id','m-name','m-alias','m-actions'].forEach(id=>document.getElementById(id).value='');document.getElementById('m-type').value='light';document.getElementById('m-protocol').value='iot_platform';document.getElementById('m-risk').value='low';document.getElementById('manual-status').textContent='状态：等待填写非 SEEKPHY 设备信息。'}
-function markAllSeekphyOfflineOnPageLoad(){const list=loadDevices();let changed=false;for(const d of list){if(d.protocol==='ble_seekphy'&&d.online){d.online=false;changed=true}}if(changed)saveDevices(list)}
-document.addEventListener('DOMContentLoaded',()=>{document.getElementById('scan-btn').addEventListener('click',scanAndConnect);document.getElementById('clear-btn').addEventListener('click',clearScan);document.getElementById('manual-register').addEventListener('click',registerManual);document.getElementById('manual-reset').addEventListener('click',resetManual);markAllSeekphyOfflineOnPageLoad();const n=loadDevices().filter(d=>d.protocol==='ble_seekphy').length;document.getElementById('bind-status').textContent=n?'绑定状态：已绑定 '+n+' 个 SEEKPHY 设备；当前未连接，离线设备不显示。请点击“扫描并连接 SEEKPHY”。':'绑定状态：暂无已绑定 SEEKPHY 设备。';renderList()});
-</script>
+<script src="js/global-device-manager.js?v=20260714g"></script>
+<script src="js/esp32-pinout.js?v=20260808"></script>
+<script src="js/logic-blocks.js?v=20260815"></script>
+<script src="js/physical-world-ctrl.js?v=20260815"></script>
 </body></html>

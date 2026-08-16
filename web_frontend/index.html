@@ -398,7 +398,7 @@
                         <div class="feature-card" onclick="window.location.href='devices.html'" style="cursor:pointer;">
                             <div class="feature-icon">🔌</div>
                             <div class="feature-title">设备管理</div>
-                            <div class="feature-desc">LSL / 串口 / WiFi 连接 EEG，实时波形与通道监控</div>
+                            <div class="feature-desc">SEEKBCI BLE 连接 EEG/IMU，实时波形与通道监控</div>
                         </div>
                         <div class="feature-card" onclick="window.location.href='plaza.html'" style="cursor:pointer;">
                             <div class="feature-icon">🏛️</div>
@@ -439,21 +439,17 @@
                         <div style="background: #1E1E1E; padding: 30px; border-radius: 12px; max-width: 600px; margin: 0 auto; text-align: left;">
                             <h4 style="color: #00D9FF; margin-bottom: 15px;">✅ 已实现功能</h4>
                             <ul style="color: #aaa; line-height: 2;">
-                                <li>✅ LSL连接界面</li>
-                                <li>✅ 串口连接界面</li>
-                                <li>✅ WiFi连接界面</li>
+                                <li>✅ SEEKBCI BLE 连接界面</li>
                                 <li>✅ 设备扫描功能</li>
                                 <li>✅ 连接状态监控</li>
-                                <li>✅ 8通道数据显示</li>
+                                <li>✅ 8通道 EEG + BMI270 IMU</li>
                                 <li>✅ 实时信号波形</li>
                                 <li>✅ 配置自动保存</li>
                             </ul>
                             
                             <h4 style="color: #00D9FF; margin: 20px 0 15px;">📡 支持的连接方式</h4>
                             <ul style="color: #aaa; line-height: 2;">
-                                <li>🌐 LSL (Lab Streaming Layer)</li>
-                                <li>🔌 串口 (Serial Port)</li>
-                                <li>📶 WiFi (TCP/UDP)</li>
+                                <li>📡 SEEKBCI BLE（扩展 Cyton：EEG + IMU）</li>
                             </ul>
                             
                             <h4 style="color: #00D9FF; margin: 20px 0 15px;">💡 提示</h4>
@@ -483,6 +479,12 @@
                             </button>
                             <button class="btn" onclick="window.location.href='emg-test.html'" style="padding: 15px 30px; font-size: 16px; background:#FFB300; color:#111;">
                                 💪 运动通道测试
+                            </button>
+                            <button class="btn" onclick="window.location.href='eog-test.html'" style="padding: 15px 30px; font-size: 16px; background:#7c3aed; color:#fff;">
+                                👁 眼电通道测试
+                            </button>
+                            <button class="btn" onclick="window.location.href='focus-test.html'" style="padding: 15px 30px; font-size: 16px; background:#0288d1; color:#fff;">
+                                🎯 专注度监测
                             </button>
                         </div>
                         

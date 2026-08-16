@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IMU / 光标测试 - SEEKBCI PLAT</title>
     <link rel="stylesheet" href="css/experiment-test-nav.css?v=20260614">
-    <link rel="stylesheet" href="css/imu-test.css?v=20260714b">
+    <link rel="stylesheet" href="css/imu-test.css?v=20260718g">
 </head>
 <body>
     <div class="layout">
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h1>IMU · 光标</h1>
-                <p>控制设备 <strong>BMI270 IMU</strong> → 被控设备 <strong>光标</strong> / 三维地球预览。协议 <code>seekbci_imu_v1</code>。</p>
+                <p>控制设备 <strong>BMI270 IMU</strong> → 光标 / 地球 / <strong>倾斜 WASD</strong>。协议 <code>seekbci_eeg_v2</code> / IMU。</p>
                 <div class="exp-test-nav">
                     <a href="experiment.html">← 实验测试</a>
                     <a href="devices.html">← 设备管理</a>
@@ -23,12 +23,12 @@
             <div class="section">
                 <h2>连接</h2>
                 <div id="conn-status" class="status-pill status-bad">未连接</div>
-                <p class="form-hint" id="conn-detail" style="margin-top:8px;">扫描 BLE 名 ESP32_BMI270_MOUSE（与固件一致）</p>
+                <p class="form-hint" id="conn-detail" style="margin-top:8px;">默认连接 SEEKBCI（EEG+IMU 同包）。也可先在设备管理连接。</p>
                 <button type="button" class="btn btn-primary" id="btn-connect">连接 IMU（推荐）</button>
                 <button type="button" class="btn btn-secondary" id="btn-connect-web">Web Bluetooth 备用</button>
                 <button type="button" class="btn btn-secondary" id="btn-disconnect">断开</button>
                 <button type="button" class="btn btn-secondary" id="btn-calibrate">重新校准（静止）</button>
-                <p class="form-hint">默认走本机后端 Bleak（同参考 Python 客户端）。连不上时请确认：设备已上电、Windows 蓝牙开启、未占用串口/其它 Bleak 程序。</p>
+                <p class="form-hint">默认走本机后端 Bleak。连不上时请确认：设备已上电广播、Windows 蓝牙开启、未在系统设置里「已配对占用」、未占用其它 Bleak 程序。搜不到时多半是广播名在 Windows 为空——请重启后端后按服务 UUID 再扫。</p>
             </div>
 
             <div class="section">
@@ -53,6 +53,39 @@
             </div>
 
             <div class="section">
+                <h2>加速度 → WASD</h2>
+                <label class="check-row"><input type="checkbox" id="cfg-loco-enable" checked> 启用 ax/ay/az 行走预览</label>
+                <div class="form-group">
+                    <label class="form-label">加速度灵敏度</label>
+                    <input type="number" class="form-input" id="cfg-loco-sens" value="2.5" min="0.2" max="12" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">前进/后退阈值 (m/s²)</label>
+                    <input type="number" class="form-input" id="cfg-loco-pitch" value="1.0" min="0.2" max="6" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">左右阈值 (m/s²)</label>
+                    <input type="number" class="form-input" id="cfg-loco-roll" value="1.0" min="0.2" max="6" step="0.1">
+                </div>
+                <label class="check-row"><input type="checkbox" id="cfg-loco-invert-fwd"> 翻转前后</label>
+                <label class="check-row"><input type="checkbox" id="cfg-loco-invert-strafe"> 翻转左右</label>
+                <label class="check-row"><input type="checkbox" id="cfg-loco-system"> 驱动系统 WASD（hold）</label>
+                <button type="button" class="btn btn-secondary" id="btn-axis-calib">方向校准（可选）</button>
+                <button type="button" class="btn btn-secondary" id="btn-axis-cancel" hidden>取消方向校准</button>
+                <button type="button" class="btn btn-secondary" id="btn-axis-clear">清除方向校准</button>
+                <pre id="axis-prompt" class="loco-live">方向：默认（不对时再校准）</pre>
+                <div class="wasd-pad" id="wasd-pad" aria-label="WASD 状态">
+                    <span class="wasd-key" data-key="W">W</span>
+                    <span class="wasd-key" data-key="A">A</span>
+                    <span class="wasd-key" data-key="S">S</span>
+                    <span class="wasd-key" data-key="D">D</span>
+                </div>
+                <pre id="loco-live" class="loco-live">WASD: —</pre>
+                <pre id="loco-log" class="loco-log">加速度触发日志…</pre>
+                <p class="form-hint">前后/左右加速度 × 灵敏度超过阈值即触发 WASD；先静止校准中立点，方向反了就勾翻转或做方向校准。</p>
+            </div>
+
+            <div class="section">
                 <h2>报文</h2>
                 <pre id="payload-raw" class="payload">—</pre>
                 <pre id="stats-text" class="stats">—</pre>
@@ -66,14 +99,23 @@
             <div class="stage" id="panel-3d">
                 <canvas id="earth-canvas"></canvas>
             </div>
+            <div id="axis-overlay" class="axis-overlay" hidden>
+                <div class="axis-overlay-card">
+                    <div class="axis-overlay-kicker">方向校准</div>
+                    <div id="axis-overlay-msg" class="axis-overlay-msg">—</div>
+                    <div class="axis-overlay-bar"><div id="axis-overlay-fill" class="axis-overlay-fill"></div></div>
+                    <div id="axis-overlay-hint" class="axis-overlay-hint"></div>
+                </div>
+            </div>
         </main>
     </div>
 
     <script src="js/global-device-manager.js?v=20260714c"></script>
-    <script src="js/imu-protocol.js?v=20260714c"></script>
-    <script src="js/imu-cursor-mapper.js?v=20260714c"></script>
-    <script src="js/imu-ble-client.js?v=20260714c"></script>
+    <script src="js/imu-protocol.js?v=20260717b"></script>
+    <script src="js/imu-cursor-mapper.js?v=20260717b"></script>
+    <script src="js/imu-ble-client.js?v=20260721a"></script>
+    <script src="js/imu-locomotion-runtime.js?v=20260718k"></script>
     <script src="js/imu-earth-renderer.js?v=20260715a"></script>
-    <script src="js/imu-test.js?v=20260715a"></script>
+    <script src="js/imu-test.js?v=20260718k"></script>
 </body>
 </html>

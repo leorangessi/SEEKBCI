@@ -467,6 +467,17 @@
                     <input type="number" class="control-input" id="exp-flicker-block-opacity" min="20" max="100" value="58">
                 </div>
                 <div class="control-group">
+                    <label class="control-label">闪烁双色（亮相 / 暗相）</label>
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#ccc;">
+                            亮相 <input type="color" id="exp-flicker-color-on" value="#ffffff">
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#ccc;">
+                            暗相 <input type="color" id="exp-flicker-color-off" value="#000000">
+                        </label>
+                    </div>
+                </div>
+                <div class="control-group">
                     <label class="control-label">目标项目</label>
                     <select class="control-input" id="exp-sync-project"></select>
                 </div>
@@ -529,8 +540,8 @@
     </div>
     
     <script src="js/display-refresh.js?v=20260613"></script>
-    <script src="js/stimulus-run-config.js?v=20260612"></script>
-    <script src="js/experiment-config.js?v=20260612"></script>
+    <script src="js/stimulus-run-config.js?v=20260719d"></script>
+    <script src="js/experiment-config.js?v=20260719e"></script>
     <script src="js/global-device-manager.js?v=20260524b"></script>
     <script src="js/multimodal-channels.js?v=20260506a"></script>
     <script src="js/device-channel-config.js?v=20260524m"></script>

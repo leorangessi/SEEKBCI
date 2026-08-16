@@ -36,6 +36,13 @@ class KeyboardSendRequest(BaseModel):
     )
 
 
+class KeyboardHoldSyncRequest(BaseModel):
+    held: Dict[str, bool] = Field(
+        ...,
+        description="DOM KeyboardEvent.code → 是否按住，如 { KeyW: true, KeyA: false }",
+    )
+
+
 class MouseDoubleClickRequest(BaseModel):
     x: float = Field(..., description="屏幕坐标 X（CSS 像素，与浏览器估算一致）")
     y: float = Field(..., description="屏幕坐标 Y")
@@ -49,6 +56,15 @@ class MouseClickRequest(BaseModel):
 class MouseMoveRequest(BaseModel):
     dx: int = Field(..., description="相对位移 X（像素，可负）")
     dy: int = Field(..., description="相对位移 Y（像素，可负）")
+
+
+class MouseClickCurrentRequest(BaseModel):
+    clicks: int = Field(default=1, ge=1, le=2, description="1=单击，2=双击（当前光标位置）")
+    button: str = Field(default="left", description="left 或 right")
+
+
+class MouseButtonHoldSyncRequest(BaseModel):
+    pressed: bool = Field(..., description="True=按住左键，False=松开")
 
 
 class PythonExecuteRequest(BaseModel):
@@ -95,6 +111,36 @@ async def keyboard_send(body: KeyboardSendRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"按键模拟失败: {e}") from e
 
+    return {"success": True}
+
+
+@router.post("/keyboard/hold-sync")
+async def keyboard_hold_sync(body: KeyboardHoldSyncRequest):
+    """同步按住状态（IMU 倾斜 → WASD）。"""
+    ok, detail = keyboard_bridge.availability()
+    if not ok:
+        raise HTTPException(status_code=503, detail=detail)
+    try:
+        active = keyboard_bridge.sync_held_keys(body.held)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"按键同步失败: {e}") from e
+    return {"success": True, "held": active}
+
+
+@router.post("/keyboard/hold-release-all")
+async def keyboard_hold_release_all():
+    """松开所有 hold-sync 按下的键。"""
+    ok, detail = keyboard_bridge.availability()
+    if not ok:
+        raise HTTPException(status_code=503, detail=detail)
+    try:
+        keyboard_bridge.release_all_held_keys()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"松开按键失败: {e}") from e
     return {"success": True}
 
 
@@ -152,6 +198,64 @@ async def mouse_move(body: MouseMoveRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"鼠标移动失败: {e}") from e
 
+    return {"success": True}
+
+
+@router.post("/mouse/click-current")
+async def mouse_click_current(body: MouseClickCurrentRequest = MouseClickCurrentRequest()):
+    """在当前系统光标位置点击（左/右键；IMU 映射光标后的点击方式）。"""
+    ok, detail = mouse_bridge.availability()
+    if not ok:
+        raise HTTPException(status_code=503, detail=detail)
+    try:
+        mouse_bridge.click_current_button(body.button, body.clicks)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"鼠标点击失败: {e}") from e
+    return {"success": True, "button": body.button, "clicks": body.clicks}
+
+
+@router.post("/mouse/move-center")
+async def mouse_move_center():
+    """将系统光标移到主屏正中央。"""
+    ok, detail = mouse_bridge.availability()
+    if not ok:
+        raise HTTPException(status_code=503, detail=detail)
+    try:
+        x, y = mouse_bridge.move_to_screen_center()
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"光标回中失败: {e}") from e
+    return {"success": True, "x": x, "y": y}
+
+
+@router.post("/mouse/button-hold-sync")
+async def mouse_button_hold_sync(body: MouseButtonHoldSyncRequest):
+    """同步左键按住（肌电能量超阈按住 / 低于阈值松开）。"""
+    ok, detail = mouse_bridge.availability()
+    if not ok:
+        raise HTTPException(status_code=503, detail=detail)
+    try:
+        held = mouse_bridge.sync_left_button_held(body.pressed)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"鼠标按住同步失败: {e}") from e
+    return {"success": True, "pressed": held}
+
+
+@router.post("/mouse/button-release-all")
+async def mouse_button_release_all():
+    """松开由 button-hold-sync 按下的左键。"""
+    ok, detail = mouse_bridge.availability()
+    if not ok:
+        raise HTTPException(status_code=503, detail=detail)
+    try:
+        mouse_bridge.release_left_button()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"松开鼠标失败: {e}") from e
     return {"success": True}
 
 

@@ -7,6 +7,7 @@
   "author": "SEEKBCI",
   "scripts": {
     "start": "electron .",
+    "start:admin": "powershell -Command \"Start-Process -Verb RunAs -FilePath node -ArgumentList 'node_modules/electron/cli.js .'\"",
     "start:stimulus": "electron . --stimulus",
     "start:editor": "electron . --editor",
     "start:home": "electron . --home",
@@ -38,6 +39,7 @@
       }
     ],
     "win": {
+      "requestedExecutionLevel": "requireAdministrator",
       "target": [
         {
           "target": "nsis",

@@ -160,8 +160,94 @@ function findFrequencyConflictOnPage(pageBlocks, blockId, freqHz) {
 
 const SSVEP_PHASE_PRESETS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9];
 
+function defaultCursorControl() {
+    return {
+        enabled: false,
+        mapping: {
+            sensitivity: 42,
+            invertX: true,
+            invertY: true,
+            headMode: true
+        },
+        clickMethod: 'none',
+        clickType: 'single',
+        dwellMs: 900,
+        dwellStillPx: 14,
+        dwellCooldownMs: 700
+    };
+}
+
+function mergeCursorControl(raw) {
+    const base = defaultCursorControl();
+    if (!raw || typeof raw !== 'object') return base;
+    const dwellCooldownMs =
+        raw.dwellCooldownMs != null
+            ? Number(raw.dwellCooldownMs)
+            : raw.dwellCooldownoldownMs != null
+              ? Number(raw.dwellCooldownoldownMs)
+              : base.dwellCooldownMs;
+    return {
+        ...base,
+        ...raw,
+        mapping: { ...base.mapping, ...(raw.mapping || {}) },
+        dwellCooldownMs: Number.isFinite(dwellCooldownMs) ? dwellCooldownMs : base.dwellCooldownMs
+    };
+}
+
+function defaultLocomotionControl() {
+    return {
+        enabled: false,
+        mode: 'lean',
+        accelForwardTh: 1.0,
+        accelStrafeTh: 1.0,
+        accelSensitivity: 2.5,
+        invertForward: false,
+        invertStrafe: false,
+        smoothing: 0.78,
+        adaptNeutral: true,
+        adaptAlpha: 0.025,
+        keys: {
+            forward: 'KeyW',
+            back: 'KeyS',
+            left: 'KeyA',
+            right: 'KeyD'
+        }
+    };
+}
+
+function mergeLocomotionControl(raw) {
+    const base = defaultLocomotionControl();
+    if (!raw || typeof raw !== 'object') return base;
+    const merged = {
+        ...base,
+        ...raw,
+        keys: { ...base.keys, ...(raw.keys || {}) }
+    };
+    merged.mode = 'lean';
+    if (raw.accelForwardTh == null && raw.pitchThresholdDeg != null) {
+        const deg = Number(raw.pitchThresholdDeg);
+        if (Number.isFinite(deg)) {
+            merged.accelForwardTh = Math.max(0.6, Math.sin((deg * Math.PI) / 180) * 9.80665);
+        }
+    }
+    if (raw.accelStrafeTh == null && raw.rollThresholdDeg != null) {
+        const deg = Number(raw.rollThresholdDeg);
+        if (Number.isFinite(deg)) {
+            merged.accelStrafeTh = Math.max(0.6, Math.sin((deg * Math.PI) / 180) * 9.80665);
+        }
+    }
+    return merged;
+}
+
 function defaultProjectSettings() {
-    return { autoAssignFreqPhaseOnSave: true, pythonImports: [], pythonGlobalCode: '', advancedFeaturesOpen: false };
+    return {
+        autoAssignFreqPhaseOnSave: true,
+        pythonImports: [],
+        pythonGlobalCode: '',
+        advancedFeaturesOpen: false,
+        cursorControl: defaultCursorControl(),
+        locomotionControl: defaultLocomotionControl()
+    };
 }
 
 function normalizePythonImportsList(raw) {
@@ -184,7 +270,14 @@ function getProjectPythonImports(project) {
 }
 
 function getProjectSettings(project) {
-    return { ...defaultProjectSettings(), ...((project && project.settings) || {}) };
+    const base = defaultProjectSettings();
+    const raw = (project && project.settings) || {};
+    return {
+        ...base,
+        ...raw,
+        cursorControl: mergeCursorControl(raw.cursorControl),
+        locomotionControl: mergeLocomotionControl(raw.locomotionControl)
+    };
 }
 
 function stablePhaseForBlock(block, salt) {
@@ -264,6 +357,139 @@ function applyEditorSettingsToUi(project) {
     const label = document.getElementById('advanced-features-btn-label');
     if (label) label.textContent = settings.advancedFeaturesOpen ? '隐藏高级功能' : '高级功能';
     refreshPythonGlobalSummary(project);
+    applyCursorControlToUi(settings.cursorControl);
+    applyLocomotionControlToUi(settings.locomotionControl);
+}
+
+function applyCursorControlToUi(cc) {
+    const cfg = mergeCursorControl(cc);
+    const enabled = document.getElementById('editor-cursor-control-enabled');
+    const opts = document.getElementById('editor-cursor-control-options');
+    const method = document.getElementById('editor-cursor-click-method');
+    const clickType = document.getElementById('editor-cursor-click-type');
+    const dwellMs = document.getElementById('editor-cursor-dwell-ms');
+    const dwellStill = document.getElementById('editor-cursor-dwell-still');
+    const dwellCd = document.getElementById('editor-cursor-dwell-cooldown');
+    const dwellWrap = document.getElementById('editor-cursor-dwell-params');
+    const sens = document.getElementById('editor-cursor-sensitivity');
+    const invX = document.getElementById('editor-cursor-invert-x');
+    const invY = document.getElementById('editor-cursor-invert-y');
+    const head = document.getElementById('editor-cursor-head-mode');
+    if (enabled) enabled.checked = !!cfg.enabled;
+    if (opts) opts.style.display = cfg.enabled ? '' : 'none';
+    if (method) method.value = cfg.clickMethod || 'none';
+    if (clickType) clickType.value = cfg.clickType || 'single';
+    if (dwellMs) dwellMs.value = String(cfg.dwellMs);
+    if (dwellStill) dwellStill.value = String(cfg.dwellStillPx);
+    if (dwellCd) dwellCd.value = String(cfg.dwellCooldownMs);
+    if (dwellWrap) dwellWrap.style.display = cfg.clickMethod === 'dwell' ? '' : 'none';
+    if (sens) sens.value = String((cfg.mapping && cfg.mapping.sensitivity) || 42);
+    if (invX) invX.checked = !!(cfg.mapping && cfg.mapping.invertX);
+    if (invY) invY.checked = !!(cfg.mapping && cfg.mapping.invertY);
+    if (head) head.checked = !!(cfg.mapping && cfg.mapping.headMode);
+}
+
+function readCursorControlFromUi() {
+    const enabled = document.getElementById('editor-cursor-control-enabled');
+    const method = document.getElementById('editor-cursor-click-method');
+    const clickType = document.getElementById('editor-cursor-click-type');
+    const dwellMs = document.getElementById('editor-cursor-dwell-ms');
+    const dwellStill = document.getElementById('editor-cursor-dwell-still');
+    const dwellCd = document.getElementById('editor-cursor-dwell-cooldown');
+    const sens = document.getElementById('editor-cursor-sensitivity');
+    const invX = document.getElementById('editor-cursor-invert-x');
+    const invY = document.getElementById('editor-cursor-invert-y');
+    const head = document.getElementById('editor-cursor-head-mode');
+    const base = defaultCursorControl();
+    if (!enabled) return base;
+    const clickMethod = method && method.value ? method.value : 'none';
+    return {
+        enabled: !!enabled.checked,
+        mapping: {
+            sensitivity: Math.max(5, Math.min(120, Number(sens && sens.value) || 42)),
+            invertX: invX ? !!invX.checked : true,
+            invertY: invY ? !!invY.checked : true,
+            headMode: head ? !!head.checked : true
+        },
+        clickMethod: ['none', 'dwell', 'space'].includes(clickMethod) ? clickMethod : 'none',
+        clickType: clickType && clickType.value === 'double' ? 'double' : 'single',
+        dwellMs: Math.max(200, Math.min(5000, Number(dwellMs && dwellMs.value) || 900)),
+        dwellStillPx: Math.max(1, Math.min(80, Number(dwellStill && dwellStill.value) || 14)),
+        dwellCooldownMs: Math.max(200, Math.min(5000, Number(dwellCd && dwellCd.value) || 700))
+    };
+}
+
+function onEditorCursorControlChange() {
+    const shell = readStoredProjectShell();
+    shell.settings = { ...defaultProjectSettings(), ...(shell.settings || {}) };
+    shell.settings.cursorControl = readCursorControlFromUi();
+    applyCursorControlToUi(shell.settings.cursorControl);
+    localStorage.setItem(
+        'ssvep_project',
+        JSON.stringify({
+            ...shell,
+            pages,
+            currentPage,
+            runConfig: { ...defaultRunConfig(), ...(shell.runConfig || {}) }
+        })
+    );
+    markEditorDirty();
+}
+
+function applyLocomotionControlToUi(lc) {
+    const cfg = mergeLocomotionControl(lc);
+    const enabled = document.getElementById('editor-loco-enabled');
+    const opts = document.getElementById('editor-loco-options');
+    const sens = document.getElementById('editor-loco-sens');
+    const fwdTh = document.getElementById('editor-loco-pitch-th');
+    const strTh = document.getElementById('editor-loco-roll-th');
+    const invF = document.getElementById('editor-loco-invert-fwd');
+    const invS = document.getElementById('editor-loco-invert-strafe');
+    if (enabled) enabled.checked = !!cfg.enabled;
+    if (opts) opts.style.display = cfg.enabled ? '' : 'none';
+    if (sens) sens.value = String(Number(cfg.accelSensitivity).toFixed(1));
+    if (fwdTh) fwdTh.value = String(Number(cfg.accelForwardTh).toFixed(2));
+    if (strTh) strTh.value = String(Number(cfg.accelStrafeTh).toFixed(2));
+    if (invF) invF.checked = !!cfg.invertForward;
+    if (invS) invS.checked = !!cfg.invertStrafe;
+}
+
+function readLocomotionControlFromUi() {
+    const enabled = document.getElementById('editor-loco-enabled');
+    const sens = document.getElementById('editor-loco-sens');
+    const fwdTh = document.getElementById('editor-loco-pitch-th');
+    const strTh = document.getElementById('editor-loco-roll-th');
+    const invF = document.getElementById('editor-loco-invert-fwd');
+    const invS = document.getElementById('editor-loco-invert-strafe');
+    const base = defaultLocomotionControl();
+    if (!enabled) return base;
+    return {
+        ...base,
+        enabled: !!enabled.checked,
+        mode: 'lean',
+        accelSensitivity: Math.max(0.2, Math.min(12, Number(sens && sens.value) || 2.5)),
+        accelForwardTh: Math.max(0.2, Math.min(6, Number(fwdTh && fwdTh.value) || 1.0)),
+        accelStrafeTh: Math.max(0.2, Math.min(6, Number(strTh && strTh.value) || 1.0)),
+        invertForward: invF ? !!invF.checked : false,
+        invertStrafe: invS ? !!invS.checked : false
+    };
+}
+
+function onEditorLocomotionControlChange() {
+    const shell = readStoredProjectShell();
+    shell.settings = { ...defaultProjectSettings(), ...(shell.settings || {}) };
+    shell.settings.locomotionControl = readLocomotionControlFromUi();
+    applyLocomotionControlToUi(shell.settings.locomotionControl);
+    localStorage.setItem(
+        'ssvep_project',
+        JSON.stringify({
+            ...shell,
+            pages,
+            currentPage,
+            runConfig: { ...defaultRunConfig(), ...(shell.runConfig || {}) }
+        })
+    );
+    markEditorDirty();
 }
 
 function syncProjectSettingsFromEditorUi(project) {
@@ -279,6 +505,16 @@ function syncProjectSettingsFromEditorUi(project) {
                 return t && !t.startsWith('#') && (t.startsWith('import ') || t.startsWith('from '));
             })
         );
+    }
+    if (document.getElementById('editor-cursor-control-enabled')) {
+        project.settings.cursorControl = readCursorControlFromUi();
+    } else {
+        project.settings.cursorControl = mergeCursorControl(project.settings.cursorControl);
+    }
+    if (document.getElementById('editor-loco-enabled')) {
+        project.settings.locomotionControl = readLocomotionControlFromUi();
+    } else {
+        project.settings.locomotionControl = mergeLocomotionControl(project.settings.locomotionControl);
     }
     return project.settings;
 }
@@ -791,6 +1027,13 @@ function addMultimodalBlock(channelId) {
         edgeJumpUv: 50,
         edgeWindowMs: 80,
         edgePolarity: 'rise',
+        eogDetectMode: 'pulse',
+        pulseOnsetUv: 45,
+        pulseRecoverRatio: 0.35,
+        pulseMaxMs: 420,
+        pulseMinMs: 40,
+        baselineTauSec: 1.5,
+        refractoryMs: 350,
         holdRepeatMs: 0,
         x: Math.random() * Math.max(80, canvasRect.width - 220) + 40,
         y: Math.random() * Math.max(80, canvasRect.height - 180) + 40,
@@ -1852,24 +2095,71 @@ function buildActionDetailHtml(block, actionIndex, isMultimodal) {
                 <p style="font-size:11px;color:#888;line-height:1.45;margin:6px 0 0 0;">识别触发后先橙黄高亮该对象，延迟结束再跳转；默认 ${PAGE_LINK_DEFAULT_DELAY_MS} ms（1 秒）。填 0 也按默认处理。</p>
             </div>`;
     }
-    if (!isMultimodal && act.type === 'mouse_click') {
+    if (act.type === 'mouse_click') {
+        const mmHint = isMultimodal
+            ? '多模态通道触发时，在<strong>当前系统光标位置</strong>发送左键单击（可与 IMU 光标配合：头动瞄准，通道触发点击）。'
+            : '运行刺激时，在本方块<strong>几何中心</strong>发送系统级<strong>左键单击</strong>；后端会<strong>暂移光标并单击后恢复原位置</strong>。';
         return `
             <div class="property-group" style="margin-top:8px;">
                 <p style="font-size:12px;color:#aaa;line-height:1.55;">
-                    运行刺激时，在本方块<strong>几何中心</strong>发送系统级<strong>左键单击</strong>；后端会<strong>暂移光标并单击后恢复原位置</strong>。<br><br>
+                    ${mmHint}<br><br>
                     单击触发频率限制更短（约 <strong>0.35 秒</strong>），用于配合双击/多步操作。<br><br>
                     须开启<strong>系统选项</strong>并安装 <code style="color:#888;">pynput</code>。
                 </p>
             </div>`;
     }
-    if (!isMultimodal && act.type === 'mouse_double_click') {
+    if (act.type === 'mouse_double_click') {
+        const mmHint = isMultimodal
+            ? '多模态通道触发时，在<strong>当前系统光标位置</strong>发送左键双击（可与 IMU 光标配合）。'
+            : '运行刺激时，在本方块<strong>几何中心</strong>发送系统级<strong>左键双击</strong>；后端会<strong>暂移光标并双击后恢复原位置</strong>。';
         return `
             <div class="property-group" style="margin-top:8px;">
                 <p style="font-size:12px;color:#aaa;line-height:1.55;">
-                    运行刺激时，在本方块<strong>几何中心</strong>发送系统级<strong>左键双击</strong>；后端会<strong>暂移光标并双击后恢复原位置</strong>。<br><br>
+                    ${mmHint}<br><br>
                     两次双击之间后端强制间隔约 <strong>1.25 秒</strong>，避免连续触发导致鼠标不可用。<br><br>
-                    <strong>Electron 桌面壳：</strong>透明区默认<strong>鼠标穿透</strong>，双击会落到下层（如浏览器）；坐标由主进程换算，减少上下偏差。<br><br>
+                    ${
+                        isMultimodal
+                            ? ''
+                            : '<strong>Electron 桌面壳：</strong>透明区默认<strong>鼠标穿透</strong>，双击会落到下层（如浏览器）；坐标由主进程换算，减少上下偏差。<br><br>'
+                    }
                     须开启<strong>系统选项</strong>并安装 <code style="color:#888;">pynput</code>。
+                </p>
+            </div>`;
+    }
+    if (act.type === 'mouse_hold') {
+        return `
+            <div class="property-group" style="margin-top:8px;">
+                <p style="font-size:12px;color:#aaa;line-height:1.55;">
+                    <strong>连续按住（肌电推荐）</strong>：通道能量<strong>超过驱动阈值时按住</strong>系统左键，
+                    <strong>低于阈值（含回滞）时松开</strong>。用于拖拽、长按等连续按压模拟。<br><br>
+                    与「鼠标单击」不同：不会点一下就放；只要能量持续超阈就一直按着。<br><br>
+                    多模态在<strong>当前系统光标位置</strong>按住（可与 IMU 光标配合）。须开启<strong>系统选项</strong>并安装 <code style="color:#888;">pynput</code>。
+                </p>
+            </div>`;
+    }
+    if (act.type === 'mouse_right_click') {
+        return `
+            <div class="property-group" style="margin-top:8px;">
+                <p style="font-size:12px;color:#aaa;line-height:1.55;">
+                    在<strong>当前系统光标位置</strong>发送<strong>右键单击</strong>（适合左侧咬肌 EMG 等）。<br><br>
+                    须开启<strong>系统选项</strong>、启用 IMU/系统键鼠，并安装 <code style="color:#888;">pynput</code>。
+                </p>
+            </div>`;
+    }
+    if (act.type === 'imu_sens_cycle') {
+        return `
+            <div class="property-group" style="margin-top:8px;">
+                <p style="font-size:12px;color:#aaa;line-height:1.55;">
+                    循环切换 IMU 光标灵敏度倍率：<strong>0.5× → 1× → 2× → 0.5×</strong>（相对项目「光标灵敏度」基准）。<br><br>
+                    触发后屏幕中央短暂显示当前倍率。需已启用项目 <strong>IMU 光标控制</strong>。
+                </p>
+            </div>`;
+    }
+    if (act.type === 'cursor_center') {
+        return `
+            <div class="property-group" style="margin-top:8px;">
+                <p style="font-size:12px;color:#aaa;line-height:1.55;">
+                    将系统光标移回<strong>主屏正中央</strong>（适合右眼电等）。须开启<strong>系统选项</strong>。
                 </p>
             </div>`;
     }
@@ -1947,9 +2237,20 @@ function buildEditorActionsSectionHtml(block, isMultimodal) {
 
 function buildEditorRegularActionsListHtml(block, isMultimodal) {
     normalizeBlockActions(block);
-    const typeOrder = isMultimodal
-        ? ['none', 'python', 'keyboard', 'page_link', 'physical_device', 'iot_platform']
-        : ['none', 'python', 'keyboard', 'page_link', 'physical_device', 'iot_platform', 'mouse_click', 'mouse_double_click'];
+    const typeOrder = [
+        'none',
+        'python',
+        'keyboard',
+        'page_link',
+        'physical_device',
+        'iot_platform',
+        'mouse_click',
+        'mouse_double_click',
+        'mouse_right_click',
+        'mouse_hold',
+        'imu_sens_cycle',
+        'cursor_center'
+    ];
     const labels = {
         none: '无动作',
         python: 'Python动作',
@@ -1958,7 +2259,11 @@ function buildEditorRegularActionsListHtml(block, isMultimodal) {
         physical_device: '物理设备动作',
         iot_platform: '物联网平台动作',
         mouse_click: '鼠标单击（系统级）',
-        mouse_double_click: '鼠标双击（系统级）'
+        mouse_double_click: '鼠标双击（系统级）',
+        mouse_right_click: '鼠标右键（当前光标）',
+        mouse_hold: '鼠标按住（超阈按下/低于松开）',
+        imu_sens_cycle: 'IMU灵敏度循环（0.5×/1×/2×）',
+        cursor_center: '光标回屏幕中央'
     };
     let html = isMultimodal
         ? ''
@@ -2647,6 +2952,23 @@ function updateMultimodalScalar(prop, raw) {
     else if (prop === 'edgePolarity') {
         selectedBlock.edgePolarity =
             raw === 'fall' || raw === 'both' ? raw : 'rise';
+    } else if (prop === 'eogDetectMode') {
+        selectedBlock.eogDetectMode = raw === 'edge' ? 'edge' : 'pulse';
+        if (selectedBlock.triggerType === 'hold') selectedBlock.triggerType = 'edge';
+        updatePropertiesPanel();
+    } else if (prop === 'pulseOnsetUv') {
+        selectedBlock.pulseOnsetUv = Math.max(1, parseFloat(raw) || 45);
+        selectedBlock.edgeJumpUv = selectedBlock.pulseOnsetUv;
+    } else if (prop === 'pulseRecoverRatio') {
+        selectedBlock.pulseRecoverRatio = Math.max(0.1, Math.min(0.9, parseFloat(raw) || 0.35));
+    } else if (prop === 'pulseMaxMs') {
+        selectedBlock.pulseMaxMs = Math.max(80, parseInt(raw, 10) || 420);
+    } else if (prop === 'pulseMinMs') {
+        selectedBlock.pulseMinMs = Math.max(10, parseInt(raw, 10) || 40);
+    } else if (prop === 'baselineTauSec') {
+        selectedBlock.baselineTauSec = Math.max(0.3, parseFloat(raw) || 1.5);
+    } else if (prop === 'refractoryMs') {
+        selectedBlock.refractoryMs = Math.max(50, parseInt(raw, 10) || 350);
     } else if (prop === 'holdRepeatMs') selectedBlock.holdRepeatMs = Math.max(0, parseInt(raw, 10) || 0);
     else if (prop === 'confirmTimeoutMs') {
         selectedBlock.confirmTimeoutMs = Math.max(200, parseInt(raw, 10) || 1000);
@@ -2655,6 +2977,22 @@ function updateMultimodalScalar(prop, raw) {
         updatePropertiesPanel();
     }
     normalizeMultimodalBlockInEditor(selectedBlock);
+    markEditorDirty();
+    saveToLocalStorage();
+}
+
+/** 眼电检测模式：pulse | edge | hold（与眼电测试对齐） */
+function updateMultimodalEogMode(mode) {
+    if (!selectedBlock || !isMultimodalBlock(selectedBlock)) return;
+    if (mode === 'hold') {
+        selectedBlock.triggerType = 'hold';
+        selectedBlock.eogDetectMode = 'pulse';
+    } else {
+        selectedBlock.triggerType = 'edge';
+        selectedBlock.eogDetectMode = mode === 'edge' ? 'edge' : 'pulse';
+    }
+    normalizeMultimodalBlockInEditor(selectedBlock);
+    updatePropertiesPanel();
     markEditorDirty();
     saveToLocalStorage();
 }
@@ -2719,6 +3057,13 @@ function updatePropertiesPanel() {
         const edgeWin = typeof b.edgeWindowMs === 'number' ? b.edgeWindowMs : 80;
         const edgePol =
             b.edgePolarity === 'fall' || b.edgePolarity === 'both' ? b.edgePolarity : 'rise';
+        const eogMode = b.eogDetectMode === 'edge' ? 'edge' : 'pulse';
+        const pulseOnset = typeof b.pulseOnsetUv === 'number' ? b.pulseOnsetUv : edgeJump || 45;
+        const pulseRecover = typeof b.pulseRecoverRatio === 'number' ? b.pulseRecoverRatio : 0.35;
+        const pulseMax = typeof b.pulseMaxMs === 'number' ? b.pulseMaxMs : 420;
+        const pulseMin = typeof b.pulseMinMs === 'number' ? b.pulseMinMs : 40;
+        const baselineTau = typeof b.baselineTauSec === 'number' ? b.baselineTauSec : 1.5;
+        const refractory = typeof b.refractoryMs === 'number' ? b.refractoryMs : 350;
         const hrm = typeof b.holdRepeatMs === 'number' ? b.holdRepeatMs : 0;
         const metaRole =
             window.SSVEP_MULTIMODAL_BY_ID && window.SSVEP_MULTIMODAL_BY_ID[b.channel]
@@ -2735,37 +3080,77 @@ function updatePropertiesPanel() {
         const manualNorm = !!b.manualNormThresholds;
         const manualUpper = typeof b.manualUpperThresholdUv === 'number' ? b.manualUpperThresholdUv : 25;
         const manualLower = typeof b.manualLowerThresholdUv === 'number' ? b.manualLowerThresholdUv : 6;
-        const edgeParamsHtml =
-            !isMotion && tt === 'edge'
-                ? `
+        const eogParamsHtml = !isMotion
+            ? `
         <p style="font-size:11px;color:#888;line-height:1.45;margin-bottom:10px;">
-            <strong>眼电眨眼识别</strong>：对 SSVEP 参考去基线后的垂直眼电差分做短时导数检测（类似 EOG 文献中的 blink artifact / 微分阈值法）。默认<strong>上升沿</strong>：眨眼引起的正向跳变超过阈值即触发一次；非持续高电平。
+            与<strong>眼电测试</strong>同源：SSVEP 参考去基线 + EMA；默认<strong>升–落脉冲</strong>（眨眼典型波形），亦可改短窗突变或持续。
+            <a href="eog-test.html" target="_blank" style="color:#c9a0ff;">打开眼电测试调参 →</a>
         </p>
         <div class="property-group">
-            <label class="property-label">沿类型</label>
+            <label class="property-label">检测模式</label>
+            <select class="property-input" onchange="updateMultimodalEogMode(this.value)">
+                <option value="pulse" ${tt !== 'hold' && eogMode === 'pulse' ? 'selected' : ''}>升–落脉冲（推荐，似眨眼）</option>
+                <option value="edge" ${tt !== 'hold' && eogMode === 'edge' ? 'selected' : ''}>短窗突变沿</option>
+                <option value="hold" ${tt === 'hold' ? 'selected' : ''}>持续性（差分超阈并维持）</option>
+            </select>
+        </div>
+        ${
+            tt !== 'hold'
+                ? `
+        <div class="property-group">
+            <label class="property-label">极性</label>
             <select class="property-input" onchange="updateMultimodalScalar('edgePolarity', this.value)">
-                <option value="rise" ${edgePol === 'rise' ? 'selected' : ''}>上升沿（眨眼正向跳变，推荐）</option>
-                <option value="fall" ${edgePol === 'fall' ? 'selected' : ''}>下降沿（反向跳变）</option>
-                <option value="both" ${edgePol === 'both' ? 'selected' : ''}>双向（绝对值突变）</option>
+                <option value="rise" ${edgePol === 'rise' ? 'selected' : ''}>正向（上升 / 正脉冲）</option>
+                <option value="fall" ${edgePol === 'fall' ? 'selected' : ''}>反向（下降 / 负脉冲）</option>
+                <option value="both" ${edgePol === 'both' ? 'selected' : ''}>双向（绝对值）</option>
             </select>
         </div>
         <div class="property-group">
-            <label class="property-label">上升沿突变阈值（µV）</label>
+            <label class="property-label">基线 EMA τ（秒）</label>
+            <input type="number" class="property-input" step="0.1" min="0.3" max="5" value="${baselineTau}"
+                   onchange="updateMultimodalScalar('baselineTauSec', this.value)">
+        </div>
+        <div class="property-group">
+            <label class="property-label">不应期（毫秒）</label>
+            <input type="number" class="property-input" min="50" step="50" value="${refractory}"
+                   onchange="updateMultimodalScalar('refractoryMs', this.value)">
+        </div>
+        ${
+            eogMode === 'pulse'
+                ? `
+        <div class="property-group">
+            <label class="property-label">升沿阈值（µV）</label>
+            <input type="number" class="property-input" step="any" min="1" value="${pulseOnset}"
+                   onchange="updateMultimodalScalar('pulseOnsetUv', this.value)">
+            <p style="font-size:10px;color:#8a7ab8;margin-top:4px;">→ 去基线后越过此值进入升起，回落后触发一次。</p>
+        </div>
+        <div class="property-group">
+            <label class="property-label">回落比例（相对峰值）</label>
+            <input type="number" class="property-input" step="0.05" min="0.1" max="0.9" value="${pulseRecover}"
+                   onchange="updateMultimodalScalar('pulseRecoverRatio', this.value)">
+        </div>
+        <div class="property-group">
+            <label class="property-label">脉冲最长 / 最短（ms）</label>
+            <div class="property-row">
+                <input type="number" class="property-input" min="80" step="20" value="${pulseMax}"
+                       onchange="updateMultimodalScalar('pulseMaxMs', this.value)" title="最长">
+                <input type="number" class="property-input" min="10" step="10" value="${pulseMin}"
+                       onchange="updateMultimodalScalar('pulseMinMs', this.value)" title="最短">
+            </div>
+        </div>`
+                : `
+        <div class="property-group">
+            <label class="property-label">突变阈值（µV）</label>
             <input type="number" class="property-input" step="any" min="1" value="${edgeJump}"
                    onchange="updateMultimodalScalar('edgeJumpUv', this.value)">
-            <p style="font-size:11px;color:#888;line-height:1.45;margin-top:6px;">
-                在 ${edgeWin} ms 内差分超过此值视为一次眨眼/眼电事件（需配合设备管理中眼电通道极性微调）。
-            </p>
         </div>
         <div class="property-group">
             <label class="property-label">突变观测窗（毫秒）</label>
             <input type="number" class="property-input" min="20" step="10" value="${edgeWin}"
                    onchange="updateMultimodalScalar('edgeWindowMs', this.value)">
         </div>`
-                : '';
-        const eogHoldParamsHtml =
-            !isMotion && tt === 'hold'
-                ? `
+        }`
+                : `
         <div class="property-group">
             <label class="property-label">持续活跃阈值（µV，相对 SSVEP 参考）</label>
             <input type="number" class="property-input" step="any" min="1" value="${holdThr}"
@@ -2781,7 +3166,8 @@ function updatePropertiesPanel() {
             <input type="number" class="property-input" min="50" step="10" value="${hrm}"
                    onchange="updateMultimodalScalar('holdRepeatMs', this.value)">
         </div>`
-                : '';
+        }`
+            : '';
         const motionEmgParamsHtml = isMotion
             ? `
         <p style="font-size:11px;color:#888;line-height:1.45;margin-bottom:12px;">
@@ -2860,22 +3246,13 @@ function updatePropertiesPanel() {
                    onchange="updateMultimodalScalar('holdRepeatMs', this.value)">
         </div>`
             : '';
-        const triggerTypeHtml = isMotion
-            ? ''
-            : `
-        <div class="property-group">
-            <label class="property-label">触发类型</label>
-            <select class="property-input" onchange="updateMultimodalScalar('triggerType', this.value)">
-                <option value="edge" ${tt === 'edge' ? 'selected' : ''}>一次性（上升沿：短时突变）</option>
-                <option value="hold" ${tt === 'hold' ? 'selected' : ''}>持续性（差分超阈并维持一段时间）</option>
-            </select>
-        </div>`;
+        const triggerTypeHtml = '';
 
         const panel = document.getElementById('properties-panel');
         panel.innerHTML = `
         <h3 style="color: #C9A0FF; margin-bottom: 20px;">🧠 多模态通道</h3>
         <p style="font-size:12px;color:#888;line-height:1.5;margin-bottom:16px;">
-            运行刺激时<strong>不在画面显示</strong>。运动通道与 EMG 测试页相同（驱动≥门限触发）；眼电采用 SSVEP 参考去基线 + 突变检测。
+            运行刺激时<strong>不在画面显示</strong>。运动通道与 EMG 测试相同；眼电与<strong>眼电测试</strong>相同（升–落脉冲 / 突变沿）。
         </p>
         <div class="property-group">
             <label class="property-label">槽位类型（EOG-L/R · MOTION-L/R，每页唯一）</label>
@@ -2905,8 +3282,7 @@ function updatePropertiesPanel() {
             </div>
         </div>
         ${triggerTypeHtml}
-        ${edgeParamsHtml}
-        ${eogHoldParamsHtml}
+        ${eogParamsHtml}
         ${motionEmgParamsHtml}
         ${buildEditorActionsSectionHtml(b, true)}
         <button class="delete-btn" onclick="deleteBlock()">🗑️ 删除多模态方块</button>
@@ -3776,6 +4152,8 @@ function defaultRunConfig() {
         flickerHighBlank: false,
         flickerOnDutyPercent: 32,
         flickerBlockOpacityPercent: 58,
+        flickerColorOn: '#ffffff',
+        flickerColorOff: '#000000',
         speakOnDecode: false,
         ssvepMultimodalWaitSec: 1.0
     };
@@ -3815,6 +4193,16 @@ function applyRunConfigToModal(project) {
     setInputChecked('rc-flicker-high-blank', cfg.flickerHighBlank);
     setInputValue('rc-flicker-on-duty', cfg.flickerOnDutyPercent);
     setInputValue('rc-flicker-block-opacity', cfg.flickerBlockOpacityPercent);
+    setInputValue(
+        'rc-flicker-color-on',
+        cfg.flickerColorOn ||
+            (typeof window.DEFAULT_FLICKER_COLOR_ON === 'string' ? window.DEFAULT_FLICKER_COLOR_ON : '#ffffff')
+    );
+    setInputValue(
+        'rc-flicker-color-off',
+        cfg.flickerColorOff ||
+            (typeof window.DEFAULT_FLICKER_COLOR_OFF === 'string' ? window.DEFAULT_FLICKER_COLOR_OFF : '#000000')
+    );
     setInputValue('rc-th-minp', cfg.mode === 'threshold' ? cfg.minProbability : 0.28);
     setInputValue('rc-th-minm', cfg.minMargin);
     setInputChecked('rc-th-stable', cfg.thresholdRequireStable);
@@ -3889,12 +4277,18 @@ function readRuntimePresentationForSession() {
     const dutyPct = Number.isFinite(dutyRaw) ? dutyRaw : 32;
     const opacityRaw = parseFloat(document.getElementById('rc-flicker-block-opacity')?.value);
     const opacityPct = Number.isFinite(opacityRaw) ? opacityRaw : 58;
+    const normHex =
+        typeof window.normalizeHexColor === 'function'
+            ? window.normalizeHexColor
+            : (v, fb) => (v && String(v).trim() ? String(v).trim() : fb);
     return {
         transparentBackground: !!document.getElementById('rc-transparent-bg')?.checked,
         startFullscreen: !!document.getElementById('rc-start-fullscreen')?.checked,
         flickerHighBlank: !!document.getElementById('rc-flicker-high-blank')?.checked,
         flickerOnDutyPercent: Math.min(50, Math.max(15, dutyPct)),
-        flickerBlockOpacityPercent: Math.min(100, Math.max(20, opacityPct))
+        flickerBlockOpacityPercent: Math.min(100, Math.max(20, opacityPct)),
+        flickerColorOn: normHex(document.getElementById('rc-flicker-color-on')?.value, '#ffffff'),
+        flickerColorOff: normHex(document.getElementById('rc-flicker-color-off')?.value, '#000000')
     };
 }
 

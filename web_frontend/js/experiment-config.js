@@ -22,6 +22,8 @@
             flickerHighBlank: false,
             flickerOnDutyPercent: 32,
             flickerBlockOpacityPercent: 58,
+            flickerColorOn: '#ffffff',
+            flickerColorOff: '#000000',
             speakOnDecode: false,
             ssvepMultimodalWaitSec: 1.0
         };
@@ -54,11 +56,17 @@
     function collectStimulusRunFromDom() {
         const duty = parseInt(document.getElementById('exp-flicker-on-duty')?.value, 10);
         const opacity = parseInt(document.getElementById('exp-flicker-block-opacity')?.value, 10);
+        const normHex =
+            typeof global.normalizeHexColor === 'function'
+                ? global.normalizeHexColor
+                : (v, fb) => (v && String(v).trim() ? String(v).trim() : fb);
         return {
             source: 'test-stimulus',
             flickerHighBlank: !!document.getElementById('exp-flicker-high-blank')?.checked,
             flickerOnDutyPercent: Number.isFinite(duty) ? Math.min(50, Math.max(15, duty)) : 32,
-            flickerBlockOpacityPercent: Number.isFinite(opacity) ? Math.min(100, Math.max(20, opacity)) : 58
+            flickerBlockOpacityPercent: Number.isFinite(opacity) ? Math.min(100, Math.max(20, opacity)) : 58,
+            flickerColorOn: normHex(document.getElementById('exp-flicker-color-on')?.value, '#ffffff'),
+            flickerColorOff: normHex(document.getElementById('exp-flicker-color-off')?.value, '#000000')
         };
     }
 
@@ -109,7 +117,9 @@
         const patch = {
             flickerHighBlank: !!stimulus.flickerHighBlank,
             flickerOnDutyPercent: stimulus.flickerOnDutyPercent,
-            flickerBlockOpacityPercent: stimulus.flickerBlockOpacityPercent
+            flickerBlockOpacityPercent: stimulus.flickerBlockOpacityPercent,
+            flickerColorOn: stimulus.flickerColorOn || '#ffffff',
+            flickerColorOff: stimulus.flickerColorOff || '#000000'
         };
         if (typeof global.normalizeStimulusRunConfig === 'function') {
             return global.normalizeStimulusRunConfig(patch);
@@ -145,6 +155,14 @@
         if (cfg.stimulusRun) {
             const sp = stimulusRunToRunConfig(cfg.stimulusRun);
             patch = patch ? { ...patch, ...sp } : sp;
+        }
+        if (cfg.keyboardTest && typeof cfg.keyboardTest === 'object') {
+            const kb = { ...cfg.keyboardTest };
+            delete kb.source;
+            if (typeof global.normalizeStimulusRunConfig === 'function') {
+                Object.assign(kb, global.normalizeStimulusRunConfig(kb));
+            }
+            patch = patch ? { ...patch, ...kb } : kb;
         }
         return patch;
     }
@@ -205,6 +223,8 @@
         setCheck('exp-flicker-high-blank', stimulusRun.flickerHighBlank);
         set('exp-flicker-on-duty', stimulusRun.flickerOnDutyPercent);
         set('exp-flicker-block-opacity', stimulusRun.flickerBlockOpacityPercent);
+        set('exp-flicker-color-on', stimulusRun.flickerColorOn || '#ffffff');
+        set('exp-flicker-color-off', stimulusRun.flickerColorOff || '#000000');
     }
 
     function listLocalProjects() {

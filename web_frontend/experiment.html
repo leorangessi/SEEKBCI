@@ -67,8 +67,8 @@
             <div class="page-scroll">
                 <div class="testing-hub">
                     <div class="testing-hub-icon">🧪</div>
-                    <p class="testing-hub-desc">
-                        在此尝试刺激参数、识别准确度、运动通道与 IMU / 光标设置。
+                        <p class="testing-hub-desc">
+                        在此尝试刺激参数、识别准确度、SSVEP 键盘、运动/眼电通道、专注度与 IMU / 光标设置。
                         <strong style="color:#ccc;">找到较合适的参数后，请写入项目的运行配置</strong>，再在正式刺激中使用。
                     </p>
 
@@ -79,8 +79,17 @@
                         <button type="button" class="btn btn-primary" onclick="window.location.href='ssvep-test.html'">
                             📊 准确度测试
                         </button>
+                        <button type="button" class="btn btn-primary" onclick="window.location.href='ssvep-keyboard-test.html'">
+                            ⌨️ SSVEP 键盘测试
+                        </button>
                         <button type="button" class="btn btn-primary" onclick="window.location.href='emg-test.html'">
                             💪 运动通道测试
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="window.location.href='eog-test.html'" style="background:#7c3aed;">
+                            👁 眼电通道测试
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="window.location.href='focus-test.html'" style="background:#0288d1;">
+                            🎯 专注度监测
                         </button>
                         <button type="button" class="btn btn-primary" onclick="window.location.href='imu-test.html'">
                             🧭 IMU / 光标测试
@@ -99,6 +108,7 @@
                             <li>✅ 三种形状支持</li>
                             <li>✅ 参数实时调整</li>
                             <li>✅ SSVEP准确度测试</li>
+                            <li>✅ SSVEP 40 键键盘测试（参数调试 + 文本输出）</li>
                             <li>✅ 混淆矩阵分析</li>
                             <li>✅ 频率识别率图表</li>
                             <li>✅ 测试报告导出</li>
@@ -108,7 +118,10 @@
                         <ul class="list-dim">
                             <li><strong>识别速度测试</strong> → 同步到项目 <code>runConfig</code>（窗长、轮询、置信度阈值）</li>
                             <li><strong>刺激参数测试</strong> → 同步闪烁占空比、透明度等到 <code>runConfig</code></li>
+                            <li><strong>SSVEP 键盘测试</strong> → 中间 40 键 + 下方文本输出，左侧调试识别/闪烁参数并可写入项目</li>
                             <li><strong>运动通道测试</strong> → 同步 EMG/峰谷参数到 <code>settings.experimentEmg</code></li>
+                            <li><strong>眼电通道测试</strong> → 同步升–落/突变参数到 <code>settings.experimentEog</code></li>
+                            <li><strong>专注度监测</strong> → 眼电通道频段功率 → 0–100 专注度（测试）</li>
                             <li><strong>IMU / 光标测试</strong> → 校验 seekbci_imu_v1 映射（二维光标 / 三维地球）</li>
                             <li>实验页参数与编辑器「运行配置」应保持一致</li>
                         </ul>

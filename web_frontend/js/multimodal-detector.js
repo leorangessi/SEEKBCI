@@ -11,7 +11,13 @@
         edgeWindowMs: 80,
         edgePolarity: 'rise',
         baselineTauSec: 1.5,
-        refractoryMs: 280
+        refractoryMs: 350,
+        /** 与 eog-test 默认一致：升–落脉冲 */
+        eogDetectMode: 'pulse',
+        pulseOnsetUv: 45,
+        pulseRecoverRatio: 0.35,
+        pulseMaxMs: 420,
+        pulseMinMs: 40
     };
 
     const DRIVE = global.SSVEP_EMG_DRIVE;
@@ -135,6 +141,17 @@
         } else if (role === 'eog') {
             out.edgePolarity = 'rise';
         }
+        if (block.eogDetectMode === 'pulse' || block.eogDetectMode === 'edge') {
+            out.eogDetectMode = block.eogDetectMode;
+        }
+        if (block.pulseOnsetUv != null) out.pulseOnsetUv = Math.max(1, Number(block.pulseOnsetUv));
+        if (block.pulseRecoverRatio != null) {
+            out.pulseRecoverRatio = Math.max(0.1, Math.min(0.9, Number(block.pulseRecoverRatio)));
+        }
+        if (block.pulseMaxMs != null) out.pulseMaxMs = Math.max(80, Number(block.pulseMaxMs));
+        if (block.pulseMinMs != null) out.pulseMinMs = Math.max(10, Number(block.pulseMinMs));
+        if (block.baselineTauSec != null) out.baselineTauSec = Math.max(0.2, Number(block.baselineTauSec));
+        if (block.refractoryMs != null) out.refractoryMs = Math.max(50, Number(block.refractoryMs));
         return out;
     }
 
@@ -160,7 +177,9 @@
             lastHoldFire: 0,
             lastMetric: null,
             lastWindowMetric: 0,
-            lastDrive: 0
+            lastDrive: 0,
+            /** 可选：复用 SSVEP_EOG_PULSE 状态（pulse 模式） */
+            eogPulse: null
         };
     }
 
@@ -333,7 +352,13 @@
         trimHistory(st, tMs, Math.max(500, params.holdDurationMs * 2));
 
         if (st.warmupUntilMs && tMs < st.warmupUntilMs) {
-            return { edgeFire: false, holdActive: false, holdFireRepeat: false, metric, windowMetric: null };
+            return eogUiResult(st, params, {
+                edgeFire: false,
+                holdActive: false,
+                holdFireRepeat: false,
+                metric,
+                inWarmup: true
+            });
         }
 
         const absMetric = Math.abs(metric);
@@ -344,7 +369,63 @@
                 holdReleaseRatio: 0.65,
                 holdRepeatMs: params.holdRepeatMs
             });
-            return { edgeFire: false, holdActive: st.holdActive, holdFireRepeat: maybeHoldFire(st, tMs, params), metric, windowMetric: null };
+            return eogUiResult(st, params, {
+                edgeFire: false,
+                holdActive: st.holdActive,
+                holdFireRepeat: maybeHoldFire(st, tMs, params),
+                metric,
+                aboveThreshold: absMetric >= (params.holdThresholdUv || 30)
+            });
+        }
+
+        // 升–落脉冲（与 eog-test 同源）
+        if (params.eogDetectMode !== 'edge') {
+            if (!st.eogPulse) {
+                st.eogPulse = {
+                    pulsePhase: 'idle',
+                    pulseOnsetMs: 0,
+                    pulsePeak: 0
+                };
+            }
+            const pulseSt = st.eogPulse;
+            const pol = params.edgePolarity || 'rise';
+            const onset = params.pulseOnsetUv != null ? params.pulseOnsetUv : params.edgeJumpUv;
+            let signed = metric;
+            if (pol === 'fall') signed = -metric;
+            else if (pol === 'both') signed = Math.abs(metric);
+            let edgeFire = false;
+            if (pulseSt.pulsePhase === 'idle') {
+                if (signed >= onset) {
+                    pulseSt.pulsePhase = 'rising';
+                    pulseSt.pulseOnsetMs = tMs;
+                    pulseSt.pulsePeak = signed;
+                }
+            } else {
+                if (signed > pulseSt.pulsePeak) pulseSt.pulsePeak = signed;
+                const age = tMs - pulseSt.pulseOnsetMs;
+                if (age > (params.pulseMaxMs || 420)) {
+                    pulseSt.pulsePhase = 'idle';
+                } else {
+                    const recoverThr = Math.max(
+                        onset * 0.4,
+                        pulseSt.pulsePeak * (params.pulseRecoverRatio || 0.35)
+                    );
+                    if (age >= (params.pulseMinMs || 40) && signed <= recoverThr && pulseSt.pulsePeak >= onset) {
+                        pulseSt.pulsePhase = 'idle';
+                        if (tMs - st.lastEdgeFire >= (params.refractoryMs || 350)) {
+                            edgeFire = true;
+                            st.lastEdgeFire = tMs;
+                        }
+                    }
+                }
+            }
+            return eogUiResult(st, params, {
+                edgeFire,
+                holdActive: false,
+                holdFireRepeat: false,
+                metric,
+                aboveThreshold: signed >= onset || pulseSt.pulsePhase === 'rising'
+            });
         }
 
         let edgeFire = false;
@@ -365,7 +446,60 @@
                 st.lastEdgeFire = tMs;
             }
         }
-        return { edgeFire, holdActive: false, holdFireRepeat: false, metric, windowMetric: null };
+        return eogUiResult(st, params, {
+            edgeFire,
+            holdActive: false,
+            holdFireRepeat: false,
+            metric,
+            aboveThreshold: edgeFire
+        });
+    }
+
+    function eogUiResult(st, params, base) {
+        const onset =
+            params.eogDetectMode === 'edge'
+                ? params.edgeJumpUv
+                : params.pulseOnsetUv != null
+                  ? params.pulseOnsetUv
+                  : params.edgeJumpUv;
+        const phase =
+            st.triggerType === 'hold'
+                ? st.holdActive
+                    ? 'hold'
+                    : 'idle'
+                : st.eogPulse && st.eogPulse.pulsePhase
+                  ? st.eogPulse.pulsePhase
+                  : 'idle';
+        const inWarmup = !!(st.warmupUntilMs && performance.now() < st.warmupUntilMs);
+        return {
+            edgeFire: !!base.edgeFire,
+            holdActive: !!base.holdActive,
+            holdFireRepeat: !!base.holdFireRepeat,
+            metric: base.metric,
+            windowMetric: null,
+            pulsePhase: phase,
+            pulsePeak: st.eogPulse ? st.eogPulse.pulsePeak || 0 : 0,
+            onsetUv: onset,
+            eogDetectMode: params.eogDetectMode || 'pulse',
+            aboveThreshold: !!base.aboveThreshold,
+            inWarmup: base.inWarmup != null ? base.inWarmup : inWarmup,
+            warmupRemainMs:
+                st.warmupUntilMs && performance.now() < st.warmupUntilMs
+                    ? Math.max(0, st.warmupUntilMs - performance.now())
+                    : 0
+        };
+    }
+
+    function resolveEogSampleRows(message) {
+        if (message) {
+            if (Array.isArray(message.data_display) && message.data_display.length) {
+                return message.data_display;
+            }
+            if (Array.isArray(message.data) && message.data.length) {
+                return message.data;
+            }
+        }
+        return null;
     }
 
     function processConfig(cfg, message, tMs) {
@@ -378,29 +512,47 @@
 
         if (isMotorRole(st.role)) return processMotorConfig(st, cfg, message, tMs);
 
-        const rows = message && message.data;
+        const rows = resolveEogSampleRows(message);
         if (!Array.isArray(rows) || !rows.length) {
-            return { edgeFire: false, holdFireRepeat: false, metric: st.lastMetric, windowMetric: st.lastWindowMetric };
+            return eogUiResult(st, st.params, {
+                edgeFire: false,
+                holdFireRepeat: false,
+                holdActive: st.holdActive,
+                metric: st.lastMetric,
+                aboveThreshold: false
+            });
         }
 
         const sr = RUN && typeof RUN.getSamplingRateHz === 'function' ? RUN.getSamplingRateHz() : 250;
         const dtSec = 1 / sr;
         let edgeFire = false;
         let holdFireRepeat = false;
-        let metric = st.lastMetric;
+        let lastOut = null;
 
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
             const raw = pickRawSample(cfg.channel, cfg.physicalChannel, message, row);
             if (raw == null || !Number.isFinite(raw)) continue;
             const sampleT = tMs - (rows.length - 1 - i) * dtSec * 1000;
-            const out = feedEogSample(st, raw, row, sampleT, dtSec);
-            metric = out.metric;
-            if (out.edgeFire) edgeFire = true;
-            if (out.holdFireRepeat) holdFireRepeat = true;
+            lastOut = feedEogSample(st, raw, row, sampleT, dtSec);
+            if (lastOut.edgeFire) edgeFire = true;
+            if (lastOut.holdFireRepeat) holdFireRepeat = true;
         }
 
-        return { edgeFire, holdFireRepeat, metric, windowMetric: null };
+        if (!lastOut) {
+            return eogUiResult(st, st.params, {
+                edgeFire: false,
+                holdFireRepeat: false,
+                holdActive: st.holdActive,
+                metric: st.lastMetric,
+                aboveThreshold: false
+            });
+        }
+        return {
+            ...lastOut,
+            edgeFire,
+            holdFireRepeat: holdFireRepeat || !!lastOut.holdFireRepeat
+        };
     }
 
     function normalizeMultimodalDetectionFields(block) {
@@ -437,6 +589,15 @@
             if (block.edgePolarity !== 'rise' && block.edgePolarity !== 'fall' && block.edgePolarity !== 'both') {
                 block.edgePolarity = p.edgePolarity || 'rise';
             }
+            if (block.eogDetectMode !== 'pulse' && block.eogDetectMode !== 'edge') {
+                block.eogDetectMode = p.eogDetectMode || 'pulse';
+            }
+            if (block.pulseOnsetUv == null) block.pulseOnsetUv = p.pulseOnsetUv;
+            if (block.pulseRecoverRatio == null) block.pulseRecoverRatio = p.pulseRecoverRatio;
+            if (block.pulseMaxMs == null) block.pulseMaxMs = p.pulseMaxMs;
+            if (block.pulseMinMs == null) block.pulseMinMs = p.pulseMinMs;
+            if (block.baselineTauSec == null) block.baselineTauSec = p.baselineTauSec;
+            if (block.refractoryMs == null) block.refractoryMs = p.refractoryMs;
             if (block.triggerType !== 'hold') block.triggerType = 'edge';
             if (typeof block.holdRepeatMs !== 'number') block.holdRepeatMs = 400;
         }

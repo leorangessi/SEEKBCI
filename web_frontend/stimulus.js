@@ -68,6 +68,9 @@ let stimulusLastMotionMessage = null;
 /** 上一帧运动检测状态（供控制面板显示真实触发进度） */
 let lastMotionTriggerUi = null;
 let lastMotionTriggerUiList = [];
+/** 上一帧眼电检测状态（控制面板） */
+let lastEogTriggerUi = null;
+let lastEogTriggerUiList = [];
 let lastMotionStreamPullMs = 0;
 let lastMotionBufSeen = 0;
 let motionBufStaleCount = 0;
@@ -110,6 +113,12 @@ let stimulusFlickerHighBlank = false;
 let stimulusFlickerOnDuty = 0.35;
 /** 闪烁对象整体不透明度，便于看见下层图像/窗口 */
 let stimulusFlickerBlockOpacity = 0.58;
+/** 闪烁亮相 / 暗相（默认白/黑） */
+let stimulusFlickerColorOn = '#ffffff';
+let stimulusFlickerColorOff = '#000000';
+/** 多模态 mouse_hold 期望按住状态 */
+let ssvepMouseHoldDesired = false;
+let ssvepMouseHoldSyncInFlight = false;
 
 // 标记是否是首次启动（用于判断是否需要倒计时）
 let isFirstStart = true;
@@ -285,6 +294,13 @@ function rebuildMultimodalRuntimeConfigs(options) {
             edgeJumpUv: b.edgeJumpUv,
             edgeWindowMs: b.edgeWindowMs,
             edgePolarity: b.edgePolarity,
+            eogDetectMode: b.eogDetectMode,
+            pulseOnsetUv: b.pulseOnsetUv,
+            pulseRecoverRatio: b.pulseRecoverRatio,
+            pulseMaxMs: b.pulseMaxMs,
+            pulseMinMs: b.pulseMinMs,
+            baselineTauSec: b.baselineTauSec,
+            refractoryMs: b.refractoryMs,
             emgWindowSec: b.emgWindowSec,
             motionWindowSec: b.motionWindowSec,
             peakWindowSec: b.peakWindowSec,
@@ -339,6 +355,7 @@ function rebuildMultimodalRuntimeConfigs(options) {
         stopMultimodalMotionTick();
     }
     updateMotionControlPanelUi(null);
+    updateEogControlPanelUi(null);
 }
 
 function pageHasConfirmSsvepGates() {
@@ -717,6 +734,153 @@ function isMotionCfg(cfg) {
     return role === 'motor_imagery';
 }
 
+function isEogCfg(cfg) {
+    if (!cfg || isMotionCfg(cfg)) return false;
+    const role =
+        typeof window.ssvepGetModalityRoleForChannel === 'function' && cfg.channel
+            ? window.ssvepGetModalityRoleForChannel(cfg.channel)
+            : null;
+    return role === 'eog';
+}
+
+function listEogPhysicalIndices() {
+    const CFG = window.SSVEP_DEVICE_CHANNEL_CONFIG;
+    if (CFG && typeof CFG.getPhysicalChannelsForRole === 'function') {
+        const arr = CFG.getPhysicalChannelsForRole('eog');
+        if (Array.isArray(arr) && arr.length) return arr.slice();
+    }
+    const gdm = window.globalDeviceManager;
+    const roles = gdm && typeof gdm.getChannelRoles === 'function' ? gdm.getChannelRoles() : null;
+    if (Array.isArray(roles)) {
+        const out = [];
+        for (let i = 0; i < roles.length; i++) {
+            if (roles[i] === 'eog') out.push(i);
+        }
+        if (out.length) return out;
+    }
+    return [];
+}
+
+function pageHasEogInput() {
+    return currentPageHasMultimodalBlocks() && multimodalRuntimeConfigs.some((c) => isEogCfg(c));
+}
+
+function eogSlotLabel(cfg) {
+    const meta = window.SSVEP_MULTIMODAL_BY_ID && cfg.channel ? window.SSVEP_MULTIMODAL_BY_ID[cfg.channel] : null;
+    const short = meta ? meta.short : cfg.channel || 'EOG';
+    const phys =
+        cfg.physicalChannel != null && cfg.physicalChannel >= 0
+            ? cfg.physicalChannel
+            : resolveBlockPhysicalChannel(cfg);
+    return phys != null && phys >= 0 ? `${short} · Ch${phys + 1}` : short;
+}
+
+function pickAggregateEogTriggerUi(list) {
+    if (!list || !list.length) return null;
+    const fired = list.find((u) => u.firedThisTick);
+    if (fired) return fired;
+    const rising = list.find((u) => u.phase === 'rising' || u.aboveThreshold);
+    if (rising) return rising;
+    return list[0];
+}
+
+function updateEogTriggerPill(triggerUi) {
+    const pill = document.getElementById('eog-trigger-pill');
+    if (!pill) return;
+    let cls = 'motion-stream-pill motion-stream-pill--wait';
+    let text = '等待检测';
+    if (!triggerUi) {
+        pill.className = cls;
+        pill.textContent = text;
+        return;
+    }
+    if (triggerUi.inWarmup) {
+        text = `预热 ${(triggerUi.warmupRemainMs / 1000).toFixed(1)}s`;
+    } else if (triggerUi.firedThisTick) {
+        cls = 'motion-stream-pill motion-stream-pill--hit';
+        text = '成功触发';
+    } else if (triggerUi.phase === 'rising' || triggerUi.holdActive) {
+        cls = 'motion-stream-pill motion-stream-pill--live';
+        text = triggerUi.holdActive ? '持续中' : '升起中';
+    } else if (triggerUi.aboveThreshold) {
+        cls = 'motion-stream-pill motion-stream-pill--live';
+        text = '超阈';
+    } else {
+        const m = Number(triggerUi.metric);
+        const thr = Number(triggerUi.threshold) || 45;
+        text = Number.isFinite(m) ? `${m.toFixed(0)}/${thr.toFixed(0)} µV` : '等待';
+    }
+    pill.className = cls;
+    pill.textContent = text;
+}
+
+function updateEogControlPanelUi(eogUiList) {
+    const wrap = document.getElementById('eog-bars-wrap');
+    if (!wrap) return;
+    const list = Array.isArray(eogUiList) ? eogUiList : lastEogTriggerUiList;
+    const show = pageHasEogInput() || (list && list.length > 0);
+    if (!show) {
+        wrap.style.display = 'none';
+        return;
+    }
+    wrap.style.display = 'flex';
+    const card = document.getElementById('eog-channel-status');
+    const statusEl = document.getElementById('eog-drive-status');
+    const agg = pickAggregateEogTriggerUi(list) || lastEogTriggerUi;
+    updateEogTriggerPill(agg);
+
+    if (!card) return;
+    if (!list.length) {
+        card.innerHTML = '<div style="font-size:11px;color:#888;padding:4px;">当前页无线电眼电方块</div>';
+        if (statusEl) statusEl.textContent = '等待眼电配置…';
+        return;
+    }
+
+    card.innerHTML = list
+        .map((u, i) => {
+            const thr = Math.max(1, Number(u.threshold) || 45);
+            const abs = Math.abs(Number(u.metric) || 0);
+            const pct = Math.max(0, Math.min(100, (abs / thr) * 100));
+            const thrPct = Math.min(100, (thr / Math.max(thr, abs, 1)) * 100);
+            let stateCls = '';
+            let stateText = u.phase || 'idle';
+            if (u.firedThisTick) {
+                stateCls = 'hit';
+                stateText = '触发';
+            } else if (u.phase === 'rising') {
+                stateCls = 'rise';
+                stateText = '升起';
+            } else if (u.holdActive) {
+                stateCls = 'rise';
+                stateText = '持续';
+            } else if (u.inWarmup) {
+                stateText = '预热';
+            }
+            const fireCls = u.firedThisTick ? ' fire' : '';
+            return `
+            <div class="eog-ch-row${fireCls}" data-eog-idx="${i}">
+                <div class="eog-ch-top">
+                    <span class="eog-ch-name">${escapeHtml(u.label || 'EOG')}</span>
+                    <span class="eog-ch-state ${stateCls}">${stateText} · ${(Number(u.metric) || 0).toFixed(0)} µV</span>
+                </div>
+                <div class="eog-metric-bar">
+                    <div class="eog-metric-fill" style="width:${pct}%"></div>
+                    <div class="eog-metric-thr" style="left:${thrPct}%"></div>
+                </div>
+            </div>`;
+        })
+        .join('');
+
+    if (statusEl) {
+        const lines = list.map((u) => {
+            const mode = u.mode === 'edge' ? '沿' : u.mode === 'hold' ? '持续' : '脉冲';
+            const fire = u.firedThisTick ? ' ★触发' : '';
+            return `${u.label}  [${mode}]  ${Number(u.metric || 0).toFixed(1)}µV / ${Number(u.threshold || 0).toFixed(0)}  ${u.phase || 'idle'}${fire}`;
+        });
+        statusEl.textContent = lines.join('\n');
+    }
+}
+
 function pickAggregateTriggerUi(list) {
     if (!list || !list.length) return null;
     const fired = list.find((u) => u.firedThisTick);
@@ -838,11 +1002,26 @@ function tickLocalMotionHold(cfg, drive, tMs) {
 
 function runMotionBlockDetection(message, t, metrics, motorUiList) {
     const cfgs = getMotionDetectionConfigs();
+    let mouseHoldWant = false;
+    let mouseHoldTracked = false;
     for (const cfg of cfgs) {
         const m = metricForMotionCfg(metrics, cfg);
         const drive = m ? m.drive : 0;
         const hold = tickLocalMotionHold(cfg, motionDriveForHold(m, drive, cfg), t);
         let firedThisTick = false;
+
+        if (
+            cfgHasMouseHoldAction(cfg) &&
+            !cfg.isConfirmGate &&
+            !cfg.isCancelGate
+        ) {
+            mouseHoldTracked = true;
+            const thr = Number(hold.threshold);
+            const releaseThr = (Number.isFinite(thr) ? thr : 0.85) * 0.88;
+            if (hold.aboveThreshold || (ssvepMouseHoldDesired && drive >= releaseThr)) {
+                mouseHoldWant = true;
+            }
+        }
 
         if (cfg.isConfirmGate) {
             if (
@@ -864,7 +1043,8 @@ function runMotionBlockDetection(message, t, metrics, motorUiList) {
                     action &&
                     action.type !== 'none' &&
                     action.type !== 'confirm_ssvep' &&
-                    action.type !== 'cancel_ssvep'
+                    action.type !== 'cancel_ssvep' &&
+                    action.type !== 'mouse_hold'
                 ) {
                     executeAction(action);
                     ran.push(action.type);
@@ -898,6 +1078,7 @@ function runMotionBlockDetection(message, t, metrics, motorUiList) {
             firedThisTick
         });
     }
+    if (mouseHoldTracked) syncMultimodalMouseHold(mouseHoldWant);
 }
 
 function findTriggerUiForMetric(m, uiList) {
@@ -1151,6 +1332,7 @@ function processMultimodalRuntimeTick(message) {
     const t = performance.now();
     const DET = window.SSVEP_MULTIMODAL_DETECTOR;
     const motorUiList = [];
+    const eogUiList = [];
 
     if (DET && multimodalRuntimeConfigs.length) {
         for (const cfg of multimodalRuntimeConfigs) {
@@ -1159,6 +1341,28 @@ function processMultimodalRuntimeTick(message) {
             const out = DET.processConfig(cfg, message || {}, t);
             const edgeFire = !!out.edgeFire;
             const holdFireRepeat = !!out.holdFireRepeat;
+
+            if (isEogCfg(cfg)) {
+                eogUiList.push({
+                    label: eogSlotLabel(cfg),
+                    channel: cfg.channel,
+                    blockId: cfg.blockId,
+                    metric: out.metric,
+                    phase: out.pulsePhase || (out.holdActive ? 'hold' : 'idle'),
+                    peak: out.pulsePeak || 0,
+                    threshold: out.onsetUv != null ? out.onsetUv : cfg.pulseOnsetUv || cfg.edgeJumpUv || 45,
+                    mode:
+                        cfg.triggerType === 'hold'
+                            ? 'hold'
+                            : out.eogDetectMode || cfg.eogDetectMode || 'pulse',
+                    firedThisTick: edgeFire || (cfg.triggerType === 'hold' && holdFireRepeat),
+                    aboveThreshold: !!out.aboveThreshold,
+                    holdActive: !!out.holdActive,
+                    inWarmup: !!out.inWarmup,
+                    warmupRemainMs: out.warmupRemainMs || 0,
+                    hasActions: cfgHasExecutableActions(cfg)
+                });
+            }
 
             if (cfg.isConfirmGate) {
                 const pendingSince = ssvepPendingConfirm
@@ -1205,6 +1409,9 @@ function processMultimodalRuntimeTick(message) {
             }
 
             if (cfg.triggerType === 'edge') {
+                if (cfgHasMouseHoldAction(cfg)) {
+                    syncMultimodalMouseHold(!!edgeFire || !!out.aboveThreshold || !!out.holdActive);
+                }
                 if (edgeFire) {
                     cfg.lastEdgeFire = t;
                     let ran = false;
@@ -1213,7 +1420,8 @@ function processMultimodalRuntimeTick(message) {
                             action &&
                             action.type !== 'none' &&
                             action.type !== 'confirm_ssvep' &&
-                            action.type !== 'cancel_ssvep'
+                            action.type !== 'cancel_ssvep' &&
+                            action.type !== 'mouse_hold'
                         ) {
                             executeAction(action);
                             ran = true;
@@ -1224,23 +1432,29 @@ function processMultimodalRuntimeTick(message) {
                         maybeSpeakMultimodalGateResult(cfg, 'trigger', opts);
                     }
                 }
-            } else if (holdFireRepeat) {
-                cfg.lastHoldFire = t;
-                let ran = false;
-                for (const action of cfg.actions || []) {
-                    if (
-                        action &&
-                        action.type !== 'none' &&
-                        action.type !== 'confirm_ssvep' &&
-                        action.type !== 'cancel_ssvep'
-                    ) {
-                        executeAction(action);
-                        ran = true;
-                    }
+            } else if (cfgHasMouseHoldAction(cfg) || holdFireRepeat) {
+                if (cfgHasMouseHoldAction(cfg)) {
+                    syncMultimodalMouseHold(!!(out.aboveThreshold || out.holdActive));
                 }
-                if (ran) {
-                    const opts = stimulusRunOpts || readStimulusRunOptions();
-                    maybeSpeakMultimodalGateResult(cfg, 'trigger', opts);
+                if (holdFireRepeat) {
+                    cfg.lastHoldFire = t;
+                    let ran = false;
+                    for (const action of cfg.actions || []) {
+                        if (
+                            action &&
+                            action.type !== 'none' &&
+                            action.type !== 'confirm_ssvep' &&
+                            action.type !== 'cancel_ssvep' &&
+                            action.type !== 'mouse_hold'
+                        ) {
+                            executeAction(action);
+                            ran = true;
+                        }
+                    }
+                    if (ran) {
+                        const opts = stimulusRunOpts || readStimulusRunOptions();
+                        maybeSpeakMultimodalGateResult(cfg, 'trigger', opts);
+                    }
                 }
             }
         }
@@ -1251,6 +1465,8 @@ function processMultimodalRuntimeTick(message) {
 
     lastMotionTriggerUiList = motorUiList;
     lastMotionTriggerUi = pickAggregateTriggerUi(motorUiList);
+    lastEogTriggerUiList = eogUiList;
+    lastEogTriggerUi = pickAggregateEogTriggerUi(eogUiList);
 
     if (hasMotionUi) {
         updateMotionControlPanelUi(message, metrics);
@@ -1259,12 +1475,14 @@ function processMultimodalRuntimeTick(message) {
             updateMotionControlPanelUi(message, fresh);
         });
     }
+    updateEogControlPanelUi(eogUiList);
 }
 
 function onStimulusDeviceStream(event, message) {
     if (event === 'wsConnected' || event === 'statusChange') {
         void ensureMultimodalEmgStream();
         if (pageHasMotionInput()) updateMotionControlPanelUi(null);
+        if (pageHasEogInput()) updateEogControlPanelUi(lastEogTriggerUiList);
         return;
     }
     if (event !== 'data' || !message) return;
@@ -1355,11 +1573,23 @@ function loadProject() {
 
                 if (currentPageHasFlickerBlocks()) {
                     setTimeout(() => startStimulus(), 500);
-                } else if (pageHasMotionInput() || multimodalRuntimeConfigs.length) {
-                    const st = document.getElementById('status-text');
-                    if (st) {
-                        st.textContent = '多模态监测中';
-                        st.style.color = '#4CAF50';
+                } else {
+                    // 无闪烁方块时不会走 startStimulus，但仍需启动 IMU 光标/行走
+                    const cc = project.settings && project.settings.cursorControl;
+                    const lc = project.settings && project.settings.locomotionControl;
+                    if ((cc && cc.enabled) || (lc && lc.enabled)) {
+                        const st = document.getElementById('status-text');
+                        if (st) {
+                            st.textContent = 'IMU 控制启动中…';
+                            st.style.color = '#FFC107';
+                        }
+                        void startImuControlRuntimesIfConfigured();
+                    } else if (pageHasMotionInput() || multimodalRuntimeConfigs.length) {
+                        const st = document.getElementById('status-text');
+                        if (st) {
+                            st.textContent = '多模态监测中';
+                            st.style.color = '#4CAF50';
+                        }
                     }
                 }
             } else {
@@ -1722,16 +1952,157 @@ async function ssvepSendMouseClickRaw(x, y) {
     if (!res.ok) throw new Error(msg || `HTTP ${res.status}`);
 }
 
+async function ssvepSendMouseClickCurrentRaw(clicks, button) {
+    const origin =
+        typeof ssvepResolveApiOrigin === 'function' ? ssvepResolveApiOrigin() : 'http://127.0.0.1:8000';
+    const n = clicks === 2 ? 2 : 1;
+    const btn = button === 'right' ? 'right' : 'left';
+    const res = await fetch(`${origin}/api/system/mouse/click-current`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clicks: n, button: btn })
+    });
+    let msg = '';
+    try {
+        const j = await res.json();
+        if (j && typeof j.detail === 'string') msg = j.detail;
+        else if (Array.isArray(j.detail))
+            msg = j.detail
+                .map((x) => (typeof x === 'object' && x.msg ? x.msg : String(x)))
+                .join('; ');
+    } catch (_) {
+        /* ignore */
+    }
+    if (!res.ok) throw new Error(msg || `HTTP ${res.status}`);
+}
+
+async function ssvepMoveCursorToCenterRaw() {
+    const origin =
+        typeof ssvepResolveApiOrigin === 'function' ? ssvepResolveApiOrigin() : 'http://127.0.0.1:8000';
+    const res = await fetch(`${origin}/api/system/mouse/move-center`, { method: 'POST' });
+    let msg = '';
+    try {
+        const j = await res.json();
+        if (j && typeof j.detail === 'string') msg = j.detail;
+        else if (Array.isArray(j.detail))
+            msg = j.detail
+                .map((x) => (typeof x === 'object' && x.msg ? x.msg : String(x)))
+                .join('; ');
+    } catch (_) {
+        /* ignore */
+    }
+    if (!res.ok) throw new Error(msg || `HTTP ${res.status}`);
+}
+
+let stimulusHudTimer = null;
+function showStimulusCenterHud(text, ms) {
+    let el = document.getElementById('stimulus-center-hud');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'stimulus-center-hud';
+        el.setAttribute('aria-live', 'polite');
+        document.body.appendChild(el);
+    }
+    el.textContent = String(text || '');
+    el.classList.add('visible');
+    if (stimulusHudTimer) clearTimeout(stimulusHudTimer);
+    stimulusHudTimer = setTimeout(() => {
+        el.classList.remove('visible');
+        stimulusHudTimer = null;
+    }, Math.max(600, ms || 1400));
+}
+
+async function ssvepSyncMouseHoldRaw(pressed) {
+    const origin =
+        typeof ssvepResolveApiOrigin === 'function' ? ssvepResolveApiOrigin() : 'http://127.0.0.1:8000';
+    const res = await fetch(`${origin}/api/system/mouse/button-hold-sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pressed: !!pressed })
+    });
+    let msg = '';
+    try {
+        const j = await res.json();
+        if (j && typeof j.detail === 'string') msg = j.detail;
+        else if (Array.isArray(j.detail))
+            msg = j.detail
+                .map((x) => (typeof x === 'object' && x.msg ? x.msg : String(x)))
+                .join('; ');
+    } catch (_) {
+        /* ignore */
+    }
+    if (!res.ok) throw new Error(msg || `HTTP ${res.status}`);
+}
+
+async function ssvepReleaseMouseHoldRaw() {
+    const origin =
+        typeof ssvepResolveApiOrigin === 'function' ? ssvepResolveApiOrigin() : 'http://127.0.0.1:8000';
+    try {
+        await fetch(`${origin}/api/system/mouse/button-release-all`, { method: 'POST' });
+    } catch (e) {
+        console.warn('[stimulus] mouse release-all:', e);
+    }
+}
+
+function cfgHasMouseHoldAction(cfg) {
+    return (cfg.actions || []).some((a) => a && a.type === 'mouse_hold');
+}
+
+/** 能量超阈 → 按住左键；低于阈值 → 松开（带驱动回滞由 hold.aboveThreshold 体现） */
+function syncMultimodalMouseHold(wantPressed) {
+    const want = !!wantPressed;
+    if (want === ssvepMouseHoldDesired && !ssvepMouseHoldSyncInFlight) return;
+    ssvepMouseHoldDesired = want;
+    if (ssvepMouseHoldSyncInFlight) return;
+    ssvepMouseHoldSyncInFlight = true;
+    const bridgeOn = !!(project && project.settings && project.settings.systemKeyboardBridge);
+    void (async () => {
+        try {
+            if (!bridgeOn) {
+                if (want) {
+                    setEegStatusLine('鼠标按住需开启系统选项（启动系统选项）');
+                }
+                return;
+            }
+            await ssvepSyncMouseHoldRaw(ssvepMouseHoldDesired);
+        } catch (err) {
+            console.warn('[stimulus] mouse hold sync:', err);
+        } finally {
+            ssvepMouseHoldSyncInFlight = false;
+            if (want !== ssvepMouseHoldDesired) {
+                syncMultimodalMouseHold(ssvepMouseHoldDesired);
+            }
+        }
+    })();
+}
+
+function releaseMultimodalMouseHold() {
+    ssvepMouseHoldDesired = false;
+    void ssvepReleaseMouseHoldRaw();
+}
+
 async function runSsvepMouseActionQueued(kind, x, y) {
     const minGap =
-        kind === 'double' ? SSVEP_MOUSE_DOUBLE_CLICK_MIN_GAP_MS : SSVEP_MOUSE_CLICK_MIN_GAP_MS;
+        kind === 'double' || kind === 'double-current'
+            ? SSVEP_MOUSE_DOUBLE_CLICK_MIN_GAP_MS
+            : SSVEP_MOUSE_CLICK_MIN_GAP_MS;
     const now = Date.now();
-    const last = kind === 'double' ? ssvepLastMouseDoubleClickSentMs : ssvepLastMouseClickSentMs;
+    const isDouble = kind === 'double' || kind === 'double-current';
+    const last = isDouble ? ssvepLastMouseDoubleClickSentMs : ssvepLastMouseClickSentMs;
     const wait = last + minGap - now;
     if (wait > 0) {
         await new Promise((r) => setTimeout(r, wait));
     }
-    if (kind === 'double') {
+    if (kind === 'double-current') {
+        await ssvepSendMouseClickCurrentRaw(2);
+        ssvepLastMouseDoubleClickSentMs = Date.now();
+    } else if (kind === 'click-current') {
+        await ssvepSendMouseClickCurrentRaw(1);
+        ssvepLastMouseClickSentMs = Date.now();
+    } else if (kind === 'right-current') {
+        await ssvepSendMouseClickCurrentRaw(1, 'right');
+        ssvepLastMouseClickSentMs = Date.now();
+    } else if (kind === 'double') {
         await ssvepSendMouseDoubleClickRaw(x, y);
         ssvepLastMouseDoubleClickSentMs = Date.now();
     } else {
@@ -2099,18 +2470,17 @@ function executeAction(action, sourceBlock) {
                 );
                 break;
             }
-            if (!sourceBlock) {
-                alert('鼠标单击动作仅适用于闪烁方块（缺少方块上下文）。');
-                break;
-            }
             void (async () => {
-                const pos = await getStimulusBlockCenterScreenPxAsync(sourceBlock);
-                if (!pos) {
-                    alert('无法取得方块在屏幕上的位置（未找到刺激页上的该对象）。');
-                    return;
-                }
                 try {
-                    await enqueueSsvepMouseAction('click', pos.x, pos.y);
+                    const pos = sourceBlock
+                        ? await getStimulusBlockCenterScreenPxAsync(sourceBlock)
+                        : null;
+                    if (pos) {
+                        await enqueueSsvepMouseAction('click', pos.x, pos.y);
+                    } else {
+                        // 多模态通道无闪烁 DOM：在当前光标位置单击（可与 IMU 光标配合）
+                        await enqueueSsvepMouseAction('click-current');
+                    }
                 } catch (err) {
                     console.error(err);
                     const msg = err.message || String(err);
@@ -2130,24 +2500,92 @@ function executeAction(action, sourceBlock) {
                 );
                 break;
             }
-            if (!sourceBlock) {
-                alert('鼠标双击动作仅适用于闪烁方块（缺少方块上下文）。');
-                break;
-            }
             void (async () => {
-                const pos = await getStimulusBlockCenterScreenPxAsync(sourceBlock);
-                if (!pos) {
-                    alert('无法取得方块在屏幕上的位置（未找到刺激页上的该对象）。');
-                    return;
-                }
                 try {
-                    await enqueueSsvepMouseAction('double', pos.x, pos.y);
+                    const pos = sourceBlock
+                        ? await getStimulusBlockCenterScreenPxAsync(sourceBlock)
+                        : null;
+                    if (pos) {
+                        await enqueueSsvepMouseAction('double', pos.x, pos.y);
+                    } else {
+                        await enqueueSsvepMouseAction('double-current');
+                    }
                 } catch (err) {
                     console.error(err);
                     const msg = err.message || String(err);
                     if (!msg.includes('过于频繁')) {
                         alert(`鼠标双击发送失败：${msg}\n请确认后端已启动且已安装 pynput。`);
                     }
+                }
+            })();
+            break;
+        }
+
+        case 'mouse_hold':
+            // 连续按住由多模态能量环 syncMultimodalMouseHold 处理，此处不点一下即放
+            break;
+
+        case 'mouse_right_click': {
+            const bridgeOn = !!(project && project.settings && project.settings.systemKeyboardBridge);
+            if (!bridgeOn) {
+                alert(
+                    '未启用系统选项：鼠标右键需由本机后端注入。\n\n请在编辑器的「启动系统选项」中开启，并保证 Python 后端与 pynput 可用。'
+                );
+                break;
+            }
+            void (async () => {
+                try {
+                    await enqueueSsvepMouseAction('right-current');
+                    setEegStatusLine('已发送鼠标右键');
+                } catch (err) {
+                    console.error(err);
+                    const msg = err.message || String(err);
+                    if (!msg.includes('过于频繁')) {
+                        alert(`鼠标右键失败：${msg}`);
+                    }
+                }
+            })();
+            break;
+        }
+
+        case 'imu_sens_cycle': {
+            const cursorRt = window.SSVEP_IMU_CURSOR_RUNTIME && window.SSVEP_IMU_CURSOR_RUNTIME.shared;
+            if (!cursorRt || !cursorRt.running || typeof cursorRt.cycleSensitivityMultiplier !== 'function') {
+                setEegStatusLine('灵敏度切换失败：请先启用并启动 IMU 光标控制');
+                showStimulusCenterHud('IMU 光标未启动', 1600);
+                break;
+            }
+            const st = cursorRt.cycleSensitivityMultiplier();
+            const label = (st && st.label) || '1×';
+            showStimulusCenterHud(`灵敏度 ${label}`, 1600);
+            setEegStatusLine(`IMU 光标灵敏度 → ${label}`);
+            const opts = stimulusRunOpts || readStimulusRunOptions();
+            if (opts && opts.speakOnDecode) speakStimulusText(label);
+            break;
+        }
+
+        case 'cursor_center': {
+            const bridgeOn = !!(project && project.settings && project.settings.systemKeyboardBridge);
+            if (!bridgeOn) {
+                alert(
+                    '未启用系统选项：光标回中需由本机后端注入。\n\n请在编辑器的「启动系统选项」中开启。'
+                );
+                break;
+            }
+            void (async () => {
+                try {
+                    const cursorRt =
+                        window.SSVEP_IMU_CURSOR_RUNTIME && window.SSVEP_IMU_CURSOR_RUNTIME.shared;
+                    if (cursorRt && typeof cursorRt.moveCursorToScreenCenter === 'function') {
+                        await cursorRt.moveCursorToScreenCenter();
+                    } else {
+                        await ssvepMoveCursorToCenterRaw();
+                    }
+                    showStimulusCenterHud('光标回中', 1000);
+                    setEegStatusLine('光标已回到屏幕中央');
+                } catch (err) {
+                    console.error(err);
+                    alert(`光标回中失败：${err.message || err}`);
                 }
             })();
             break;
@@ -2277,6 +2715,107 @@ function startStimulusDirectly() {
     ensureMultimodalDeviceListener();
     void ensureMultimodalEmgStream();
     forceElectronPassthroughRecheck();
+    void startImuControlRuntimesIfConfigured();
+}
+
+async function startImuControlRuntimesIfConfigured() {
+    if (!project || !project.settings) return;
+    const stEl = document.getElementById('status-text');
+    const setImuStatus = (text, color) => {
+        if (!stEl) return;
+        stEl.textContent = text;
+        stEl.style.color = color || '#FFC107';
+    };
+
+    const cursorRt = window.SSVEP_IMU_CURSOR_RUNTIME && window.SSVEP_IMU_CURSOR_RUNTIME.shared;
+    const locoRt = window.SSVEP_IMU_LOCOMOTION && window.SSVEP_IMU_LOCOMOTION.shared;
+    const cc = project.settings.cursorControl;
+    const lc = project.settings.locomotionControl;
+    const wantCursor = !!(cursorRt && cc && cc.enabled);
+    const wantLoco = !!(locoRt && lc && lc.enabled);
+    if (!wantCursor && !wantLoco) return;
+
+    // 光标/行走依赖本机 pynput；与「系统选项」同一能力
+    project.settings.systemKeyboardBridge = true;
+    if (typeof refreshStimulusSystemOptionUi === 'function') {
+        try {
+            refreshStimulusSystemOptionUi();
+        } catch (_) {
+            /* ignore */
+        }
+    }
+
+    if (wantCursor) {
+        setImuStatus('IMU 光标：正在连接 SEEKBCI…', '#FFC107');
+        try {
+            const res = await cursorRt.start(project.settings);
+            if (!res || !res.ok) {
+                console.warn('[IMU cursor]', res && res.detail);
+                const detail = (res && res.detail) || '启动失败';
+                setImuStatus('IMU 光标失败：' + detail, '#F44336');
+                alert(
+                    'IMU 光标未能启动：\n' +
+                        detail +
+                        '\n\n请确认：\n• 编辑器已勾选「启用 IMU → 系统光标」\n• 已启动系统选项 / 安装 pynput\n• SEEKBCI 已上电并可被后端连接'
+                );
+            } else {
+                console.log('[IMU cursor]', res.detail);
+                setImuStatus('IMU 光标：' + (res.detail || '已启动'), '#4CAF50');
+                // 数秒后若仍无采样，提示卡在校准
+                setTimeout(() => {
+                    if (!cursorRt.running) return;
+                    const st = cursorRt.getStatus && cursorRt.getStatus();
+                    if (st === 'calibrating' || st === 'running') {
+                        const mapper = cursorRt.mapper;
+                        if (mapper && mapper.isCalibrating) {
+                            setImuStatus(
+                                'IMU 光标：等待数据（校准中）。请确认 SEEKBCI 已连接并在流式发送',
+                                '#FFC107'
+                            );
+                        }
+                    }
+                }, 4000);
+            }
+        } catch (e) {
+            console.warn('[IMU cursor] start failed', e);
+            setImuStatus('IMU 光标异常：' + (e.message || e), '#F44336');
+        }
+    }
+
+    if (wantLoco) {
+        try {
+            const res = await locoRt.start(project.settings);
+            if (!res || !res.ok) {
+                console.warn('[IMU loco]', res && res.detail);
+                if (!wantCursor || (res && !res.ok)) {
+                    setImuStatus('倾斜行走失败：' + ((res && res.detail) || '启动失败'), '#F44336');
+                }
+            } else {
+                console.log('[IMU loco]', res.detail);
+            }
+        } catch (e) {
+            console.warn('[IMU loco] start failed', e);
+        }
+    }
+}
+
+async function stopImuControlRuntimes() {
+    const cursorRt = window.SSVEP_IMU_CURSOR_RUNTIME && window.SSVEP_IMU_CURSOR_RUNTIME.shared;
+    const locoRt = window.SSVEP_IMU_LOCOMOTION && window.SSVEP_IMU_LOCOMOTION.shared;
+    if (locoRt) {
+        try {
+            await locoRt.stop();
+        } catch (_) {
+            /* ignore */
+        }
+    }
+    if (cursorRt) {
+        try {
+            await cursorRt.stop();
+        } catch (_) {
+            /* ignore */
+        }
+    }
 }
 
 // 停止视觉刺激（多模态检测继续）
@@ -2284,6 +2823,8 @@ function stopStimulus() {
     if (!isRunning) return;
 
     isRunning = false;
+    void stopImuControlRuntimes();
+    releaseMultimodalMouseHold();
 
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
@@ -2323,7 +2864,21 @@ function renderLoop() {
     stimulusBlocks.forEach((block) => {
         const brightness = stimulusBlockBrightness(block, elapsedTime);
         const alpha = block.opaqueBackdrop ? 1 : stimulusFlickerBlockOpacity;
-        block.element.style.backgroundColor = `rgba(${brightness}, ${brightness}, ${brightness}, ${alpha})`;
+        if (typeof window.flickerColorCss === 'function') {
+            block.element.style.backgroundColor = window.flickerColorCss(
+                brightness,
+                stimulusFlickerColorOn,
+                stimulusFlickerColorOff,
+                alpha
+            );
+            block.element.style.color = window.flickerLabelColor(
+                brightness,
+                stimulusFlickerColorOn,
+                stimulusFlickerColorOff
+            );
+        } else {
+            block.element.style.backgroundColor = `rgba(${brightness}, ${brightness}, ${brightness}, ${alpha})`;
+        }
     });
     
     // 更新FPS
@@ -2616,6 +3171,7 @@ document.addEventListener('fullscreenchange', () => {
 // 页面卸载时停止刺激
 window.addEventListener('beforeunload', () => {
     stopStimulusEegLoop();
+    releaseMultimodalMouseHold();
     if (isRunning) {
         stopStimulus();
     }
@@ -2693,6 +3249,12 @@ function applyFlickerOptionsFromRunConfig() {
     let opacityPct = cfg && cfg.flickerBlockOpacityPercent != null ? Number(cfg.flickerBlockOpacityPercent) : 58;
     if (!Number.isFinite(opacityPct)) opacityPct = 58;
     stimulusFlickerBlockOpacity = Math.max(20, Math.min(100, opacityPct)) / 100;
+    const norm =
+        typeof window.normalizeHexColor === 'function'
+            ? window.normalizeHexColor
+            : (v, fb) => (v && String(v).trim() ? String(v).trim() : fb);
+    stimulusFlickerColorOn = norm(cfg && cfg.flickerColorOn, '#ffffff');
+    stimulusFlickerColorOff = norm(cfg && cfg.flickerColorOff, '#000000');
 }
 
 /**

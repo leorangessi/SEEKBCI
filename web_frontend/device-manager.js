@@ -1,7 +1,7 @@
 // 设备管理 JavaScript - 集成全局状态管理和波形显示
 
 // 全局变量
-let currentTab = 'lsl';
+let currentTab = 'ble';
 let waveformDisplay = null;
 let packetCount = 0;
 
@@ -43,16 +43,14 @@ async function refreshBackendStatusBanner() {
 document.addEventListener('DOMContentLoaded', () => {
     refreshBackendStatusBanner();
 
-    // 加载保存的配置
     loadSavedConfig();
     initDeviceChannelMatrixUi();
     initWaveformAutoToggle();
 
-    // 监听全局设备管理器事件
     window.globalDeviceManager.addEventListener(handleDeviceEvent);
 
-    // 检查是否已经连接
     checkAndRestoreConnection();
+    switchTab('ble');
 });
 
 function onDeviceChannelRolesChange(roles) {
@@ -165,44 +163,28 @@ function handleDeviceEvent(event, data) {
     }
 }
 
-// 切换标签
+// 切换标签（仅 SEEKBCI BLE）
 function switchTab(tab) {
-    currentTab = tab;
-    
-    // 更新标签样式
+    currentTab = tab || 'ble';
+
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    event.target.classList.add('active');
-    
-    // 切换内容
+    if (event && event.target) {
+        event.target.classList.add('active');
+    } else {
+        document.querySelectorAll('.tab').forEach(t => t.classList.add('active'));
+    }
+
     document.querySelectorAll('.connection-content').forEach(c => c.style.display = 'none');
-    document.getElementById(`${tab}-content`).style.display = 'block';
-    
-    // 清空设备列表
+    const panel = document.getElementById('ble-content');
+    if (panel) panel.style.display = 'block';
+
     document.getElementById('device-list').innerHTML = `
         <div class="info-text" style="text-align: center; padding: 20px; color: #666;">
-            ${tab === 'serial' || tab === 'brainflow'
-                ? '正在扫描串口…'
-                : '点击对应标签页的「扫描」按钮查找设备'}
+            点击「扫描 SEEKBCI BLE」查找烧录了 SEEKBCI.ino 的设备
         </div>
     `;
 
-    // 串口 / BrainFlow：进入页面即扫描，避免下拉框长期只有占位项
-    if (tab === 'serial' || tab === 'brainflow') {
-        scanSerial();
-    }
-}
-
-/** 优先使用手动输入的端口（与下拉框互补） */
-function getChosenRawSerialPort() {
-    const manual = document.getElementById('serial-port-manual').value.trim();
-    if (manual) return manual;
-    return document.getElementById('serial-port').value;
-}
-
-function getChosenBrainflowSerialPort() {
-    const manual = document.getElementById('brainflow-port-manual').value.trim();
-    if (manual) return manual;
-    return document.getElementById('brainflow-port').value;
+    scanBLE();
 }
 
 // LSL扫描
@@ -401,7 +383,127 @@ function selectSerialDevice(port) {
     event.currentTarget.classList.add('connected');
 }
 
-// LSL连接
+// SEEKBCI BLE
+async function scanBLE() {
+    const deviceList = document.getElementById('device-list');
+    deviceList.innerHTML = '<div class="info-text" style="text-align: center; padding: 20px;">正在扫描 BLE…</div>';
+
+    try {
+        const response = await fetch(`${API_BASE}/scan/ble?timeout=6`);
+        const result = await response.json();
+
+        if (result.ble_available === false) {
+            deviceList.innerHTML = `
+                <div class="info-text" style="text-align: center; padding: 20px; color: #F44336;">
+                    ${result.availability_detail || '后端未安装 bleak'}<br><br>
+                    请执行 <code style="color:#FFB74D;">pip install bleak</code> 后重启后端
+                </div>
+            `;
+            return;
+        }
+
+        if (result.success && result.devices && result.devices.length > 0) {
+            deviceList.innerHTML = result.devices.map(device => {
+                const name = (device.name || 'SEEKBCI').replace(/'/g, "\\'");
+                const addr = (device.address || '').replace(/'/g, "\\'");
+                const badge = device.match
+                    ? (device.by_service ? 'SEEKBCI·UUID' : 'SEEKBCI')
+                    : '附近';
+                return `
+                <div class="device-item" onclick="selectBLEDevice('${name}', '${addr}')">
+                    <div class="device-name">
+                        <span class="device-status status-online"></span>
+                        ${device.name || '(unnamed)'}
+                    </div>
+                    <div class="device-info">
+                        ${badge} | ${device.address || '无地址'}${device.rssi != null ? ` | RSSI ${device.rssi}` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        } else {
+            deviceList.innerHTML = `
+                <div class="info-text" style="text-align: center; padding: 20px; color: #666;">
+                    未找到 SEEKBCI BLE 设备<br><br>
+                    请确保：<br>
+                    • 已烧录 reference/SEEKBCI/SEEKBCI.ino<br>
+                    • 设备已上电并广播（Windows 上可能显示为无名，但仍可按服务 UUID 识别）<br>
+                    • Windows 蓝牙已开启，且未在「蓝牙设置」里配对占用<br>
+                    • 已重启后端（扫描逻辑已按服务 UUID 匹配）
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('扫描 BLE 失败:', error);
+        deviceList.innerHTML = `
+            <div class="info-text" style="text-align: center; padding: 20px; color: #F44336;">
+                扫描失败: ${error.message}<br><br>
+                请确保后端服务正在运行
+            </div>
+        `;
+    }
+}
+
+function selectBLEDevice(name, address) {
+    const clean = (name || '').trim();
+    const useName =
+        !clean || clean.startsWith('(') || clean.toLowerCase() === 'unnamed'
+            ? 'SEEKBCI'
+            : clean;
+    document.getElementById('ble-device-name').value = useName;
+    document.getElementById('ble-address').value = address || '';
+    document.querySelectorAll('.device-item').forEach(item => item.classList.remove('connected'));
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('connected');
+    }
+}
+
+async function connectBLE() {
+    const deviceName = (document.getElementById('ble-device-name').value || 'SEEKBCI').trim();
+    const address = (document.getElementById('ble-address').value || '').trim();
+
+    const params = {
+        device_name: deviceName || 'SEEKBCI',
+        timeout: 18.0
+    };
+    if (address) params.address = address;
+
+    try {
+        const origin =
+            typeof window.ssvepResolveApiOrigin === 'function'
+                ? window.ssvepResolveApiOrigin()
+                : window.globalDeviceManager?.apiOrigin || 'http://127.0.0.1:8000';
+        const response = await fetch(`${origin}/api/devices/connect/ble`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(params)
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.success) {
+            let detail = data.detail || data.message || `HTTP ${response.status}`;
+            if (typeof detail !== 'string') detail = JSON.stringify(detail);
+            throw new Error(detail);
+        }
+        // 同步前端全局状态与 WebSocket
+        window.globalDeviceManager.isConnected = true;
+        window.globalDeviceManager.deviceInfo = data.device_info;
+        window.globalDeviceManager.saveState();
+        window.globalDeviceManager.connectWebSocket(true);
+        window.globalDeviceManager.notifyListeners('connected', data);
+        alert('✅ SEEKBCI BLE 连接成功！');
+    } catch (e) {
+        const msg = e && e.message ? e.message : String(e);
+        alert(
+            '❌ SEEKBCI BLE 连接失败\n\n' +
+                msg +
+                '\n\n排查：\n' +
+                '• 设备已上电且广播名为 SEEKBCI\n' +
+                '• 先点「扫描」再选中设备（带地址更稳）\n' +
+                '• 关闭手机/其它程序占用的 BLE\n' +
+                '• 后端已安装 bleak，必要时重启 API'
+        );
+    }
+}
+
 async function connectLSL() {
     const streamName = document.getElementById('lsl-stream-name').value;
     const streamType = document.getElementById('lsl-stream-type').value;
@@ -420,101 +522,6 @@ async function connectLSL() {
         alert('✅ LSL设备连接成功！');
     } else {
         alert('❌ 连接失败\n\n请确保设备正在运行LSL服务');
-    }
-}
-
-// 串口连接
-async function connectSerial() {
-    const port = getChosenRawSerialPort();
-    const baudrate = document.getElementById('serial-baudrate').value;
-    
-    if (!port) {
-        alert('请选择串口，或在「或手动输入端口」中填写 COM 号');
-        return;
-    }
-    
-    const success = await window.globalDeviceManager.connectDevice('serial', {
-        port: port,
-        baudrate: parseInt(baudrate)
-    });
-    
-    if (success) {
-        alert('✅ 串口设备连接成功！');
-    } else {
-        alert('❌ 连接失败\n\n请确保串口未被占用');
-    }
-}
-
-// BrainFlow连接
-async function connectBrainFlow() {
-    const boardId = parseInt(document.getElementById('brainflow-board').value);
-    const serialPort = getChosenBrainflowSerialPort();
-    
-    const params = { board_id: boardId };
-    if (serialPort) {
-        params.serial_port = serialPort;
-    }
-    
-    const success = await window.globalDeviceManager.connectDevice('brainflow', params);
-    
-    if (success) {
-        alert('✅ BrainFlow设备连接成功！');
-    } else {
-        alert('❌ 连接失败\n\n请检查设备连接和串口设置');
-    }
-}
-
-// WiFi连接
-async function connectWiFi() {
-    const ip = document.getElementById('wifi-ip').value;
-    const port = document.getElementById('wifi-port').value;
-    const protocol = document.getElementById('wifi-protocol').value;
-    
-    if (!ip || !port) {
-        alert('请输入IP地址和端口');
-        return;
-    }
-    
-    const success = await window.globalDeviceManager.connectDevice('wifi', {
-        ip: ip,
-        port: parseInt(port),
-        protocol: protocol
-    });
-    
-    if (success) {
-        alert('✅ WiFi设备连接成功！');
-    } else {
-        alert('❌ 连接失败\n\n请检查网络连接');
-    }
-}
-
-// WiFi测试
-async function testWiFi() {
-    const ip = document.getElementById('wifi-ip').value;
-    const port = document.getElementById('wifi-port').value;
-    const protocol = document.getElementById('wifi-protocol').value;
-    
-    if (!ip || !port) {
-        alert('请输入IP地址和端口');
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_BASE}/test/wifi`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ip, port: parseInt(port), protocol })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success && result.reachable) {
-            alert('✅ 连接测试成功！');
-        } else {
-            alert('❌ 连接测试失败\n\n' + result.message);
-        }
-    } catch (error) {
-        alert('❌ 测试失败\n\n' + error.message);
     }
 }
 
@@ -540,8 +547,10 @@ function onConnectionSuccess(type, deviceInfo) {
     // 初始化波形显示
     initializeWaveform(deviceInfo);
     
-    // 重置计数
-    packetCount = 0;
+    // 重置收包统计显示（后端在新会话会重新累计）
+    updatePacketStatsUi(null);
+    updateBatteryUi(deviceInfo && deviceInfo.battery);
+    scheduleBatteryRefresh();
 }
 
 // 断开连接
@@ -580,6 +589,7 @@ function onDisconnected() {
     });
     
     packetCount = 0;
+    updatePacketStatsUi(null);
 }
 
 // 更新连接状态
@@ -596,10 +606,67 @@ function updateConnectionStatus(status) {
         if (status.device_info && status.device_info.sampling_rate) {
             samplingRate.textContent = status.device_info.sampling_rate + ' Hz';
         }
+        if (status.packet_stats) {
+            updatePacketStatsUi(status.packet_stats);
+        }
+        updateBatteryUi(status.battery || (status.device_info && status.device_info.battery));
     } else {
         dot.classList.remove('status-connected');
         dot.classList.add('status-disconnected');
         statusText.textContent = '已断开';
+        updatePacketStatsUi(null);
+        updateBatteryUi(null);
+    }
+}
+
+function updateBatteryUi(battery) {
+    const el = document.getElementById('battery-level');
+    if (!el) return;
+    if (!battery || battery.percent == null) {
+        el.textContent = '—';
+        el.style.color = '';
+        el.title = '';
+        return;
+    }
+    const pct = Math.max(0, Math.min(100, Number(battery.percent) || 0));
+    const v = battery.voltage_v != null ? Number(battery.voltage_v) : null;
+    const low = !!battery.low;
+    el.textContent = v != null ? `${pct}% (${v.toFixed(2)}V)` : `${pct}%`;
+    el.style.color = low || pct < 20 ? '#F44336' : pct <= 30 ? '#FF9800' : '#4CAF50';
+    el.title = low || pct < 20 ? '低电量' : '电池';
+}
+
+function updatePacketStatsUi(stats) {
+    const recvEl = document.getElementById('packet-count');
+    const lostEl = document.getElementById('packet-lost');
+    const rateEl = document.getElementById('packet-loss-rate');
+    const seqEl = document.getElementById('packet-seq');
+    if (!recvEl) return;
+
+    if (!stats) {
+        recvEl.textContent = '0';
+        if (lostEl) lostEl.textContent = '0';
+        if (rateEl) rateEl.textContent = '0%';
+        if (seqEl) seqEl.textContent = '—';
+        packetCount = 0;
+        return;
+    }
+
+    const recv = stats.packets_received != null ? stats.packets_received : 0;
+    const lost = stats.packets_lost != null ? stats.packets_lost : 0;
+    const rate = stats.loss_rate_pct != null ? stats.loss_rate_pct : 0;
+    packetCount = recv;
+    recvEl.textContent = String(recv);
+    if (lostEl) {
+        lostEl.textContent = String(lost);
+        lostEl.style.color = lost > 0 ? '#FF9800' : '';
+    }
+    if (rateEl) {
+        rateEl.textContent = `${rate}%`;
+        rateEl.style.color = rate > 1 ? '#F44336' : rate > 0 ? '#FF9800' : '';
+    }
+    if (seqEl) {
+        seqEl.textContent = stats.last_seq != null ? String(stats.last_seq) : '—';
     }
 }
 
@@ -668,71 +735,59 @@ function handleRealtimeData(message) {
     if (waveformDisplay) {
         waveformDisplay.addData(plot);
     }
-    
-    // 更新数据包计数
-    packetCount++;
-    document.getElementById('packet-count').textContent = packetCount;
+
+    // 按头环 sample_number 的收包/丢包统计
+    if (message.packet_stats) {
+        updatePacketStatsUi(message.packet_stats);
+    }
+    if (message.battery) {
+        updateBatteryUi(message.battery);
+    }
+}
+
+let _batteryRefreshTimers = [];
+function scheduleBatteryRefresh() {
+    _batteryRefreshTimers.forEach((t) => clearTimeout(t));
+    _batteryRefreshTimers = [800, 2500, 8000].map((ms) =>
+        setTimeout(async () => {
+            try {
+                const response = await fetch(`${API_BASE}/status`);
+                const data = await response.json();
+                if (data.success && data.status) {
+                    updateBatteryUi(data.status.battery || (data.status.device_info && data.status.device_info.battery));
+                }
+            } catch (_) { /* ignore */ }
+        }, ms)
+    );
 }
 
 // 保存配置
 function saveConfig() {
+    const nameEl = document.getElementById('ble-device-name');
+    const addrEl = document.getElementById('ble-address');
     const config = {
-        lsl: {
-            streamName: document.getElementById('lsl-stream-name').value,
-            streamType: document.getElementById('lsl-stream-type').value
-        },
-        serial: {
-            port: document.getElementById('serial-port').value,
-            portManual: document.getElementById('serial-port-manual').value,
-            baudrate: document.getElementById('serial-baudrate').value
-        },
-        brainflow: {
-            boardId: document.getElementById('brainflow-board').value,
-            port: document.getElementById('brainflow-port').value,
-            portManual: document.getElementById('brainflow-port-manual').value
-        },
-        wifi: {
-            ip: document.getElementById('wifi-ip').value,
-            port: document.getElementById('wifi-port').value,
-            protocol: document.getElementById('wifi-protocol').value
+        ble: {
+            deviceName: nameEl ? nameEl.value : 'SEEKBCI',
+            address: addrEl ? addrEl.value : ''
         }
     };
-    
     localStorage.setItem('device_config', JSON.stringify(config));
 }
 
 // 加载保存的配置
 function loadSavedConfig() {
     const saved = localStorage.getItem('device_config');
-    if (saved) {
-        try {
-            const config = JSON.parse(saved);
-            
-            if (config.lsl) {
-                document.getElementById('lsl-stream-name').value = config.lsl.streamName || '';
-                document.getElementById('lsl-stream-type').value = config.lsl.streamType || 'EEG';
-            }
-            
-            if (config.serial) {
-                document.getElementById('serial-port').value = config.serial.port || '';
-                document.getElementById('serial-port-manual').value = config.serial.portManual || '';
-                document.getElementById('serial-baudrate').value = config.serial.baudrate || '115200';
-            }
-            
-            if (config.brainflow) {
-                document.getElementById('brainflow-board').value = config.brainflow.boardId || '-1';
-                document.getElementById('brainflow-port').value = config.brainflow.port || '';
-                document.getElementById('brainflow-port-manual').value = config.brainflow.portManual || '';
-            }
-            
-            if (config.wifi) {
-                document.getElementById('wifi-ip').value = config.wifi.ip || '192.168.4.1';
-                document.getElementById('wifi-port').value = config.wifi.port || '12345';
-                document.getElementById('wifi-protocol').value = config.wifi.protocol || 'udp';
-            }
-        } catch (error) {
-            console.error('加载配置失败:', error);
+    if (!saved) return;
+    try {
+        const config = JSON.parse(saved);
+        if (config.ble) {
+            const nameEl = document.getElementById('ble-device-name');
+            const addrEl = document.getElementById('ble-address');
+            if (nameEl) nameEl.value = config.ble.deviceName || 'SEEKBCI';
+            if (addrEl) addrEl.value = config.ble.address || '';
         }
+    } catch (error) {
+        console.error('加载配置失败:', error);
     }
 }
 
@@ -742,6 +797,333 @@ document.addEventListener('input', (e) => {
         saveConfig();
     }
 });
+
+async function loadLatestFirmwareManifest() {
+    const statusEl = document.getElementById('ota-status');
+    const urlEl = document.getElementById('ota-firmware-url');
+    const manifestUrl = `${window.location.origin}/firmware/seekbci/manifest.json`;
+    try {
+        setOtaStatus(`正在检查云端固件：${manifestUrl}`);
+        const response = await fetch(manifestUrl, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const manifest = await response.json();
+        if (!manifest || !manifest.url) throw new Error('manifest 缺少 url 字段');
+        urlEl.value = new URL(manifest.url, manifestUrl).toString();
+        const version = manifest.version ? `版本 ${manifest.version}` : '发现固件';
+        setOtaStatus(`${version}，已填入固件 URL。点击“开始 BLE OTA”升级。`);
+    } catch (error) {
+        const fallback = '未找到云端 manifest。当前可手动选择 .bin，或在 /firmware/seekbci/manifest.json 提供 {"version":"...","url":"...bin"}。';
+        if (statusEl) statusEl.textContent = `${fallback} 错误：${error.message || error}`;
+    }
+}
+
+function setOtaStatus(message, percent) {
+    const statusEl = document.getElementById('ota-status');
+    const barEl = document.getElementById('ota-progress-bar');
+    if (statusEl) statusEl.textContent = message;
+    if (barEl && percent != null) {
+        const p = Math.max(0, Math.min(100, Number(percent) || 0));
+        barEl.style.width = `${p}%`;
+    }
+}
+
+async function resolveOtaFirmwareBlob() {
+    const fileEl = document.getElementById('ota-firmware-file');
+    if (fileEl && fileEl.files && fileEl.files[0]) {
+        return {
+            blob: fileEl.files[0],
+            name: fileEl.files[0].name,
+            source: 'file'
+        };
+    }
+
+    const url = (document.getElementById('ota-firmware-url')?.value || '').trim();
+    if (!url) {
+        throw new Error('请先选择 .bin 固件文件，或填写云端固件 URL');
+    }
+    setOtaStatus('正在下载云端固件…', 0);
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`下载固件失败 HTTP ${response.status}`);
+    const blob = await response.blob();
+    return {
+        blob,
+        name: url.split('/').pop() || 'SEEKBCI.bin',
+        source: 'url'
+    };
+}
+
+function decodeOtaStatus(event) {
+    const value = event.target.value;
+    const text = new TextDecoder('utf-8', { fatal: false }).decode(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength)).trim();
+    if (!text.startsWith('OTA:')) return;
+    const parts = text.split(':');
+    const kind = parts[1] || '';
+    const detail = parts.slice(2).join(':');
+    if (kind === 'PROGRESS') {
+        setOtaStatus(`设备写入中：${detail}%`, Number(detail));
+    } else if (kind === 'READY') {
+        setOtaStatus(`设备已进入 OTA，固件大小 ${detail} 字节。`, 0);
+    } else if (kind === 'DONE') {
+        setOtaStatus('OTA 完成，设备正在重启。', 100);
+    } else if (kind === 'ERROR') {
+        setOtaStatus(`设备返回 OTA 错误：${detail || 'unknown'}`);
+    }
+}
+
+async function releaseCurrentBleConnectionForOta() {
+    const connected = !!(window.globalDeviceManager && window.globalDeviceManager.isConnected);
+    if (!connected) return;
+
+    setOtaStatus('检测到当前采集连接，正在断开并准备进入 OTA…', 0);
+    try {
+        await window.globalDeviceManager.disconnectDevice();
+    } catch (_) {
+        try {
+            await fetch(`${API_BASE}/disconnect`, { method: 'POST' });
+        } catch (_2) { /* ignore */ }
+    }
+
+    localStorage.removeItem('deviceState');
+    window.globalDeviceManager.isConnected = false;
+    window.globalDeviceManager.deviceInfo = null;
+    onDisconnected();
+    await new Promise((resolve) => setTimeout(resolve, 4000));
+}
+
+async function connectSeekbciOtaGatt(device, protocol) {
+    let lastError = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            setOtaStatus(`正在连接设备…（第 ${attempt}/3 次）`, 0);
+            if (device.gatt && device.gatt.connected) {
+                try {
+                    device.gatt.disconnect();
+                } catch (_) { /* ignore */ }
+                await new Promise((resolve) => setTimeout(resolve, 800));
+            }
+
+            const server = await device.gatt.connect();
+            await new Promise((resolve) => setTimeout(resolve, 900));
+            if (!device.gatt.connected) {
+                throw new Error('GATT 连接建立后立即断开');
+            }
+
+            const service = await server.getPrimaryService(protocol.serviceUuid);
+            const notifyChar = await service.getCharacteristic(protocol.notifyCharUuid);
+            const otaChar = await service.getCharacteristic(protocol.otaCharUuid);
+            return { server, notifyChar, otaChar };
+        } catch (error) {
+            lastError = error;
+            const message = error && error.message ? error.message : String(error);
+            setOtaStatus(`GATT 连接失败：${message}，准备重试…`);
+            try {
+                if (device.gatt && device.gatt.connected) device.gatt.disconnect();
+            } catch (_) { /* ignore */ }
+            await new Promise((resolve) => setTimeout(resolve, 1800 + attempt * 900));
+        }
+    }
+    throw lastError || new Error('GATT 连接失败');
+}
+
+async function startSeekbciOta() {
+    if (!confirm('确认开始 SEEKBCI BLE OTA？\n\n升级期间请保持供电、不要关闭页面。')) {
+        return;
+    }
+
+    try {
+        await startSeekbciBackendOta();
+    } catch (error) {
+        console.error('SEEKBCI backend OTA failed:', error);
+        const msg = error && error.message ? error.message : String(error);
+        setOtaStatus(`OTA 失败：${msg}`);
+        alert(`OTA 失败：${msg}`);
+    }
+}
+
+function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, chunk);
+    }
+    return btoa(binary);
+}
+
+async function pollSeekbciOtaProgress(origin, taskId) {
+    while (true) {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        const response = await fetch(`${origin}/api/devices/ota/ble/${encodeURIComponent(taskId)}?t=${Date.now()}`, { cache: 'no-store' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            let detail = data.detail || `HTTP ${response.status}`;
+            if (typeof detail !== 'string') detail = JSON.stringify(detail);
+            throw new Error(detail);
+        }
+        const backendPercent = Math.max(0, Math.min(100, Number(data.percent || 0)));
+        const uiPercent = data.state === 'done' ? 100 : Math.max(10, Math.min(99, 10 + backendPercent * 0.89));
+        const message = data.message || 'OTA 进行中…';
+        setOtaStatus(`${message}（${backendPercent}%）`, uiPercent);
+        if (data.state === 'done') {
+            setOtaStatus(message || 'OTA 完成，设备正在重启。', 100);
+            return data;
+        }
+        if (data.state === 'error') {
+            throw new Error(data.error || message || 'OTA 失败');
+        }
+    }
+}
+
+function postSeekbciOtaTask(origin, payload) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${origin}/api/devices/ota/ble`, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.responseType = 'json';
+        xhr.upload.onprogress = (event) => {
+            if (!event.lengthComputable) {
+                setOtaStatus('正在上传固件到本地后端…', 5);
+                return;
+            }
+            const uploadPercent = Math.floor((event.loaded * 100) / event.total);
+            const uiPercent = Math.max(1, Math.min(10, uploadPercent / 10));
+            setOtaStatus(`正在上传固件到本地后端：${uploadPercent}%`, uiPercent);
+        };
+        xhr.onload = () => {
+            const data = xhr.response || (() => {
+                try { return JSON.parse(xhr.responseText || '{}'); } catch (_) { return {}; }
+            })();
+            if (xhr.status < 200 || xhr.status >= 300 || !data.success) {
+                let detail = data.detail || data.message || `HTTP ${xhr.status}`;
+                if (typeof detail !== 'string') detail = JSON.stringify(detail);
+                reject(new Error(detail));
+                return;
+            }
+            resolve(data);
+        };
+        xhr.onerror = () => reject(new Error('OTA 请求发送失败'));
+        xhr.ontimeout = () => reject(new Error('OTA 请求超时'));
+        xhr.timeout = 30000;
+        xhr.send(JSON.stringify(payload));
+    });
+}
+
+async function startSeekbciBackendOta() {
+    const firmware = await resolveOtaFirmwareBlob();
+    const deviceName = (document.getElementById('ble-device-name')?.value || 'SEEKBCI').trim() || 'SEEKBCI';
+    const address = (document.getElementById('ble-address')?.value || '').trim();
+
+    setOtaStatus('正在准备后端 Bleak OTA…', 0);
+    if (window.globalDeviceManager && window.globalDeviceManager.isConnected) {
+        window.globalDeviceManager.isConnected = false;
+        window.globalDeviceManager.deviceInfo = null;
+        localStorage.removeItem('deviceState');
+        try { onDisconnected(); } catch (_) { /* ignore */ }
+    }
+
+    setOtaStatus('正在读取固件文件…', 0);
+    const firmwareBuffer = await firmware.blob.arrayBuffer();
+    setOtaStatus('正在编码固件，准备上传到本地后端…', 1);
+    const payload = {
+        filename: firmware.name || 'SEEKBCI.bin',
+        firmware_b64: arrayBufferToBase64(firmwareBuffer),
+        device_name: deviceName,
+        address: address || null,
+        timeout: 24
+    };
+
+    const origin =
+        typeof window.ssvepResolveApiOrigin === 'function'
+            ? window.ssvepResolveApiOrigin()
+            : window.globalDeviceManager?.apiOrigin || 'http://127.0.0.1:8000';
+
+    setOtaStatus('正在上传固件到本地后端…', 1);
+    const data = await postSeekbciOtaTask(origin, payload);
+    if (!data.task_id) {
+        throw new Error('后端未返回 OTA task_id');
+    }
+    setOtaStatus(data.message || 'OTA 已启动，正在等待进度…', Number(data.percent || 0));
+    const finalState = await pollSeekbciOtaProgress(origin, data.task_id);
+    alert(finalState.message || 'OTA 完成，设备正在重启。');
+}
+
+async function startSeekbciWebBluetoothOta() {
+    if (!navigator.bluetooth) {
+        alert('当前环境不支持 Web Bluetooth。请使用 Chrome/Edge 或支持 BLE 的 Electron 客户端。');
+        return;
+    }
+    if (!confirm('确认开始 SEEKBCI BLE OTA？\n\n升级期间请保持供电、不要关闭页面。')) {
+        return;
+    }
+
+    const protocol = window.SSVEP_IMU_PROTOCOL && window.SSVEP_IMU_PROTOCOL.PROTOCOL;
+    if (!protocol || !protocol.serviceUuid || !protocol.notifyCharUuid || !protocol.otaCharUuid) {
+        alert('缺少 SEEKBCI BLE OTA 协议常量，请刷新页面后重试。');
+        return;
+    }
+
+    let device;
+    let notifyChar;
+    try {
+        setOtaStatus('请选择要升级的 SEEKBCI 设备…', 0);
+        device = await navigator.bluetooth.requestDevice({
+            filters: [
+                { name: protocol.deviceName },
+                { services: [protocol.serviceUuid] }
+            ],
+            optionalServices: [protocol.serviceUuid]
+        });
+
+        await releaseCurrentBleConnectionForOta();
+        const firmware = await resolveOtaFirmwareBlob();
+        const firmwareBytes = new Uint8Array(await firmware.blob.arrayBuffer());
+        if (!firmwareBytes.length) throw new Error('固件为空');
+
+        setOtaStatus(`已选择设备 ${device.name || 'SEEKBCI'}，固件：${firmware.name}`, 0);
+
+        const { notifyChar: connectedNotifyChar, otaChar } = await connectSeekbciOtaGatt(device, protocol);
+        notifyChar = connectedNotifyChar;
+        await notifyChar.startNotifications();
+        notifyChar.addEventListener('characteristicvaluechanged', decodeOtaStatus);
+
+        const chunkSize = 480;
+        const encoder = new TextEncoder();
+        await otaChar.writeValueWithResponse(encoder.encode(`OTA:BEGIN:${firmwareBytes.length}:`));
+        await new Promise((resolve) => setTimeout(resolve, 350));
+
+        for (let offset = 0; offset < firmwareBytes.length; offset += chunkSize) {
+            const chunk = firmwareBytes.slice(offset, Math.min(offset + chunkSize, firmwareBytes.length));
+            await otaChar.writeValueWithResponse(chunk);
+            const percent = Math.floor((chunk.byteLength + offset) * 100 / firmwareBytes.length);
+            setOtaStatus(`正在发送固件：${percent}%`, percent);
+            await new Promise((resolve) => setTimeout(resolve, 8));
+        }
+
+        await otaChar.writeValueWithResponse(encoder.encode('OTA:END'));
+        setOtaStatus('固件已发送完毕，等待设备校验并重启…', 100);
+    } catch (error) {
+        console.error('SEEKBCI OTA failed:', error);
+        const rawMessage = error && error.message ? error.message : String(error);
+        const friendlyMessage = /user cancelled|user canceled|cancelled|canceled|no device selected|notfounderror/i.test(rawMessage)
+            ? '未选择 BLE 设备或 Electron 蓝牙选择器超时。请确认 SEEKBCI 已上电并处于广播状态，然后重新点击“开始 BLE OTA”。如果使用桌面客户端，请重启客户端以加载最新蓝牙选择逻辑。'
+            : /gatt server is disconnected|cannot retrieve services|gatt.*disconnect/i.test(rawMessage)
+              ? 'BLE GATT 刚连接就断开。通常是设备刚从采集连接释放、仍被系统蓝牙/其它程序占用，或信号不稳。请断开实时采集后等待 5 秒，必要时重启头环，再直接开始 OTA。'
+              : rawMessage;
+        setOtaStatus(`OTA 失败：${friendlyMessage}`);
+        alert(`OTA 失败：${friendlyMessage}`);
+    } finally {
+        if (notifyChar) {
+            try {
+                notifyChar.removeEventListener('characteristicvaluechanged', decodeOtaStatus);
+                await notifyChar.stopNotifications();
+            } catch (_) { /* ignore */ }
+        }
+        try {
+            if (device && device.gatt && device.gatt.connected) device.gatt.disconnect();
+        } catch (_) { /* ignore */ }
+    }
+}
 
 // 清除设备状态（用于调试）
 function clearDeviceState() {

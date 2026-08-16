@@ -52,14 +52,16 @@
 
         async connect(deviceName) {
             const origin = resolveApiOrigin();
-            this._setStatus('scanning', `后端扫描 ${deviceName || PROTOCOL.deviceName}…`);
+            // 空名称：后端优先 SEEKBCI，失败自动回退 ESP32_BMI270_MOUSE
+            const want = deviceName && deviceName !== 'backend' && deviceName !== 'web' ? deviceName : '';
+            this._setStatus('scanning', want ? `后端扫描 ${want}…` : '后端扫描 SEEKBCI / 独立 IMU…');
 
             const statusRes = await fetch(`${origin}/api/imu/status`);
             if (!statusRes.ok) {
-                throw new Error(`无法访问 /api/imu/status（HTTP ${statusRes.status}），请重启 Electron`);
+                throw new Error(`无法访问 /api/imu/status（HTTP ${statusRes.status}），请重启后端`);
             }
             const statusJson = await statusRes.json();
-            if (!statusJson.available) {
+            if (!statusJson.available && statusJson.status !== 'connected') {
                 throw new Error(
                     statusJson.availability_detail ||
                         '后端未安装 bleak。请执行: py -3.9 -m pip install bleak'
@@ -70,8 +72,8 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    device_name: deviceName || PROTOCOL.deviceName,
-                    timeout: 12
+                    device_name: want || null,
+                    timeout: 14
                 })
             });
             const body = await res.json().catch(() => ({}));
@@ -84,7 +86,7 @@
             }
 
             await this._openSocket(origin);
-            this._setStatus('connected', (body && body.detail) || PROTOCOL.deviceName);
+            this._setStatus('connected', (body && body.detail) || want || 'IMU');
         }
 
         async _openSocket(origin) {

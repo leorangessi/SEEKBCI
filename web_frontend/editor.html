@@ -1075,6 +1075,97 @@
                     开启后，运行刺激时「键盘快捷键」「鼠标双击（方块中心）」由本机 Python 后端模拟（需启动 API、<code style="color:#aaa;">pip install pynput</code>）。使用前请先聚焦要接收操作的目标窗口。
                 </p>
             </div>
+
+            <div class="toolbar-section">
+                <div class="toolbar-title">🧭 IMU 光标控制</div>
+                <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#ccc;cursor:pointer;">
+                    <input type="checkbox" id="editor-cursor-control-enabled"
+                           onchange="onEditorCursorControlChange()" style="margin-top:2px;">
+                    <span>启用 IMU → 系统光标（运行刺激时）</span>
+                </label>
+                <div id="editor-cursor-control-options" style="display:none;margin-top:12px;">
+                    <label style="display:block;font-size:11px;color:#aaa;margin-bottom:4px;">点击方式</label>
+                    <select id="editor-cursor-click-method" onchange="onEditorCursorControlChange()"
+                            style="width:100%;margin-bottom:10px;padding:6px 8px;background:#2a2a2a;color:#eee;border:1px solid #444;border-radius:4px;">
+                        <option value="none">仅移动（不点击）</option>
+                        <option value="dwell">停留点击（dwell）</option>
+                        <option value="space">空格键点击</option>
+                    </select>
+                    <label style="display:block;font-size:11px;color:#aaa;margin-bottom:4px;">点击类型</label>
+                    <select id="editor-cursor-click-type" onchange="onEditorCursorControlChange()"
+                            style="width:100%;margin-bottom:10px;padding:6px 8px;background:#2a2a2a;color:#eee;border:1px solid #444;border-radius:4px;">
+                        <option value="single">单击</option>
+                        <option value="double">双击</option>
+                    </select>
+                    <div id="editor-cursor-dwell-params">
+                        <label style="display:block;font-size:11px;color:#aaa;margin-bottom:4px;">停留时长 (ms)</label>
+                        <input type="number" id="editor-cursor-dwell-ms" min="200" max="5000" step="50" value="900"
+                               onchange="onEditorCursorControlChange()"
+                               style="width:100%;margin-bottom:10px;padding:6px 8px;background:#2a2a2a;color:#eee;border:1px solid #444;border-radius:4px;">
+                        <label style="display:block;font-size:11px;color:#aaa;margin-bottom:4px;">静止阈值 (px)</label>
+                        <input type="number" id="editor-cursor-dwell-still" min="1" max="80" step="1" value="14"
+                               onchange="onEditorCursorControlChange()"
+                               style="width:100%;margin-bottom:10px;padding:6px 8px;background:#2a2a2a;color:#eee;border:1px solid #444;border-radius:4px;">
+                        <label style="display:block;font-size:11px;color:#aaa;margin-bottom:4px;">点击冷却 (ms)</label>
+                        <input type="number" id="editor-cursor-dwell-cooldown" min="200" max="5000" step="50" value="700"
+                               onchange="onEditorCursorControlChange()"
+                               style="width:100%;margin-bottom:10px;padding:6px 8px;background:#2a2a2a;color:#eee;border:1px solid #444;border-radius:4px;">
+                    </div>
+                    <label style="display:block;font-size:11px;color:#aaa;margin-bottom:4px;">灵敏度</label>
+                    <input type="number" id="editor-cursor-sensitivity" min="5" max="120" step="1" value="42"
+                           onchange="onEditorCursorControlChange()"
+                           style="width:100%;margin-bottom:8px;padding:6px 8px;background:#2a2a2a;color:#eee;border:1px solid #444;border-radius:4px;">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#ccc;cursor:pointer;margin-bottom:6px;">
+                        <input type="checkbox" id="editor-cursor-invert-x" checked onchange="onEditorCursorControlChange()">
+                        <span>翻转 X</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#ccc;cursor:pointer;margin-bottom:6px;">
+                        <input type="checkbox" id="editor-cursor-invert-y" checked onchange="onEditorCursorControlChange()">
+                        <span>翻转 Y</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#ccc;cursor:pointer;">
+                        <input type="checkbox" id="editor-cursor-head-mode" checked onchange="onEditorCursorControlChange()">
+                        <span>头部模式（重力参考）</span>
+                    </label>
+                </div>
+                <p style="font-size: 11px; color: #888; margin-top: 10px; line-height: 1.45;">
+                    需先在设备管理连接 SEEKBCI（或运行时自动连接），并启用上方「系统选项」（pynput）。启动刺激后自动校准约 0.5s，请保持头部静止。勾选后点「运行项目」即可在刺激页驱动系统光标。
+                </p>
+            </div>
+
+            <div class="toolbar-section">
+                <div class="toolbar-title">🚶 IMU 加速度行走（WASD）</div>
+                <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#ccc;cursor:pointer;">
+                    <input type="checkbox" id="editor-loco-enabled"
+                           onchange="onEditorLocomotionControlChange()" style="margin-top:2px;">
+                    <span>启用 ax/ay/az → WASD（可与光标并行）</span>
+                </label>
+                <div id="editor-loco-options" style="display:none;margin-top:12px;">
+                    <label style="display:block;font-size:11px;color:#aaa;margin-bottom:4px;">加速度灵敏度</label>
+                    <input type="number" id="editor-loco-sens" min="0.2" max="12" step="0.1" value="2.5"
+                           onchange="onEditorLocomotionControlChange()"
+                           style="width:100%;margin-bottom:10px;padding:6px 8px;background:#2a2a2a;color:#eee;border:1px solid #444;border-radius:4px;">
+                    <label style="display:block;font-size:11px;color:#aaa;margin-bottom:4px;">前进/后退阈值 (m/s²)</label>
+                    <input type="number" id="editor-loco-pitch-th" min="0.2" max="6" step="0.1" value="1.0"
+                           onchange="onEditorLocomotionControlChange()"
+                           style="width:100%;margin-bottom:10px;padding:6px 8px;background:#2a2a2a;color:#eee;border:1px solid #444;border-radius:4px;">
+                    <label style="display:block;font-size:11px;color:#aaa;margin-bottom:4px;">左右阈值 (m/s²)</label>
+                    <input type="number" id="editor-loco-roll-th" min="0.2" max="6" step="0.1" value="1.0"
+                           onchange="onEditorLocomotionControlChange()"
+                           style="width:100%;margin-bottom:10px;padding:6px 8px;background:#2a2a2a;color:#eee;border:1px solid #444;border-radius:4px;">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#ccc;cursor:pointer;margin-bottom:6px;">
+                        <input type="checkbox" id="editor-loco-invert-fwd" onchange="onEditorLocomotionControlChange()">
+                        <span>翻转前后</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#ccc;cursor:pointer;">
+                        <input type="checkbox" id="editor-loco-invert-strafe" onchange="onEditorLocomotionControlChange()">
+                        <span>翻转左右</span>
+                    </label>
+                </div>
+                <p style="font-size: 11px; color: #888; margin-top: 10px; line-height: 1.45;">
+                    相对中立的前后/左右加速度 × 灵敏度超过阈值时按住 WASD；回中松开。视角仍用陀螺→光标。
+                </p>
+            </div>
             
             <div class="toolbar-section">
                 <div class="toolbar-title">ℹ️ 使用说明</div>
@@ -1086,10 +1177,12 @@
                     5. Python 动作：高级功能 → 打开全局编辑器写 import/初始化，动作里写逻辑<br>
                     6. 「Python 编译检查」为静态分析，不会连机；运行时才执行 connect 等<br>
                     7. 需要真实快捷键时点击「启动系统选项」并运行后端<br>
-                    8. 保存项目到本地；每个对象有唯一<strong>内部 ID</strong>，侧栏「标签」仅显示用，可随意改，不影响选中与拖拽<br>
-                    9. <kbd>Ctrl</kbd>+<kbd>Z</kbd> 撤销；<kbd>Ctrl</kbd>+<kbd>Y</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> 重做<br>
-                    10. 选中对象：<kbd>Ctrl</kbd>+<kbd>C</kbd> 复制，<kbd>Ctrl</kbd>+<kbd>V</kbd> 粘贴（新内部 ID，标签加「副本」），<kbd>Delete</kbd>/<kbd>Backspace</kbd> 删除（输入框内除外）<br>
-                    11. 选中对象后拖右下角黄色圆点缩放；按 <kbd>Space</kbd> 旋转 15°
+                    8. IMU 光标：侧栏启用后头动映射系统光标<br>
+                    9. IMU 行走：侧栏「加速度行走」用 ax/ay/az 差分映射 WASD<br>
+                    10. 保存项目到本地；每个对象有唯一<strong>内部 ID</strong>，侧栏「标签」仅显示用<br>
+                    11. <kbd>Ctrl</kbd>+<kbd>Z</kbd> 撤销；<kbd>Ctrl</kbd>+<kbd>Y</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> 重做<br>
+                    12. 选中对象：<kbd>Ctrl</kbd>+<kbd>C</kbd> 复制，<kbd>Ctrl</kbd>+<kbd>V</kbd> 粘贴，<kbd>Delete</kbd> 删除<br>
+                    13. 选中对象后拖右下角黄色圆点缩放；按 <kbd>Space</kbd> 旋转 15°
                 </p>
             </div>
         </div>
@@ -1218,6 +1311,24 @@
                         降低后方块会半透明叠加到下方图像/窗口上，减少遮挡；如果识别变差，可适当调高。
                     </div>
                 </div>
+                <div style="margin-top: 12px;">
+                    <label class="form-label" style="margin-bottom: 6px;">闪烁双色（亮相 / 暗相）</label>
+                    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                        <label style="display:flex;align-items:center;gap:8px;color:#ccc;font-size:13px;">
+                            亮相
+                            <input type="color" id="rc-flicker-color-on" value="#ffffff" title="闪烁亮相颜色（默认白）">
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;color:#ccc;font-size:13px;">
+                            暗相
+                            <input type="color" id="rc-flicker-color-off" value="#000000" title="闪烁暗相颜色（默认黑）">
+                        </label>
+                        <button type="button" class="btn btn-secondary" style="padding:4px 10px;font-size:12px;"
+                                onclick="document.getElementById('rc-flicker-color-on').value='#ffffff';document.getElementById('rc-flicker-color-off').value='#000000';">恢复黑白</button>
+                    </div>
+                    <div class="rc-help" style="margin-top: 8px;">
+                        默认黑白闪烁。也可选黄/绿等任意两色（如亮相 <code style="color:#888;">#ffeb3b</code>、暗相 <code style="color:#888;">#1b5e20</code>）。
+                    </div>
+                </div>
                 <div class="rc-help">
                     <strong>系统级置顶、无边框</strong>需后续桌面壳；EEG 仍按文档约定连接 Python API。
                 </div>
@@ -1251,7 +1362,7 @@
                 <label class="form-label">最低 softmax 概率（0～1）</label>
                 <input type="number" class="form-input" id="rc-th-minp" value="0.28" min="0.03" max="0.99" step="0.01">
                 <div class="rc-help">
-                    第一名概率必须达到该值才考虑触发。误触多 → 略调高；很难触发 → 略调低。默认偏宽松，便于先跑通流程。
+                    第一名概率必须达到该值才考虑触发。误触多 → 略调高；很难触发 → 略调低（可低至 <strong>0.2</strong> 或更低）。默认偏宽松，便于先跑通流程。
                 </div>
             </div>
             <div class="form-group">
@@ -1311,13 +1422,13 @@
     <script src="js/emg-peak-trigger.js?v=20260601a"></script>
     <script src="js/emg-drive.js?v=20260602a"></script>
     <script src="js/emg-motion-runtime.js?v=20260531a"></script>
-    <script src="js/multimodal-detector.js?v=20260531i"></script>
+    <script src="js/multimodal-detector.js?v=20260722a"></script>
     <script src="js/multimodal-channels.js?v=20260522b"></script>
     <script src="keyboard-binding.js?v=20260503f"></script>
     <script src="js/ssvep-keyboard-40.js?v=20260522a"></script>
     <script src="js/project-thumbnail.js?v=20260714f"></script>
-    <script src="js/stimulus-run-config.js?v=20260529d"></script>
+    <script src="js/stimulus-run-config.js?v=20260719d"></script>
     <script src="js/project-contract.js?v=20260612"></script>
-    <script src="editor.js?v=20260529b"></script>
+    <script src="editor.js?v=20260722a"></script>
 </body>
 </html>

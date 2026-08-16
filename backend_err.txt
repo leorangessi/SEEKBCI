@@ -1,0 +1,1399 @@
+INFO:     Started server process [48480]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:28765 (Press CTRL+C to quit)
+INFO:     127.0.0.1:58893 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58920 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58934 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58943 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58951 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58969 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58984 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58996 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59003 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59020 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59034 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59046 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58733 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58756 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58780 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54001 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54017 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54044 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54070 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54086 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54098 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54108 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54129 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54143 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54155 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54173 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54192 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54208 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54225 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54240 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54248 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54252 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54259 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54283 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54293 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54308 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54331 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54361 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54373 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54384 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49413 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51290 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51308 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51323 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51337 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51351 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51360 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51379 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51391 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51402 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51407 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51437 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:57056 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60518 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60539 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60561 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60573 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60578 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56312 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56325 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56330 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56343 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56366 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56383 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56390 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49987 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50002 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50025 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50035 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50044 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50056 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50067 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50093 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50099 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50115 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50132 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50150 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60773 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60782 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60791 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60798 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60808 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60844 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60856 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60873 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60883 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60899 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60912 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60925 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65315 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65331 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53805 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53821 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53824 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53834 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53846 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53862 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53869 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53874 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53891 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53898 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53909 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53921 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53931 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53961 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53970 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53997 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65304 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65342 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65365 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65405 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65416 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60812 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60821 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60825 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60844 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60851 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60864 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60884 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62310 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62325 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62334 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49269 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64045 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64060 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64074 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64081 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:57332 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:57362 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:57409 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:57432 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:57452 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:57464 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64248 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64309 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64328 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64339 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64362 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64379 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64388 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64396 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64410 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64417 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64453 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64460 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64476 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64486 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64048 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51106 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64651 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64659 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64667 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64694 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64698 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64722 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50662 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:57345 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53272 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56482 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59469 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51578 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51583 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51611 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51619 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49168 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49181 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54674 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54677 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50424 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50430 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:57519 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59686 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59698 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59711 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59742 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59749 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59756 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59767 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59772 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59791 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59816 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59827 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59853 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59901 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59167 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59181 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59198 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59217 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59251 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59262 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59285 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53005 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53045 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53098 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53114 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53136 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53147 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53153 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53185 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53196 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53213 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58923 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58939 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58952 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58961 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58128 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58155 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58168 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58175 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58191 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58203 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58224 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58239 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58244 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58256 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58283 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58305 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58314 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56442 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56448 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56471 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56482 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56493 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56499 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56512 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56552 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56558 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56561 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56572 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56586 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56592 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56600 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56624 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56628 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56633 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56639 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56649 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56659 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56668 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56683 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56993 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:57011 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:57022 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:57033 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:57053 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:57070 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50056 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50076 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50096 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50126 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50143 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50177 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50201 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:50211 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51113 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64160 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64183 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64188 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64192 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64196 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64203 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65045 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65052 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65070 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65084 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65093 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65109 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65136 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65154 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65164 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65177 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65194 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65208 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65232 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65245 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65262 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65267 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65272 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65305 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65314 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65432 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49192 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49213 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49232 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49244 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49254 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49278 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49286 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49300 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49323 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49345 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49366 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49382 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49398 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49409 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49425 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53628 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53638 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53651 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53658 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53693 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53700 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53722 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53732 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53748 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53756 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53761 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53775 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54042 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54062 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54075 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54082 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54085 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:54101 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61818 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61837 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61843 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61871 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61881 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61890 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61901 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61905 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61912 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61930 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61973 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61982 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61997 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62006 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62008 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62029 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62037 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62048 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62057 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62096 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62107 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62116 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62124 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62143 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62152 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62160 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62169 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62192 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62203 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62213 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62225 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62240 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:55801 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:55809 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:63434 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:63455 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:63479 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51009 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51041 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51052 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51068 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51091 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:51098 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60290 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60304 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60308 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:60320 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:49682 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56441 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58410 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58426 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58439 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58441 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58447 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58454 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:62794 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64988 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56019 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56039 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56054 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56067 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56078 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56090 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56109 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56121 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56138 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56143 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:56162 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:58600 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64938 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64944 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64957 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64966 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64972 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64989 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65010 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65028 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65036 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65041 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65057 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65066 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65075 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65096 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65124 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65142 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65167 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65175 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65185 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65201 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65208 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65214 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65218 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65247 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65262 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65274 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65285 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65306 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65313 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65330 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65343 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65349 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65389 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65404 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65420 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65421 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53905 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53911 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53920 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:53927 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64781 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64807 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64812 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64828 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64840 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64842 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64849 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64862 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64863 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64877 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64880 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64887 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64897 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64904 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64919 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64928 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64933 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64938 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64946 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64965 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64990 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:64998 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65008 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65016 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:65026 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61830 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61842 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61849 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61851 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61865 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61880 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61895 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61901 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61921 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61942 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61963 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61974 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61978 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:61993 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+INFO:     127.0.0.1:59770 - "WebSocket /ctrl/signals/stream" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+forrtl: error (200): program aborting due to window-CLOSE event
+Image              PC                Routine            Line        Source             
+libifcoremd.dll    00007FFB5FDC3B58  Unknown               Unknown  Unknown
+KERNELBASE.dll     00007FFC8C803E3D  Unknown               Unknown  Unknown
+KERNEL32.DLL       00007FFC8D9FE957  Unknown               Unknown  Unknown
+ntdll.dll          00007FFC8F44AD6C  Unknown               Unknown  Unknown

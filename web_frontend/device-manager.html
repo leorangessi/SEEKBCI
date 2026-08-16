@@ -567,6 +567,51 @@
         }
 
         .waveform-auto-toggle input { accent-color: #00d9ff; }
+
+        .ota-panel {
+            margin-top: 18px;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 179, 0, 0.35);
+            background: rgba(255, 179, 0, 0.08);
+        }
+
+        .ota-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .ota-row .form-input {
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .ota-progress {
+            width: 100%;
+            height: 10px;
+            background: #2A2A2A;
+            border-radius: 999px;
+            overflow: hidden;
+            border: 1px solid #444;
+            margin-top: 12px;
+        }
+
+        .ota-progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ffb300, #00d9ff);
+            transition: width 0.2s ease;
+        }
+
+        .ota-status {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #bbb;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body class="app-shell-page">
@@ -579,10 +624,7 @@
             <div class="sidebar-header">
                 <div class="sidebar-title">🔌 设备连接</div>
                 <div class="connection-tabs">
-                    <div class="tab active" onclick="switchTab('lsl')">LSL</div>
-                    <div class="tab" onclick="switchTab('serial')">串口</div>
-                    <div class="tab" onclick="switchTab('brainflow')">BrainFlow</div>
-                    <div class="tab" onclick="switchTab('wifi')">WiFi</div>
+                    <div class="tab active" onclick="switchTab('ble')">SEEKBCI BLE</div>
                 </div>
             </div>
             
@@ -618,200 +660,58 @@
             </div>
             
             <div class="content-area">
-                <!-- LSL连接 -->
-                <div id="lsl-content" class="connection-content">
+                <!-- SEEKBCI BLE -->
+                <div id="ble-content" class="connection-content">
                     <div class="connection-form">
-                        <h3 style="color: #00D9FF; margin-bottom: 20px;">📡 LSL (Lab Streaming Layer) 连接</h3>
-                        
+                        <h3 style="color: #00D9FF; margin-bottom: 20px;">📡 SEEKBCI BLE 连接</h3>
+
                         <div class="form-group">
-                            <label class="form-label">流名称</label>
-                            <input type="text" class="form-input" id="lsl-stream-name" 
-                                   placeholder="请先扫描设备" value="">
+                            <label class="form-label">设备名称</label>
+                            <input type="text" class="form-input" id="ble-device-name"
+                                   placeholder="默认 SEEKBCI" value="SEEKBCI">
                         </div>
-                        
+
                         <div class="form-group">
-                            <label class="form-label">流类型</label>
-                            <select class="form-select" id="lsl-stream-type">
-                                <option value="EEG">EEG</option>
-                                <option value="EMG">EMG</option>
-                                <option value="ECG">ECG</option>
-                            </select>
+                            <label class="form-label">BLE 地址（可选，扫描后点选）</label>
+                            <input type="text" class="form-input" id="ble-address"
+                                   placeholder="留空则按名称连接" value="">
                         </div>
-                        
-                        <button class="btn" onclick="scanLSL()" style="width: 100%; margin-bottom: 10px;">
-                            🔍 扫描LSL设备
+
+                        <button class="btn" onclick="scanBLE()" style="width: 100%; margin-bottom: 10px;">
+                            🔍 扫描 SEEKBCI BLE
                         </button>
-                        
-                        <button class="btn" onclick="connectLSL()" style="width: 100%;">
+
+                        <button class="btn" onclick="connectBLE()" style="width: 100%;">
                             🔗 连接设备
                         </button>
-                        
+
                         <div class="info-box">
-                            <div class="info-title">💡 LSL连接说明</div>
+                            <div class="info-title">💡 SEEKBCI BLE 说明</div>
                             <div class="info-text">
-                                • LSL是实验室数据流协议<br>
-                                • 支持网络自动发现<br>
-                                • 适合OpenBCI等设备<br>
-                                • 需要设备运行LSL服务
+                                • 固件：reference/SEEKBCI/SEEKBCI.ino（ADS1299 + BMI270）<br>
+                                • 协议 seekbci_eeg_v2：39 字节扩展 Cyton 包（8 路 EEG µV + IMU）<br>
+                                • 电量：固件周期上报 / 主机发 'p'；状态包 0xB0…0xC2<br>
+                                • BMI270：SDA=IO25，SCL=IO33<br>
+                                • 连接后 SSVEP / EMG 与 IMU 测试共用此链路<br>
+                                • 需后端安装 bleak
                             </div>
                         </div>
-                    </div>
-                </div>
-                
-                <!-- 串口连接 -->
-                <div id="serial-content" class="connection-content" style="display: none;">
-                    <div class="connection-form">
-                        <h3 style="color: #00D9FF; margin-bottom: 20px;">🔌 串口连接 (推荐使用 BrainFlow)</h3>
-                        
-                        <div class="info-box" style="margin-bottom: 20px; border-left-color: #FF9800;">
-                            <div class="info-title" style="color: #FF9800;">⚠️ 重要提示</div>
+
+                        <div class="ota-panel">
+                            <h3 style="color: #FFB300; margin-bottom: 10px;">固件 OTA 升级（BLE）</h3>
                             <div class="info-text">
-                                如果你使用 OpenBCI Cyton，建议使用 <strong>BrainFlow 标签</strong> 连接，<br>
-                                它会自动处理设备启动和数据流。
+                                未来云端可下发 manifest 与固件 URL；当前支持填写固件 URL 或手动选择 Arduino/ESP32 编译产物 <code>.bin</code>。升级时会暂停采集，完成后头环自动重启。
                             </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">串口号</label>
-                            <select class="form-select" id="serial-port">
-                                <option value="">选择串口（需先扫描或见下方手动输入）</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">或手动输入端口</label>
-                            <input type="text" class="form-input" id="serial-port-manual"
-                                   placeholder="例如 Windows: COM3、COM10；Linux: /dev/ttyUSB0" value="">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">波特率</label>
-                            <select class="form-select" id="serial-baudrate">
-                                <option value="9600">9600</option>
-                                <option value="115200" selected>115200</option>
-                                <option value="230400">230400</option>
-                                <option value="460800">460800</option>
-                            </select>
-                        </div>
-                        
-                        <button class="btn" onclick="scanSerial()" style="width: 100%; margin-bottom: 10px;">
-                            🔍 扫描串口
-                        </button>
-                        
-                        <button class="btn" onclick="connectSerial()" style="width: 100%;">
-                            🔗 连接设备 (原始串口)
-                        </button>
-                        
-                        <div class="info-box">
-                            <div class="info-title">💡 串口连接说明</div>
-                            <div class="info-text">
-                                • 此方式为原始串口连接<br>
-                                • 需要手动处理设备协议<br>
-                                • <strong>推荐使用 BrainFlow 标签</strong><br>
-                                • BrainFlow 会自动启动设备
+                            <div class="ota-row">
+                                <input type="url" class="form-input" id="ota-firmware-url" placeholder="云端固件 URL，例如 https://.../SEEKBCI.bin">
+                                <button class="btn btn-secondary" type="button" onclick="loadLatestFirmwareManifest()">检查云端更新</button>
                             </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- BrainFlow连接 -->
-                <div id="brainflow-content" class="connection-content" style="display: none;">
-                    <div class="connection-form">
-                        <h3 style="color: #00D9FF; margin-bottom: 20px;">🧠 BrainFlow连接 (推荐)</h3>
-                        
-                        <div class="info-box" style="margin-bottom: 20px; border-left-color: #4CAF50;">
-                            <div class="info-title" style="color: #4CAF50;">✅ 推荐使用</div>
-                            <div class="info-text">
-                                BrainFlow 会自动处理设备启动、数据流和协议，<br>
-                                无需手动发送命令，即插即用！
+                            <div class="ota-row">
+                                <input type="file" class="form-input" id="ota-firmware-file" accept=".bin,application/octet-stream">
+                                <button class="btn" type="button" onclick="startSeekbciOta()">开始 BLE OTA</button>
                             </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">设备类型</label>
-                            <select class="form-select" id="brainflow-board">
-                                <option value="0">OpenBCI Cyton (8通道) - 推荐</option>
-                                <option value="2">OpenBCI Cyton+Daisy (16通道)</option>
-                                <option value="1">OpenBCI Ganglion (4通道)</option>
-                                <option value="-1">Synthetic Board (测试用)</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">串口号</label>
-                            <select class="form-select" id="brainflow-port">
-                                <option value="">自动检测（需先扫描或见下方手动输入）</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">或手动输入端口</label>
-                            <input type="text" class="form-input" id="brainflow-port-manual"
-                                   placeholder="留空则自动检测；否则填 COM3 等" value="">
-                        </div>
-                        
-                        <button class="btn" onclick="scanSerial()" style="width: 100%; margin-bottom: 10px;">
-                            🔍 扫描串口
-                        </button>
-                        
-                        <button class="btn" onclick="connectBrainFlow()" style="width: 100%;">
-                            🔗 连接设备
-                        </button>
-                        
-                        <div class="info-box">
-                            <div class="info-title">💡 BrainFlow连接说明</div>
-                            <div class="info-text">
-                                • BrainFlow统一接口，支持多种设备<br>
-                                • <strong>自动发送启动命令</strong><br>
-                                • 自动配置采样率和通道数<br>
-                                • 自动启动数据流<br>
-                                • Synthetic Board可用于测试（无需硬件）
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- WiFi连接 -->
-                <div id="wifi-content" class="connection-content" style="display: none;">
-                    <div class="connection-form">
-                        <h3 style="color: #00D9FF; margin-bottom: 20px;">📶 WiFi连接</h3>
-                        
-                        <div class="form-group">
-                            <label class="form-label">IP地址</label>
-                            <input type="text" class="form-input" id="wifi-ip" 
-                                   placeholder="例如: 192.168.4.1" value="192.168.4.1">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">端口</label>
-                            <input type="number" class="form-input" id="wifi-port" 
-                                   placeholder="例如: 12345" value="12345">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">协议</label>
-                            <select class="form-select" id="wifi-protocol">
-                                <option value="tcp">TCP</option>
-                                <option value="udp" selected>UDP</option>
-                            </select>
-                        </div>
-                        
-                        <button class="btn" onclick="testWiFi()" style="width: 100%; margin-bottom: 10px;">
-                            🧪 测试连接
-                        </button>
-                        
-                        <button class="btn" onclick="connectWiFi()" style="width: 100%;">
-                            🔗 连接设备
-                        </button>
-                        
-                        <div class="info-box">
-                            <div class="info-title">💡 WiFi连接说明</div>
-                            <div class="info-text">
-                                • 适用于WiFi Shield等设备<br>
-                                • 确保设备和电脑在同一网络<br>
-                                • 默认IP: 192.168.4.1<br>
-                                • 默认端口: 12345
-                            </div>
+                            <div class="ota-progress"><div class="ota-progress-bar" id="ota-progress-bar"></div></div>
+                            <div class="ota-status" id="ota-status">未开始。建议电量充足、设备靠近电脑，升级期间不要关闭页面。</div>
                         </div>
                     </div>
                 </div>
@@ -831,8 +731,24 @@
                             <div class="status-value" id="sampling-rate">250 Hz</div>
                         </div>
                         <div class="status-text">
-                            <div class="status-label">数据包</div>
+                            <div class="status-label">电量</div>
+                            <div class="status-value" id="battery-level">—</div>
+                        </div>
+                        <div class="status-text">
+                            <div class="status-label">收包</div>
                             <div class="status-value" id="packet-count">0</div>
+                        </div>
+                        <div class="status-text">
+                            <div class="status-label">丢包</div>
+                            <div class="status-value" id="packet-lost">0</div>
+                        </div>
+                        <div class="status-text">
+                            <div class="status-label">丢包率</div>
+                            <div class="status-value" id="packet-loss-rate">0%</div>
+                        </div>
+                        <div class="status-text">
+                            <div class="status-label">序号</div>
+                            <div class="status-value" id="packet-seq">—</div>
                         </div>
                         <button class="btn btn-secondary" onclick="disconnectDevice()">
                             断开连接
@@ -865,6 +781,7 @@
     <script src="js/device-channel-config.js?v=20260524n"></script>
     <script src="js/connection-status-indicator.js?v=1.2"></script>
     <script src="js/waveform-display.js?v=20260524b"></script>
-    <script src="device-manager.js?v=20260524b"></script>
+    <script src="js/imu-protocol.js?v=20260727a"></script>
+    <script src="device-manager.js?v=20260727a"></script>
 </body>
 </html>

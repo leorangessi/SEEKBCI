@@ -11,17 +11,18 @@
             label: '脑电头环 / 放大器',
             kind: 'control',
             modality: 'eeg',
-            connect: 'lsl_serial_wifi',
-            testPage: 'device-manager.html'
+            connect: 'ble',
+            testPage: 'device-manager.html',
+            protocolId: 'seekbci_eeg_v2'
         },
         {
             id: 'imu_bmi270',
             label: 'IMU（BMI270）',
             kind: 'control',
             modality: 'imu',
-            connect: 'ble_nordic_uart',
+            connect: 'ble_seekbci_or_standalone',
             testPage: 'imu-test.html',
-            protocolId: 'seekbci_imu_v1'
+            protocolId: 'seekbci_eeg_v2'
         },
         {
             id: 'eog_channel',
@@ -29,7 +30,7 @@
             kind: 'control',
             modality: 'eog',
             connect: 'via_eeg_amp',
-            testPage: 'device-manager.html'
+            testPage: 'eog-test.html'
         },
         {
             id: 'emg_mi_channel',

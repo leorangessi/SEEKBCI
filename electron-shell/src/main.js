@@ -5,7 +5,7 @@ const path = require('path');
 const { fileURLToPath } = require('url');
 const apiLauncher = require('./api-launcher');
 
-// Web Bluetooth（IMU BMI270 等）
+// Web Bluetooth（SEEKBCI OTA、IMU BMI270 等）
 app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 app.commandLine.appendSwitch('enable-features', 'WebBluetooth');
 
@@ -22,6 +22,7 @@ const FRAMED_SHELL_PAGE_TITLES = {
     'profile.html': 'SEEKBCI 个人中心',
     'experiment.html': 'SEEKBCI 实验测试',
     'devices.html': 'SEEKBCI 设备管理',
+    'physical-world.html': 'SEEKBCI 物理世界',
     'ssvep-test.html': 'SEEKBCI 实验 · 准确度',
     'emg-test.html': 'SEEKBCI 实验 · 运动通道',
     'imu-test.html': 'SEEKBCI 实验 · IMU / 光标',
@@ -313,11 +314,12 @@ function attachBluetoothHandlers(win) {
         }
 
         const preferred = list.find((d) =>
-            /BMI270|ESP32_BMI270/i.test(String(d.deviceName || ''))
-        );
+            /SEEKBCI|BMI270|ESP32_BMI270/i.test(String(d.deviceName || ''))
+        ) || list[0];
         if (preferred) {
             clearScanTimer();
             selectBluetoothCallback = null;
+            console.log('[bluetooth] selected:', preferred.deviceName || '(no-name)', preferred.deviceId);
             callback(preferred.deviceId);
             return;
         }
@@ -326,7 +328,7 @@ function attachBluetoothHandlers(win) {
             scanTimer = setTimeout(() => {
                 scanTimer = null;
                 if (selectBluetoothCallback) {
-                    console.warn('[bluetooth] timeout waiting for ESP32_BMI270_MOUSE');
+                    console.warn('[bluetooth] timeout waiting for SEEKBCI / ESP32_BMI270 device');
                     const cb = selectBluetoothCallback;
                     selectBluetoothCallback = null;
                     cb('');

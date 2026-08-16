@@ -75,6 +75,31 @@
             z-index: 3;
         }
 
+        #stimulus-center-hud {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) scale(0.92);
+            z-index: 99999;
+            pointer-events: none;
+            padding: 18px 28px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.72);
+            border: 2px solid rgba(255, 193, 7, 0.85);
+            color: #ffc107;
+            font-size: clamp(28px, 4.5vw, 48px);
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            opacity: 0;
+            transition: opacity 0.18s ease, transform 0.18s ease;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+        }
+
+        #stimulus-center-hud.visible {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
         .stimulus-keyboard-wrap {
             padding: 6px 8px 8px;
             flex-direction: column;
@@ -403,6 +428,57 @@
             margin-top: 6px;
             font-family: Consolas, 'Segoe UI', monospace;
             white-space: pre-line;
+        }
+
+        .eog-bars-card {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .eog-ch-row {
+            background: #16161e;
+            border: 1px solid #2a2a38;
+            border-radius: 8px;
+            padding: 7px 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .eog-ch-row.fire {
+            border-color: #c9a0ff;
+            box-shadow: 0 0 12px rgba(201,160,255,0.35);
+        }
+        .eog-ch-row .eog-ch-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+        .eog-ch-row .eog-ch-name { font-weight: 700; color: #e0d0ff; }
+        .eog-ch-row .eog-ch-state { color: #8a8aa0; font-size: 10px; }
+        .eog-ch-row .eog-ch-state.hit { color: #e0b0ff; font-weight: 700; }
+        .eog-ch-row .eog-ch-state.rise { color: #ffc107; }
+        .eog-metric-bar {
+            height: 7px;
+            border-radius: 4px;
+            background: #0c0c14;
+            overflow: hidden;
+            position: relative;
+        }
+        .eog-metric-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #6a4a9a, #c9a0ff);
+            transition: width 0.08s linear;
+        }
+        .eog-metric-thr {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #ff5252;
+            opacity: 0.85;
         }
 
         .eeg-decode-history {
@@ -767,6 +843,20 @@
             <div id="motion-drive-status" class="motion-bars-foot">等待滤波数据…</div>
         </div>
 
+        <div class="control-group motion-bars-group" id="eog-bars-wrap" style="display: none;">
+            <div class="motion-bars-header">
+                <span class="control-label">眼电通道</span>
+                <div class="motion-bars-header-pills">
+                    <span id="eog-trigger-pill" class="motion-stream-pill motion-stream-pill--wait">等待检测</span>
+                </div>
+            </div>
+            <div class="eog-bars-card" id="eog-channel-status"></div>
+            <div class="motion-bars-legend" style="flex-direction:column;align-items:flex-start;gap:4px;line-height:1.45;">
+                <span>与眼电测试同源：去基线差分；紫条 ≈ |metric|/阈值；红竖线 = 升沿阈值；高亮 = 刚触发。</span>
+            </div>
+            <div id="eog-drive-status" class="motion-bars-foot">等待眼电数据…</div>
+        </div>
+
         <div class="control-group" id="eeg-status-wrap" style="display: none;">
             <span class="control-label">EEG 在线识别</span>
             <div id="eeg-decode-status" style="font-size: 11px; color: #888; line-height: 1.45; min-height: 2.8em;"></div>
@@ -868,10 +958,16 @@
     <script src="js/emg-motion-runtime.js?v=20260531i"></script>
     <script src="js/emg-motion-bars.js?v=20260602a"></script>
     <script src="js/multimodal-channels.js?v=20260522b"></script>
-    <script src="js/multimodal-detector.js?v=20260531i"></script>
+    <script src="js/multimodal-detector.js?v=20260722a"></script>
     <script src="keyboard-binding.js?v=20260503f"></script>
     <script src="js/ssvep-keyboard-40.js?v=20260522a"></script>
-    <script src="js/stimulus-run-config.js?v=20260529d"></script>
-    <script src="stimulus.js?v=20260602b"></script>
+    <script src="js/stimulus-run-config.js?v=20260719d"></script>
+    <script src="js/imu-protocol.js?v=20260717b"></script>
+    <script src="js/imu-ble-client.js?v=20260717b"></script>
+    <script src="js/imu-sample-hub.js?v=20260717b"></script>
+    <script src="js/imu-cursor-mapper.js?v=20260717b"></script>
+    <script src="js/imu-cursor-runtime.js?v=20260721b"></script>
+    <script src="js/imu-locomotion-runtime.js?v=20260718k"></script>
+    <script src="stimulus.js?v=20260722a"></script>
 </body>
 </html>

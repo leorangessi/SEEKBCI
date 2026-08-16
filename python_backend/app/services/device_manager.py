@@ -1,6 +1,6 @@
 """
 设备连接管理模块
-支持LSL、串口、WiFi、BrainFlow四种连接方式
+主路径：LSL、SEEKBCI BLE；保留串口/WiFi/BrainFlow 后端实现但不在 UI 暴露。
 """
 import asyncio
 import json
@@ -35,6 +35,7 @@ except ImportError:
 import socket
 
 from app.services.signal_processor import signal_processor
+from app.services.eeg_ble_bridge import eeg_ble_bridge, availability as eeg_ble_availability
 
 
 class DeviceManager:
@@ -57,8 +58,12 @@ class DeviceManager:
         # LSL：流端关闭后 pull 常返回空而不抛错，用连续空读检测断开
         self._lsl_empty_streak = 0
         self._lsl_got_first_sample = False
-
-        # SSVEP：与 lsl_received_data.py 一致，在「start-*」与「end」之间累积原始采样（由 API 标记边界）
+        self._ble_reconnect_inflight = False
+        self._ble_next_reconnect_at = 0.0
+        self._ble_reconnect_enabled = False
+        self._ble_last_name = "SEEKBCI"
+        self._ble_last_address: Optional[str] = None
+        # SSVEP trial data is accumulated between start and end markers.
         self._trial_lock = threading.Lock()
         self._trial_segment_active = False
         self._trial_segment_samples: List[List[float]] = []
@@ -428,6 +433,122 @@ class DeviceManager:
             print(f"读取WiFi数据失败: {e}")
             return None
     
+    # ==================== SEEKBCI BLE ====================
+
+    def scan_ble_devices(self, timeout: float = 6.0) -> List[Dict]:
+        """扫描 SEEKBCI BLE 设备"""
+        ok, detail = eeg_ble_availability()
+        if not ok:
+            print(f"警告: {detail}")
+            return []
+        try:
+            return eeg_ble_bridge.scan(timeout=timeout)
+        except Exception as e:
+            print(f"扫描 BLE 失败: {e}")
+            return []
+
+    def connect_ble(
+        self,
+        device_name: Optional[str] = None,
+        address: Optional[str] = None,
+        timeout: float = 15.0,
+    ) -> bool:
+        """连接 SEEKBCI BLE（OpenBCI Cyton 包 → µV）"""
+        ok, detail = eeg_ble_availability()
+        if not ok:
+            print(f"警告: {detail}")
+            self.last_error = detail
+            return False
+        self._ble_reconnect_enabled = True
+        try:
+            if self.is_connected:
+                self.disconnect(allow_reconnect=True)
+            snap = eeg_ble_bridge.connect(
+                device_name=device_name or "SEEKBCI",
+                address=address,
+                timeout=timeout,
+                start_stream=True,
+            )
+            if snap.get("status") != "connected":
+                self.last_error = snap.get("detail") or "BLE 连接失败"
+                return False
+
+            self.device_type = "ble"
+            self._ble_last_name = device_name or "SEEKBCI"
+            self._ble_last_address = snap.get("address") or address
+            self._ble_reconnect_enabled = True
+
+            self.channel_count = int(snap.get("channel_count") or 8)
+            self.device_info = {
+                "name": snap.get("device_name") or device_name or "SEEKBCI",
+                "address": snap.get("address"),
+                "protocol": "seekbci_eeg_v2",
+                "sampling_rate": self.sampling_rate,
+                "channel_count": self.channel_count,
+                "type": "ble",
+                "battery": snap.get("battery"),
+            }
+            self.is_connected = True
+            self.last_error = None
+            self._sync_display_processor()
+            # 拉取一次电量（固件 'p' 命令）
+            try:
+                eeg_ble_bridge.request_battery()
+            except Exception as e:
+                print(f"请求电量失败（可忽略）: {e}")
+            print(f"SEEKBCI BLE 连接成功: {self.device_info}")
+            return True
+        except Exception as e:
+            print(f"连接 SEEKBCI BLE 失败: {e}")
+            self.last_error = str(e)
+            try:
+                eeg_ble_bridge.disconnect()
+            except Exception:
+                pass
+            return False
+
+    def _schedule_ble_reconnect(self) -> None:
+        if not self._ble_reconnect_enabled or self._ble_reconnect_inflight:
+            return
+        if not self._ble_last_address:
+            return
+        now = time.monotonic()
+        if now < self._ble_next_reconnect_at:
+            return
+        self._ble_reconnect_inflight = True
+        self._ble_next_reconnect_at = now + 8.0
+
+        def worker() -> None:
+            try:
+                time.sleep(2.0)
+                if self.is_connected or not self._ble_reconnect_enabled:
+                    return
+                print(f"[ble-reconnect] trying {self._ble_last_address}")
+                self.connect_ble(self._ble_last_name, self._ble_last_address, timeout=8.0)
+                print("[ble-reconnect] connected")
+            except Exception as exc:
+                self.last_error = f"BLE 自动重连失败: {exc}"
+                print(f"[ble-reconnect] failed: {exc}")
+            finally:
+                self._ble_reconnect_inflight = False
+
+        threading.Thread(target=worker, name="seekbci-auto-reconnect", daemon=True).start()
+
+    def read_ble_data(self, duration: float = 1.0) -> Optional[np.ndarray]:
+        """从 BLE 环形缓冲弹出约 duration 秒样本 → (N, channels) µV"""
+        if not self.is_connected or self.device_type != "ble":
+            return None
+        snap = eeg_ble_bridge.snapshot()
+        if snap.get("status") != "connected":
+            self._mark_connection_lost(snap.get("detail") or "BLE 已断开")
+            self._schedule_ble_reconnect()
+            return None
+        n = max(1, int(self.sampling_rate * duration))
+        data = eeg_ble_bridge.pop_samples(n)
+        if data is None or data.size == 0:
+            return None
+        return data
+
     # ==================== BrainFlow连接 ====================
     
     def list_brainflow_boards(self) -> List[Dict]:
@@ -538,6 +659,8 @@ class DeviceManager:
         raw_data = None
         if self.device_type == 'lsl':
             raw_data = self.read_lsl_data(duration)
+        elif self.device_type == 'ble':
+            raw_data = self.read_ble_data(duration)
         elif self.device_type == 'serial':
             raw_data = self.read_serial_data(duration)
         elif self.device_type == 'wifi':
@@ -550,13 +673,20 @@ class DeviceManager:
         # 带通/去趋势仅用于前端波形绘制（见 devices WebSocket 的 data_display），此处始终返回原始采样
         return raw_data
     
-    def disconnect(self):
+    def disconnect(self, allow_reconnect: bool = False):
         """断开设备连接"""
+        if not allow_reconnect:
+            self._ble_reconnect_enabled = False
         err = None
         try:
             if self.device_type == 'lsl' and self.inlet:
                 self.inlet.close_stream()
                 self.inlet = None
+            elif self.device_type == 'ble':
+                try:
+                    eeg_ble_bridge.disconnect()
+                except Exception as e:
+                    print(f"断开 BLE 失败: {e}")
             elif self.device_type == 'serial' and self.serial_port:
                 # 发送 's' 命令停止设备（OpenBCI 协议）
                 try:
@@ -597,9 +727,29 @@ class DeviceManager:
                 pass
             print("设备已断开")
     
+    def get_packet_stats(self) -> Optional[Dict]:
+        """BLE 收包/丢包统计（按 sample_number）；非 BLE 返回 None。"""
+        if self.device_type != "ble" or not self.is_connected:
+            return None
+        try:
+            return eeg_ble_bridge.snapshot().get("packet_stats")
+        except Exception:
+            return None
+
+    def get_battery(self) -> Optional[Dict]:
+        if not self.is_connected or self.device_type != "ble":
+            return None
+        try:
+            bat = eeg_ble_bridge.snapshot().get("battery")
+            if isinstance(self.device_info, dict):
+                self.device_info["battery"] = bat
+            return bat
+        except Exception:
+            return None
+
     def get_status(self) -> Dict:
         """获取设备状态"""
-        return {
+        status = {
             'connected': self.is_connected,
             'device_type': self.device_type,
             'device_info': self.device_info,
@@ -607,6 +757,18 @@ class DeviceManager:
             'channel_count': self.channel_count,
             'last_error': self.last_error,
         }
+        pkt = self.get_packet_stats()
+        if pkt is not None:
+            status['packet_stats'] = pkt
+        if self.is_connected and self.device_type == "ble":
+            try:
+                bat = eeg_ble_bridge.snapshot().get("battery")
+                status["battery"] = bat
+                if isinstance(self.device_info, dict):
+                    self.device_info["battery"] = bat
+            except Exception:
+                status["battery"] = None
+        return status
 
 
 # 全局设备管理器实例

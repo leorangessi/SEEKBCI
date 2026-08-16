@@ -31,6 +31,7 @@ brainflow==5.10.1
 
 # 设备连接
 pyserial==3.5
+bleak>=0.22.0
 
 # 视觉刺激
 psychopy==2023.2.3

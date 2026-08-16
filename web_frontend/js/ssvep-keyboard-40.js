@@ -110,8 +110,12 @@
         return !!(block && block.shape === KB_SHAPE);
     }
 
-    function keyboardKeyFrequencyHz(index) {
-        return FREQ_BASE_HZ + Number(index) * FREQ_STEP_HZ;
+    function keyboardKeyFrequencyHz(index, block) {
+        const baseRaw = block && block.keyboardFreqBase != null ? Number(block.keyboardFreqBase) : NaN;
+        const stepRaw = block && block.keyboardFreqStep != null ? Number(block.keyboardFreqStep) : NaN;
+        const base = Number.isFinite(baseRaw) ? baseRaw : FREQ_BASE_HZ;
+        const step = Number.isFinite(stepRaw) && stepRaw > 0 ? stepRaw : FREQ_STEP_HZ;
+        return base + Number(index) * step;
     }
 
     /** 为键盘块各键生成随机相位（0～1），写入 block.keyboardKeyPhases 后持久化到项目 */
@@ -171,7 +175,7 @@
                     display: meta.display,
                     code: meta.code,
                     flex: cell.flex != null ? cell.flex : 1,
-                    frequencyHz: keyboardKeyFrequencyHz(idx),
+                    frequencyHz: keyboardKeyFrequencyHz(idx, block),
                     phase: block ? keyboardKeyPhaseFor(block, cell.id, idx) : 0,
                     index: idx
                 });

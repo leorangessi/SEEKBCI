@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 # 暂时注释掉API路由，先测试基础框架
 # from app.api import auth, users, projects
-from app.api import devices, ssvep, system, plaza, imu
+from app.api import devices, ssvep, system, plaza, imu, focus, ctrl
 from app.services.plaza_store import seed_demo_plaza_if_empty
 
 # 创建FastAPI应用
@@ -40,10 +40,12 @@ app.include_router(devices.router, prefix="/api/devices", tags=["设备管理"])
 app.include_router(system.router, prefix="/api/system", tags=["系统"])
 app.include_router(ssvep.router, prefix="/api/ssvep", tags=["SSVEP"])
 app.include_router(imu.router, prefix="/api/imu", tags=["IMU"])
+app.include_router(focus.router, prefix="/api/focus", tags=["专注度"])
 # 注册路由（暂时注释，等数据库配置好后再启用）
 # app.include_router(auth.router, prefix="/api/auth", tags=["认证"])
 # app.include_router(users.router, prefix="/api/users", tags=["用户"])
 app.include_router(plaza.router, prefix="/api/plaza", tags=["项目广场"])
+app.include_router(ctrl.router, prefix="/api/ctrl", tags=["控制板"])
 
 
 @app.on_event("startup")

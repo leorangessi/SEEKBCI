@@ -4,6 +4,7 @@
 """
 from __future__ import annotations
 
+import threading
 import time
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -19,6 +20,9 @@ except ImportError as e:
     _IMPORT_ERROR = str(e)
 
 _controller: Optional["Controller"] = None
+# DOM code → pynput key；用于 tilt→WASD 等「按住/松开」
+_held_keys: Dict[str, Any] = {}
+_held_lock = threading.Lock()
 
 
 def availability() -> Tuple[bool, str]:
@@ -152,3 +156,56 @@ def send_chords(chords: List[Dict[str, Any]], pause_between: float = 0.06) -> No
         _tap_chord(ch)
         if i < len(chords) - 1:
             time.sleep(pause_between)
+
+
+def sync_held_keys(held: Dict[str, bool]) -> Dict[str, bool]:
+    """
+    同步「当前应处于按下状态」的键（DOM KeyboardEvent.code → bool）。
+    用于 IMU 倾斜 → WASD：前端周期性上报期望状态，后端 press/release 差分。
+    """
+    ok, msg = availability()
+    if not ok:
+        raise RuntimeError(msg)
+    if not isinstance(held, dict):
+        raise ValueError("held 必须是对象")
+
+    desired: Dict[str, bool] = {}
+    for code, want in held.items():
+        c = str(code or "").strip()
+        if not c:
+            continue
+        desired[c] = bool(want)
+
+    c = _get_controller()
+    with _held_lock:
+        # 松开不再需要的键
+        for code in list(_held_keys.keys()):
+            if not desired.get(code):
+                try:
+                    c.release(_held_keys.pop(code))
+                except Exception:
+                    _held_keys.pop(code, None)
+        # 按下新键
+        for code, want in desired.items():
+            if not want or code in _held_keys:
+                continue
+            key = _resolve_dom_code(code)
+            try:
+                c.press(key)
+                _held_keys[code] = key
+            except Exception as e:
+                raise RuntimeError(f"按下 {code} 失败: {e}") from e
+        return {k: True for k in _held_keys.keys()}
+
+
+def release_all_held_keys() -> None:
+    """松开所有由 sync_held_keys 按下的键（刺激停止时调用）。"""
+    if not _PYNPUT_OK:
+        return
+    c = _get_controller()
+    with _held_lock:
+        for code in list(_held_keys.keys()):
+            try:
+                c.release(_held_keys.pop(code))
+            except Exception:
+                _held_keys.pop(code, None)

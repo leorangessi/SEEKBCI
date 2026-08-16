@@ -94,7 +94,7 @@ function importSampleProjectsManually() {
     const added = seedSampleProjects({ forceRefresh: false });
     renderProjects();
     if (added > 0) {
-        alert(`已导入 ${added} 个示例项目。\n\n• 脑控音乐盒\n• 脑控骰子运势站`);
+        alert(`已导入 ${added} 个示例项目。\n\n• 脑控音乐盒\n• 脑控骰子运势站\n• SSVEP 键盘测试`);
     } else {
         alert('示例项目已在列表中。\n\n如需重新导出，可在编辑器中修改后另存为新项目。');
     }
@@ -867,6 +867,8 @@ function defaultRunConfig() {
         flickerHighBlank: false,
         flickerOnDutyPercent: 32,
         flickerBlockOpacityPercent: 58,
+        flickerColorOn: '#ffffff',
+        flickerColorOff: '#000000',
         speakOnDecode: false,
         ssvepMultimodalWaitSec: 1.0
     };
@@ -908,6 +910,16 @@ function applyRunConfigToModal(project) {
     setInputChecked('rc-flicker-high-blank', cfg.flickerHighBlank);
     setInputValue('rc-flicker-on-duty', cfg.flickerOnDutyPercent);
     setInputValue('rc-flicker-block-opacity', cfg.flickerBlockOpacityPercent);
+    setInputValue(
+        'rc-flicker-color-on',
+        cfg.flickerColorOn ||
+            (typeof window.DEFAULT_FLICKER_COLOR_ON === 'string' ? window.DEFAULT_FLICKER_COLOR_ON : '#ffffff')
+    );
+    setInputValue(
+        'rc-flicker-color-off',
+        cfg.flickerColorOff ||
+            (typeof window.DEFAULT_FLICKER_COLOR_OFF === 'string' ? window.DEFAULT_FLICKER_COLOR_OFF : '#000000')
+    );
     setInputValue('rc-th-minp', cfg.mode === 'threshold' ? cfg.minProbability : 0.28);
     setInputValue('rc-th-minm', cfg.minMargin);
     setInputChecked('rc-th-stable', cfg.thresholdRequireStable);
@@ -983,12 +995,18 @@ function readRuntimePresentationForSession() {
     const dutyPct = Number.isFinite(dutyRaw) ? dutyRaw : 32;
     const opacityRaw = parseFloat(document.getElementById('rc-flicker-block-opacity')?.value);
     const opacityPct = Number.isFinite(opacityRaw) ? opacityRaw : 58;
+    const normHex =
+        typeof window.normalizeHexColor === 'function'
+            ? window.normalizeHexColor
+            : (v, fb) => (v && String(v).trim() ? String(v).trim() : fb);
     return {
         transparentBackground: !!document.getElementById('rc-transparent-bg')?.checked,
         startFullscreen: !!document.getElementById('rc-start-fullscreen')?.checked,
         flickerHighBlank: !!document.getElementById('rc-flicker-high-blank')?.checked,
         flickerOnDutyPercent: Math.min(50, Math.max(15, dutyPct)),
-        flickerBlockOpacityPercent: Math.min(100, Math.max(20, opacityPct))
+        flickerBlockOpacityPercent: Math.min(100, Math.max(20, opacityPct)),
+        flickerColorOn: normHex(document.getElementById('rc-flicker-color-on')?.value, '#ffffff'),
+        flickerColorOff: normHex(document.getElementById('rc-flicker-color-off')?.value, '#000000')
     };
 }
 

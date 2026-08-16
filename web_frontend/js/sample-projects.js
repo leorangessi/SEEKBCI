@@ -127,6 +127,47 @@
         };
     }
 
+    /** 与 js/ssvep-keyboard-40.js 行序一致；固定相位便于复现实验 */
+    const KB_KEY_IDS = [
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+        'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P',
+        'Caps', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L',
+        'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'Space', 'Backspace', 'Enter'
+    ];
+
+    function buildFixedKeyboardKeyPhases() {
+        const phases = {};
+        const PHI = 0.618033988749895;
+        KB_KEY_IDS.forEach((id, i) => {
+            phases[id] = Math.round(((i * PHI) % 1) * 10000) / 10000;
+        });
+        return phases;
+    }
+
+    function buildSsvepKeyboardTestBlock(id, layout) {
+        const cw = (layout && layout.width) || 1200;
+        const ch = (layout && layout.height) || 700;
+        const w = Math.min(1040, Math.max(720, cw - 80));
+        const h = Math.min(420, Math.max(300, Math.round(w * 0.38)));
+        return {
+            id,
+            shape: 'ssvep_keyboard',
+            x: Math.max(20, Math.round((cw - w) / 2)),
+            y: Math.max(40, Math.round((ch - h) / 2) - 20),
+            width: w,
+            height: h,
+            label: 'SSVEP 键盘 (40)',
+            frequency: null,
+            phase: 0,
+            color: '#00D9FF',
+            rotation: 0,
+            keyboardLayout: 'qwerty40',
+            keyboardKeyPhases: buildFixedKeyboardKeyPhases(),
+            opaqueFlickerRegion: true,
+            actions: [{ type: 'none', content: '', targetPage: null, delayMs: 0 }]
+        };
+    }
+
     const now = '2026-06-04T08:00:00.000Z';
     const layoutRef = { width: 1200, height: 700 };
     const defaultRunConfig = {
@@ -334,6 +375,72 @@
                 advancedFeaturesOpen: false
             },
             version_history: [{ version: '1.0.0', timestamp: now, changes: '示例项目创建' }]
+        },
+        {
+            contractVersion: 1,
+            id: 'sample_ssvep_keyboard_test',
+            sampleKey: 'ssvep_keyboard_test_v1',
+            name: 'SSVEP 键盘测试',
+            description:
+                '40 目标 QWERTY 脑控键盘（8.0～15.8 Hz，0.2 Hz 步长，联合频率-相位）。识别后注入系统按键。用于打字准确率、窗长/阈值/相位与 ITR 等研究；请先连接 SEEKBCI 并开启系统选项。',
+            author: 'SSVEP 平台示例',
+            version: '1.0.0',
+            created_at: '2026-07-19T12:00:00.000Z',
+            updated_at: '2026-07-19T12:00:00.000Z',
+            thumbnail: '⌨️',
+            pages: [
+                {
+                    id: 0,
+                    name: '键盘',
+                    stimulusLayoutRef: layoutRef,
+                    blocks: [buildSsvepKeyboardTestBlock(1, layoutRef)],
+                    multimodalBlocks: []
+                }
+            ],
+            frequencies: [],
+            phases: [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 0],
+            runConfig: {
+                ...defaultRunConfig,
+                // 40 类目标需要更长窗与更严一点的阈值门控
+                windowSec: 3.0,
+                cooldownSec: 2.0,
+                pollMs: 400,
+                minProbability: 0.22,
+                minMargin: 0.06,
+                flickerOnDutyPercent: 50,
+                flickerBlockOpacityPercent: 100,
+                speakOnDecode: true
+            },
+            settings: {
+                autoAssignFreqPhaseOnSave: false,
+                pythonImports: [],
+                pythonGlobalCode: '',
+                advancedFeaturesOpen: false,
+                systemKeyboardBridge: true,
+                cursorControl: {
+                    enabled: false,
+                    mapping: { sensitivity: 42, invertX: true, invertY: true, headMode: true },
+                    clickMethod: 'none',
+                    clickType: 'single',
+                    dwellMs: 900,
+                    dwellStillPx: 14,
+                    dwellCooldownMs: 700
+                },
+                locomotionControl: {
+                    enabled: false,
+                    mode: 'lean',
+                    accelForwardTh: 1.0,
+                    accelStrafeTh: 1.0,
+                    accelSensitivity: 2.5
+                }
+            },
+            version_history: [
+                {
+                    version: '1.0.0',
+                    timestamp: '2026-07-19T12:00:00.000Z',
+                    changes: 'SSVEP 40 键键盘测试项目'
+                }
+            ]
         }
     ];
 

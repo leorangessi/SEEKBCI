@@ -741,6 +741,24 @@
                         降低后方块会半透明叠加到下方图像/窗口上，减少遮挡；如果识别变差，可适当调高。
                     </div>
                 </div>
+                <div style="margin-top: 12px;">
+                    <label class="form-label" style="margin-bottom: 6px;">闪烁双色（亮相 / 暗相）</label>
+                    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                        <label style="display:flex;align-items:center;gap:8px;color:#ccc;font-size:13px;">
+                            亮相
+                            <input type="color" id="rc-flicker-color-on" value="#ffffff" title="闪烁亮相颜色（默认白）">
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;color:#ccc;font-size:13px;">
+                            暗相
+                            <input type="color" id="rc-flicker-color-off" value="#000000" title="闪烁暗相颜色（默认黑）">
+                        </label>
+                        <button type="button" class="btn btn-secondary" style="padding:4px 10px;font-size:12px;"
+                                onclick="document.getElementById('rc-flicker-color-on').value='#ffffff';document.getElementById('rc-flicker-color-off').value='#000000';">恢复黑白</button>
+                    </div>
+                    <div class="rc-help" style="margin-top: 8px;">
+                        默认黑白闪烁。也可选黄/绿等任意两色。
+                    </div>
+                </div>
                 <div class="rc-help">
                     <strong>系统级置顶、无边框窗口</strong>需后续 Electron/Tauri 桌面壳；EEG 仍按文档约定启动本机 Python API。
                 </div>
@@ -776,7 +794,7 @@
                 <label class="form-label">最低 softmax 概率（0～1）</label>
                 <input type="number" class="form-input" id="rc-th-minp" value="0.28" min="0.03" max="0.99" step="0.01">
                 <div class="rc-help">
-                    第一名概率必须达到该值才考虑触发。误触多 → 略调高；很难触发 → 略调低。默认偏宽松，便于先跑通流程。
+                    第一名概率必须达到该值才考虑触发。误触多 → 略调高；很难触发 → 略调低（可低至 <strong>0.2</strong> 或更低）。默认偏宽松，便于先跑通流程。
                 </div>
             </div>
             <div class="form-group">
@@ -839,10 +857,10 @@
     <script src="js/multimodal-channels.js?v=20260522b"></script>
     <script src="js/project-thumbnail.js?v=20260714f"></script>
     <script src="js/image-display-editor.js?v=20260714f"></script>
-    <script src="js/stimulus-run-config.js?v=20260529d"></script>
-    <script src="js/sample-projects.js?v=20260604a"></script>
+    <script src="js/stimulus-run-config.js?v=20260719d"></script>
+    <script src="js/sample-projects.js?v=20260719c"></script>
     <script src="js/plaza-client.js?v=20260714e"></script>
     <script src="js/project-contract.js?v=20260605"></script>
-    <script src="project-manager.js?v=20260714f"></script>
+    <script src="project-manager.js?v=20260719e"></script>
 </body>
 </html>
